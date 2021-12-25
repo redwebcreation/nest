@@ -6,10 +6,17 @@ import (
 
 	"github.com/me/nest/cli"
 	"github.com/me/nest/cli/proxy"
+	"github.com/me/nest/global"
 	"github.com/spf13/cobra"
 )
 
 func main() {
+	for _, arg := range os.Args {
+		if arg == "-v" || arg == "--version" {
+			fmt.Printf("Nest (%s) \n", global.Version)
+			os.Exit(0)
+		}
+	}
 	nest := &cobra.Command{
 		Use:   "nest",
 		Short: "Service orchestrator",
@@ -28,6 +35,8 @@ func main() {
 		command.SilenceErrors = true
 		nest.AddCommand(command)
 	}
+
+	nest.PersistentFlags().BoolP("version", "v", false, "Print version information")
 
 	nest.SetHelpCommand(&cobra.Command{
 		Use:    "_help",
