@@ -29,6 +29,11 @@ func main() {
 		nest.AddCommand(command)
 	}
 
+	nest.SetHelpCommand(&cobra.Command{
+		Use:    "_help",
+		Hidden: true,
+	})
+
 	err := nest.Execute()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error: "+err.Error())
