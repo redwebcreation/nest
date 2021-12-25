@@ -1,0 +1,17 @@
+services:
+  defo:
+    include: example.yml
+  og:
+    include: example.yml
+  bsg:
+    include: example.yml
+  dsf:
+    include: example.yml
+  dsv:
+    include: example.yml
+  aaa:
+    include: example.yml
+  aa:
+    include: example.yml
+  a:
+    include: example.yml
