@@ -1,17 +1,13 @@
+vault:
+  type: file
+  metadata:
+    path: secrets
+
 services:
   defo:
     include: example.yml
-  og:
-    include: example.yml
-  bsg:
-    include: example.yml
-  dsf:
-    include: example.yml
-  dsv:
-    include: example.yml
-  aaa:
-    include: example.yml
-  aa:
-    include: example.yml
-  a:
-    include: example.yml
+registry:
+  default:
+    host: rg.fr-par.scw.cloud/rwsapps
+    username: nobody
+    password: {{ vault.default_registry_key }}

@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func DiagnoseCommand() *cobra.Command {
+func MedicCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "diagnose",
+		Use:   "medic",
 		Short: "diagnose your configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			diagnosis := common.DiagnoseConfiguration()
@@ -29,13 +29,13 @@ func DiagnoseCommand() *cobra.Command {
 
 			fmt.Printf("\n  \033[1m\033[38;2;250;175;0mRecommendations:\033[0m\n")
 
-			if len(diagnosis.Recommendations) == 0 {
+			if len(diagnosis.Warnings) == 0 {
 				fmt.Println("  \033[1m\033[38;2;120;120;120m- no recommendations\033[0m")
 			} else {
-				for _, warn := range diagnosis.Recommendations {
+				for _, warn := range diagnosis.Warnings {
 					fmt.Printf("  \033[1m\033[38;2;255;255;255m- %s\033[0m\n", warn.Title)
-					if warn.Details != "" {
-						fmt.Printf("  \033[1m\033[38;2;125;125;125m  %s\033[0m\n", warn.Details)
+					if warn.Advice != "" {
+						fmt.Printf("  \033[1m\033[38;2;125;125;125m  %s\033[0m\n", warn.Advice)
 					}
 				}
 			}

@@ -1,4 +1,4 @@
-package common
+package util
 
 func Plural(count int, singular string, plural string) string {
 	if count == 1 {

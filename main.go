@@ -6,6 +6,7 @@ import (
 
 	"github.com/me/nest/cli"
 	"github.com/me/nest/cli/proxy"
+	"github.com/me/nest/common"
 	"github.com/me/nest/global"
 	"github.com/spf13/cobra"
 )
@@ -26,13 +27,14 @@ func main() {
 	commands := []*cobra.Command{
 		proxy.RootCommand(),
 		cli.DeployCommand(),
-		cli.DiagnoseCommand(),
+		cli.MedicCommand(),
 		cli.SelfUpdateCommand(),
 	}
 
 	for _, command := range commands {
 		command.SilenceUsage = true
 		command.SilenceErrors = true
+
 		nest.AddCommand(command)
 	}
 
@@ -42,6 +44,22 @@ func main() {
 		Use:    "_help",
 		Hidden: true,
 	})
+
+	nest.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if cmd.Name() == "medic" {
+			return nil
+		}
+
+		diagnosis := common.DiagnoseConfiguration()
+
+		if len(diagnosis.Errors) == 0 {
+			return nil
+		}
+
+		return fmt.Errorf("your configuration is invalid, please run `nest medic` for details")
+	}
+
+	nest.SilenceErrors = true
 
 	err := nest.Execute()
 	if err != nil {

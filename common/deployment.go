@@ -141,14 +141,15 @@ func StopOldContainers() (int, error) {
 	}
 
 	for _, container := range containers {
-		if container.ID == lastByService[container.Labels["nest:service"]].ID {
+		isDead := Config.Services[container.Labels["nest:service"]] == nil
+		if !isDead && container.ID == lastByService[container.Labels["nest:service"]].ID {
 			continue
 		}
 
 		wg.Add(1)
-		count++
 		go func(container types.Container) {
 			defer wg.Done()
+			count++
 
 			global.Docker.ContainerStop(context.Background(), container.ID, nil)
 			global.Docker.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{})

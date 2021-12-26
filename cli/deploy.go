@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/me/nest/common"
+	"github.com/me/nest/util"
 	"github.com/spf13/cobra"
 )
 
@@ -82,7 +83,7 @@ func DeployCommand() *cobra.Command {
 				render(messages)
 			}
 
-			fmt.Printf("\nDeployed %d %s in %.3fs.\n", deployableSize, common.Plural(deployableSize, "service", "services"), float64(time.Now().UnixMilli()-deploymentStart)/1000.0)
+			fmt.Printf("\nDeployed %d %s in %.3fs.\n", deployableSize, util.Plural(deployableSize, "service", "services"), float64(time.Now().UnixMilli()-deploymentStart)/1000.0)
 
 			stopped, _ := common.StopOldContainers()
 			fmt.Printf("Cleaned up %d older services.\n", stopped)
