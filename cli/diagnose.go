@@ -10,7 +10,7 @@ import (
 func DiagnoseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "diagnose",
-		Short: "Diagnose your configuration",
+		Short: "diagnose your configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			diagnosis := common.DiagnoseConfiguration()
 

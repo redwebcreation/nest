@@ -16,7 +16,7 @@ var deploymentStart int64
 func DeployCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy [service]",
-		Short: "Deploy the configuration to the cluster",
+		Short: "deploy the configuration",
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var deployables common.ServiceMap

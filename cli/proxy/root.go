@@ -5,7 +5,7 @@ import "github.com/spf13/cobra"
 func RootCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proxy",
-		Short: "Proxy related commands",
+		Short: "proxy related commands",
 	}
 
 	cmd.AddCommand(startCommand())

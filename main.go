@@ -36,7 +36,7 @@ func main() {
 		nest.AddCommand(command)
 	}
 
-	nest.PersistentFlags().BoolP("version", "v", false, "Print version information")
+	nest.PersistentFlags().BoolP("version", "v", false, "print version information")
 
 	nest.SetHelpCommand(&cobra.Command{
 		Use:    "_help",
