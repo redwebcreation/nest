@@ -2,22 +2,22 @@ package main
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/me/nest/cli"
 	"github.com/me/nest/cli/proxy"
 	"github.com/me/nest/common"
 	"github.com/me/nest/global"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 func main() {
 	for _, arg := range os.Args {
 		if arg == "-v" || arg == "--version" {
-			fmt.Printf("Nest (%s) \n", global.Version)
+			fmt.Printf("nest@%s\n", global.Version)
 			os.Exit(0)
 		}
 	}
+
 	nest := &cobra.Command{
 		Use:   "nest",
 		Short: "Service orchestrator",
@@ -29,6 +29,7 @@ func main() {
 		cli.DeployCommand(),
 		cli.MedicCommand(),
 		cli.SelfUpdateCommand(),
+		cli.ReconfigureCommand(),
 	}
 
 	for _, command := range commands {
@@ -40,6 +41,7 @@ func main() {
 
 	nest.PersistentFlags().BoolP("version", "v", false, "print version information")
 
+	// hide the help command
 	nest.SetHelpCommand(&cobra.Command{
 		Use:    "_help",
 		Hidden: true,
@@ -63,7 +65,7 @@ func main() {
 
 	err := nest.Execute()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "error: "+err.Error())
+		_, _ = fmt.Fprintln(os.Stderr, "error: "+err.Error())
 		os.Exit(1)
 	}
 }

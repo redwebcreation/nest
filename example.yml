@@ -1,8 +1,0 @@
-image: registry
-hosts:
-  - ~example.com
-prestart:
-  - echo 'Done' > /tmp/hello.txt
-  - sleep 0.5
-env:
-  CHAUSSURE_DE_SKI: outlawed

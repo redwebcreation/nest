@@ -1,5 +1,7 @@
 package common
 
+import "strings"
+
 type Service struct {
 	// The path to a file containing the service configuration.
 	Include string `yaml:"include" json:"include"`
@@ -24,4 +26,32 @@ type Service struct {
 		// The path to mount to.
 		To string `json:"to" yaml:"to"`
 	} `json:"volumes" yaml:"volumes"`
+}
+
+func (s *Service) Accepts(host string) bool {
+	for _, h := range s.Hosts {
+		if h == host {
+			return true
+		}
+
+		accepted := strings.Split(h, ".")
+		comparison := strings.Split(host, ".")
+
+		for i := range comparison {
+			if accepted[i] == "*" {
+				comparison[i] = "*"
+				continue
+			}
+
+			if accepted[i] != comparison[i] {
+				break
+			}
+		}
+
+		if strings.Join(comparison, ".") == strings.Join(accepted, ".") {
+			return true
+		}
+	}
+
+	return false
 }

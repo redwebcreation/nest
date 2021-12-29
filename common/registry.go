@@ -17,7 +17,7 @@ type Registry struct {
 }
 
 func (r Registry) IsDefault() bool {
-	return r.Name == "" || r.Name == "default" || r.Host == "@"
+	return r.Name == "" || r.Name == "default" || r.Name == "@"
 }
 
 func (r Registry) ToBase64() (string, error) {
