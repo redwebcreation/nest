@@ -51,9 +51,7 @@ func (s *Service) expandFromConfig(serviceName string) {
 
 	if s.ListeningOn == "" {
 		s.ListeningOn = "80"
-	}
-
-	if strings.HasPrefix(s.ListeningOn, ":") {
-		s.ListeningOn = s.ListeningOn[1:]
+	} else {
+		s.ListeningOn = strings.TrimPrefix(s.ListeningOn, ":")
 	}
 }

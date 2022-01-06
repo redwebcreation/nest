@@ -62,7 +62,7 @@ func ValidateServicesConfiguration(diagnosis *Diagnosis) {
 			})
 		}
 
-		for k, _ := range service.Env {
+		for k := range service.Env {
 			envKeyRegex := regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 
 			if !envKeyRegex.MatchString(k) {

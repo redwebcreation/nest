@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var imageVersion string
+//var imageVersion string
 var deploymentStart int64
 
 func DeployCommand() *cobra.Command {

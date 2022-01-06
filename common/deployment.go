@@ -119,8 +119,6 @@ func (d *Deployment) Start(out chan Message) {
 		Service: d.Service,
 		Value:   io.EOF,
 	}
-
-	return
 }
 
 func StopOldContainers() (int, error) {
