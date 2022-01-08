@@ -1,9 +1,10 @@
 package common
 
 import (
+	"strings"
+
 	"github.com/me/nest/global"
 	"gopkg.in/yaml.v2"
-	"strings"
 )
 
 var Config *Configuration
@@ -13,11 +14,11 @@ type Configuration struct {
 }
 
 func init() {
-	if !global.IsConfigResolverConfigured {
+	if !global.IsConfigLocatorConfigured {
 		return
 	}
 
-	contents, err := global.ConfigResolver.Get("nest.yaml")
+	contents, err := global.ConfigLocatorConfig.Read("nest.yaml")
 	if err != nil {
 		panic(err)
 	}

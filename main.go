@@ -2,44 +2,37 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/me/nest/cli"
 	"github.com/me/nest/cli/proxy"
 	"github.com/me/nest/common"
 	"github.com/me/nest/global"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 func main() {
-	for _, arg := range os.Args {
-		if arg == "-v" || arg == "--version" {
-			fmt.Printf("nest@%s\n", global.Version)
-			os.Exit(0)
-		}
-	}
 
+	//os.Exit(0)
 	nest := &cobra.Command{
 		Use:   "nest",
 		Short: "Service orchestrator",
 		Long:  "Nest is a powerful service orchestrator for a single server.",
 	}
 
-	commands := []*cobra.Command{
+	for _, command := range []*cobra.Command{
 		proxy.RootCommand(),
 		cli.DeployCommand(),
 		cli.MedicCommand(),
 		cli.SelfUpdateCommand(),
-		cli.ReconfigureCommand(),
-	}
-
-	for _, command := range commands {
+		cli.ConfigureCommand(),
+		cli.VersionCommand(),
+	} {
 		command.SilenceUsage = true
 		command.SilenceErrors = true
 
 		nest.AddCommand(command)
 	}
-
-	nest.PersistentFlags().BoolP("version", "v", false, "print version information")
 
 	// hide the help command
 	nest.SetHelpCommand(&cobra.Command{
@@ -48,7 +41,12 @@ func main() {
 	})
 
 	nest.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if cmd.Name() == "medic" {
+		commandName := cmd.Name()
+		if !global.IsConfigLocatorConfigured && (commandName != "configure" && commandName != "version" && commandName != "self-update") {
+			return fmt.Errorf("run `nest configure` to set up nest")
+		}
+
+		if commandName == "medic" || commandName == "version" || commandName == "configure" || commandName == "self-update" {
 			return nil
 		}
 
@@ -58,7 +56,7 @@ func main() {
 			return nil
 		}
 
-		return fmt.Errorf("your configuration is invalid, please run `nest medic` for details")
+		return fmt.Errorf("your configuration is invalid, please run `nest medic` to troubleshoot")
 	}
 
 	nest.SilenceErrors = true

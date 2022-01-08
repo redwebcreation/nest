@@ -22,5 +22,5 @@ func TestService_Accepts(t *testing.T) {
 	if service.Accepts("") {
 		t.Error("Service should not accept empty string")
 	}
-	
+
 }

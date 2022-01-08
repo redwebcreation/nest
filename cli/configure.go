@@ -2,19 +2,21 @@ package cli
 
 import (
 	"fmt"
+	"regexp"
+
 	"github.com/me/nest/global"
 	"github.com/me/nest/ui"
 	"github.com/spf13/cobra"
-	"regexp"
 )
 
-func ReconfigureCommand() *cobra.Command {
+func ConfigureCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "reconfigure",
+		Use: "configure",
 		Aliases: []string{
 			"rcfg",
+			"reconfigure",
 		},
-		Short: "Update the current global configuration",
+		Short: "Update the global configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			strategy, err := ui.Select{
 				Question: "Choose a strategy: ",
@@ -23,25 +25,17 @@ func ReconfigureCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			global.ConfigResolver.Strategy = strategy
+			global.ConfigLocatorConfig.Strategy = strategy
 
 			provider, err := ui.Select{
 				Question: "Choose a provider: ",
-				Choices:  []string{"GitHub", "GitLab", "Bitbucket"},
+				Choices:  []string{"github", "gitlab", "bitbucket"},
 			}.Prompt()
 			if err != nil {
 				return err
 			}
-			global.ConfigResolver.Provider = provider
 
-			transportMode, err := ui.Select{
-				Question: "Choose a transport mode: ",
-				Choices:  []string{"ssh", "https"},
-			}.Prompt()
-			if err != nil {
-				return err
-			}
-			global.ConfigResolver.TransportMode = transportMode
+			global.ConfigLocatorConfig.ProviderURL = fmt.Sprintf("git@%s.com:", provider)
 
 			repository, err := ui.Input{
 				Question: "Enter the repository URL: ",
@@ -50,16 +44,16 @@ func ReconfigureCommand() *cobra.Command {
 
 					return re.MatchString(s)
 				},
-				Default: global.ConfigResolver.Repository,
+				Default: global.ConfigLocatorConfig.Repository,
 			}.Prompt()
 			if err != nil {
 				return err
 			}
-			global.ConfigResolver.Repository = repository
+			global.ConfigLocatorConfig.Repository = repository
 
-			fmt.Println("\nSuccessfully configured the finder.")
+			fmt.Println("\nSuccessfully configured the config resolver.")
 
-			return global.ConfigResolver.Write()
+			return global.ConfigLocatorConfig.SaveLocally()
 		},
 	}
 	return cmd

@@ -42,7 +42,7 @@ func (i Image) Pull(options types.ImagePullOptions, handler func(event *PullEven
 	var event *PullEvent
 
 	for {
-		if err := decoder.Decode(&event); err != nil {
+		if err = decoder.Decode(&event); err != nil {
 			if err == io.EOF {
 				break
 			}
