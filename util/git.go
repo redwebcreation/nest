@@ -47,5 +47,5 @@ func (r Repository) Files() ([]string, error) {
 		return nil, err
 	}
 
-	return strings.Split(out, "\n"), nil
+	return strings.Split(strings.TrimSpace(out), "\n"), nil
 }
