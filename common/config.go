@@ -3,9 +3,6 @@ package common
 import (
 	"fmt"
 	"strings"
-
-	"github.com/me/nest/global"
-	"gopkg.in/yaml.v2"
 )
 
 var Config *Configuration
@@ -21,23 +18,23 @@ var (
 )
 
 func init() {
-	if !global.IsConfigLocatorConfigured {
-		return
-	}
-
-	contents, err := global.ConfigLocatorConfig.Read("nest.yaml")
-	if err != nil {
-		panic(err)
-	}
-
-	var config Configuration
-
-	err = yaml.Unmarshal(contents, &config)
-	if err != nil {
-		panic(err)
-	}
-
-	Config = &config
+	//if !IsConfigLocatorConfigured {
+	//	return
+	//}
+	//
+	//contents, err := ConfigLocatorConfig.Read("nest.yaml")
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//var config Configuration
+	//
+	//err = yaml.Unmarshal(contents, &config)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//Config = &config
 }
 
 func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -52,10 +49,9 @@ func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	c.Services = p.Services
 
 	for _, service := range c.Services {
-		// if service.Registry is of type Registry
 		switch service.Registry.(type) {
 		case Registry:
-		// do nothing
+			continue
 		case string:
 			if service.Registry == "" {
 				continue

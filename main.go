@@ -2,18 +2,17 @@ package main
 
 import (
 	"fmt"
+	"github.com/me/nest/common"
+	"github.com/me/nest/global"
+	"gopkg.in/yaml.v2"
 	"os"
 
 	"github.com/me/nest/cli"
 	"github.com/me/nest/cli/proxy"
-	"github.com/me/nest/common"
-	"github.com/me/nest/global"
 	"github.com/spf13/cobra"
 )
 
 func main() {
-
-	//os.Exit(0)
 	nest := &cobra.Command{
 		Use:   "nest",
 		Short: "Service orchestrator",
@@ -43,11 +42,37 @@ func main() {
 
 	nest.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		commandName := cmd.Name()
-		if !global.IsConfigLocatorConfigured && (commandName != "configure" && commandName != "version" && commandName != "self-update") {
-			return fmt.Errorf("run `nest configure` to set up nest")
+
+		if _, err := os.Stat(global.ConfigLocatorConfigFile); err != nil {
+			if commandName == "configure" {
+				return nil
+			}
+
+			return fmt.Errorf("run `nest configure` to setup nest")
 		}
 
-		if commandName == "medic" || commandName == "version" || commandName == "configure" || commandName == "self-update" {
+		reader, err := common.LoadConfigReader()
+		if err != nil {
+			return err
+		}
+
+		common.ConfigReader = reader
+
+		contents, err := reader.Read("nest.yaml")
+		if err != nil {
+			panic(err)
+		}
+
+		var config common.Configuration
+
+		err = yaml.Unmarshal(contents, &config)
+		if err != nil {
+			panic(err)
+		}
+
+		common.Config = &config
+
+		if commandName == "medic" {
 			return nil
 		}
 
