@@ -18,7 +18,7 @@ type Service struct {
 	// Prestart is a list of commands to run before the service is deployed
 	Prestart []string `json:"prestart" yaml:"prestart"`
 	// The registry to pull the image from.
-	Registry *Registry
+	Registry interface{} `json:"registry" yaml:"registry"`
 	// The volumes to mount for the service.
 	Volumes []struct {
 		// The path to mount from.

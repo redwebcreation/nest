@@ -24,6 +24,7 @@ func main() {
 		proxy.RootCommand(),
 		cli.DeployCommand(),
 		cli.MedicCommand(),
+		cli.ConfigCommand(),
 		cli.SelfUpdateCommand(),
 		cli.ConfigureCommand(),
 		cli.VersionCommand(),

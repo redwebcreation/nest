@@ -27,7 +27,7 @@ type locatorConfig struct {
 type LocatorConfig struct {
 	locatorConfig
 	Head     *object.Commit `json:"head,omitempty"`
-	Worktree *git.Worktree
+	Worktree *git.Worktree  `json:"worktree,omitempty"`
 }
 
 func (r LocatorConfig) SaveLocally() error {

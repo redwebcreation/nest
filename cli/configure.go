@@ -16,7 +16,7 @@ func ConfigureCommand() *cobra.Command {
 			"rcfg",
 			"reconfigure",
 		},
-		Short: "Update the global configuration",
+		Short: "update the global configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			strategy, err := ui.Select{
 				Question: "Choose a strategy: ",

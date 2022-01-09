@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/me/nest/global"
@@ -10,8 +11,14 @@ import (
 var Config *Configuration
 
 type Configuration struct {
-	Services ServiceMap `yaml:"services" json:"services"`
+	Services   ServiceMap          `yaml:"services"`
+	Registries map[string]Registry `yaml:"registries"`
 }
+
+var (
+	ErrRegistryNotFound = fmt.Errorf("registry not found")
+	ErrInvalidRegistry  = fmt.Errorf("invalid registry")
+)
 
 func init() {
 	if !global.IsConfigLocatorConfigured {
@@ -31,6 +38,44 @@ func init() {
 	}
 
 	Config = &config
+}
+
+func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type plain Configuration
+	var p plain
+	err := unmarshal(&p)
+	if err != nil {
+		return err
+	}
+
+	c.Registries = p.Registries
+	c.Services = p.Services
+
+	for _, service := range c.Services {
+		// if service.Registry is of type Registry
+		switch service.Registry.(type) {
+		case Registry:
+		// do nothing
+		case string:
+			if service.Registry == "" {
+				continue
+			}
+
+			if _, ok := c.Registries[service.Registry.(string)]; !ok {
+				return ErrRegistryNotFound
+			} else {
+				service.Registry = c.Registries[service.Registry.(string)]
+			}
+		default:
+			if service.Registry == nil {
+				continue
+			}
+
+			return ErrInvalidRegistry
+		}
+	}
+
+	return nil
 }
 
 func (s *Service) expandFromConfig(serviceName string) {
