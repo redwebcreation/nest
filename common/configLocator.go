@@ -4,10 +4,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/me/nest/global"
-	"io"
+	"github.com/me/nest/util"
 	"os"
 	"strings"
 )
@@ -23,8 +21,8 @@ type LocatorConfig struct {
 
 type configReader struct {
 	LocatorConfig
-	Head     *object.Commit
-	Worktree *git.Worktree `json:"-"`
+	LatestCommit string
+	Git          *util.Repository
 }
 
 func (c configReader) WriteOnDisk() error {
@@ -37,18 +35,9 @@ func (c configReader) WriteOnDisk() error {
 }
 
 func (c configReader) Read(path string) ([]byte, error) {
-	f, err := c.Worktree.Filesystem.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
+	data, err := c.Git.ReadFile(path)
 
-	contents, err := io.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-
-	return contents, nil
+	return []byte(data), err
 }
 
 func LoadConfigReader() (*configReader, error) {
@@ -88,33 +77,28 @@ func (c *configReader) UnmarshalJSON(data []byte) error {
 		c.Cache = strings.TrimSuffix(c.Cache, "/")
 	}
 
-	repositoryPath := c.Cache + "/" + c.getCacheKey()
-
-	var repo *git.Repository
-
-	if _, e := os.Stat(repositoryPath); e != nil {
-		repo, err = git.PlainClone(repositoryPath, false, &git.CloneOptions{
-			URL: c.ProviderURL + c.Repository + ".git",
-		})
-		if err != nil {
-			return err
-		}
-	} else {
-		repo, err = git.PlainOpen(repositoryPath)
+	repo := &util.Repository{
+		Path: c.Cache + "/" + c.getCacheKey(),
+	}
+	if _, e := os.Stat(repo.Path); e != nil {
+		err = repo.Clone(c.ProviderURL + c.Repository)
 		if err != nil {
 			return err
 		}
 	}
 
-	worktree, _ := repo.Worktree()
-	ref, _ := repo.Head()
-	commit, _ := repo.CommitObject(ref.Hash())
+	commit, err := repo.LatestCommit()
+	if err != nil {
+		return err
+	}
 
-	_ = worktree.Checkout(&git.CheckoutOptions{
-		Hash: commit.Hash,
-	})
+	err = repo.Checkout(commit)
+	if err != nil {
+		return err
+	}
 
-	c.Head = commit
-	c.Worktree = worktree
+	c.LatestCommit = commit
+	c.Git = repo
+
 	return nil
 }
