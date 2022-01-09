@@ -43,6 +43,11 @@ jobs:
       - name: Install dependencies
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
 
+      - name: Run coverage
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic
+      - name: Upload coverage to Codecov
+        run: bash <(curl -s https://codecov.io/bash)
+
       - name: Run tests
         run: go test -v ./...
 
@@ -51,4 +56,6 @@ jobs:
 
       - name: Run staticcheck
         run: staticcheck ./...
+
+
 
