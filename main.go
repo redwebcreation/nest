@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/me/nest/common"
 	"github.com/me/nest/global"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"os"
 	"os/exec"
 
