@@ -1,5 +1,5 @@
 package global
 
-import "github.com/me/nest/util"
+import "github.com/redwebcreation/nest/util"
 
 var Repository util.GithubRepository = "redwebcreation/nest"

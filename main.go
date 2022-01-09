@@ -2,15 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/me/nest/common"
-	"github.com/me/nest/global"
+	"github.com/redwebcreation/nest/common"
+	"github.com/redwebcreation/nest/global"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"os"
 	"os/exec"
 
-	"github.com/me/nest/cli"
-	"github.com/me/nest/cli/proxy"
-	"github.com/spf13/cobra"
+	"github.com/redwebcreation/nest/cli"
+	"github.com/redwebcreation/nest/cli/proxy"
 )
 
 func main() {

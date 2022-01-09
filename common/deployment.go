@@ -12,8 +12,8 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/me/nest/docker"
-	"github.com/me/nest/global"
+	"github.com/redwebcreation/nest/docker"
+	"github.com/redwebcreation/nest/global"
 )
 
 type Message struct {

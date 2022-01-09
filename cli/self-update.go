@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/me/nest/global"
+	"github.com/redwebcreation/nest/global"
 	"github.com/spf13/cobra"
 )
 

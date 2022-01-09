@@ -1,4 +1,4 @@
-module github.com/me/nest
+module github.com/redwebcreation/nest
 
 go 1.17
 

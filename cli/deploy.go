@@ -6,8 +6,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/me/nest/common"
-	"github.com/me/nest/util"
+	"github.com/redwebcreation/nest/common"
+	"github.com/redwebcreation/nest/util"
 	"github.com/spf13/cobra"
 )
 

@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/me/nest/global"
-	"github.com/me/nest/util"
+	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/util"
 	"os"
 	"strings"
 )

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types"
-	"github.com/me/nest/global"
+	"github.com/redwebcreation/nest/global"
 )
 
 type Image string
