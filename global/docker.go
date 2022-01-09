@@ -1,6 +1,10 @@
 package global
 
-import "github.com/docker/docker/client"
+import (
+	"fmt"
+	"github.com/docker/docker/client"
+	"os"
+)
 
 var Docker *client.Client
 
@@ -8,8 +12,8 @@ func init() {
 	docker, err := client.NewClientWithOpts(client.FromEnv)
 
 	if err != nil {
-		// TODO: print a nice message saying that docker is most likely not installed
-		panic(err)
+		_, _ = fmt.Fprintf(os.Stderr, "Docker client could not be initialized: %s\n", err)
+		os.Exit(1)
 	}
 
 	Docker = docker
