@@ -6,6 +6,7 @@ import (
 	"github.com/me/nest/global"
 	"gopkg.in/yaml.v2"
 	"os"
+	"os/exec"
 
 	"github.com/me/nest/cli"
 	"github.com/me/nest/cli/proxy"
@@ -13,6 +14,12 @@ import (
 )
 
 func main() {
+	// check if git is installed
+	if _, err := exec.LookPath("git"); err != nil {
+		fmt.Println("Git is not installed. Please install git and try again.")
+		os.Exit(1)
+	}
+
 	nest := &cobra.Command{
 		Use:   "nest",
 		Short: "Service orchestrator",
@@ -60,14 +67,14 @@ func main() {
 
 		contents, err := reader.Read("nest.yaml")
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		var config common.Configuration
 
 		err = yaml.Unmarshal(contents, &config)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		common.Config = &config
