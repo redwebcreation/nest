@@ -2,10 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"regexp"
+
 	"github.com/redwebcreation/nest/common"
 	"github.com/redwebcreation/nest/util"
 	"github.com/spf13/cobra"
-	"regexp"
 )
 
 var strategy string
@@ -36,22 +37,14 @@ func ConfigureCommand() *cobra.Command {
 					return re.MatchString(input)
 				})
 			} else {
-				if strategy != "local" && strategy != "remote" {
-					return fmt.Errorf("strategy must be either local or remote")
-				}
-
-				if provider != "github" && provider != "gitlab" && provider != "bitbucket" {
-					return fmt.Errorf("provider must be either github, gitlab or bitbucket")
-				}
-
-				re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+")
-				if !re.MatchString(repository) {
-					return fmt.Errorf("repository must be in the format of <username>/<repository>")
-				}
-
 				common.ConfigReader.Strategy = strategy
 				common.ConfigReader.ProviderURL = fmt.Sprintf("git@%s.com:", provider)
 				common.ConfigReader.Repository = repository
+				err := common.ConfigReader.Validate()
+				if err != nil {
+					return err
+				}
+
 			}
 
 			fmt.Println("\nSuccessfully configured the config resolver.")

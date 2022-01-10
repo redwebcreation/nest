@@ -3,11 +3,14 @@ package common
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
+	"regexp"
+	"strings"
+
 	"github.com/redwebcreation/nest/global"
 	"github.com/redwebcreation/nest/util"
-	"os"
-	"strings"
 )
 
 var ConfigReader *configReader
@@ -71,6 +74,11 @@ func (c *configReader) UnmarshalJSON(data []byte) error {
 	c.Repository = lc.Repository
 	c.Cache = lc.Cache
 
+	err = c.Validate()
+	if err != nil {
+		return err
+	}
+
 	if c.Cache == "" {
 		c.Cache = "/tmp"
 	} else {
@@ -80,11 +88,13 @@ func (c *configReader) UnmarshalJSON(data []byte) error {
 	repo := &util.Repository{
 		Path: c.Cache + "/" + c.getCacheKey(),
 	}
-	if _, e := os.Stat(repo.Path); e != nil {
+	if _, err := os.Stat(repo.Path); errors.Is(err, os.ErrNotExist) {
 		err = repo.Clone(c.ProviderURL + c.Repository)
 		if err != nil {
 			return err
 		}
+	} else {
+		return err
 	}
 
 	commit, err := repo.LatestCommit()
@@ -101,4 +111,27 @@ func (c *configReader) UnmarshalJSON(data []byte) error {
 	c.Git = repo
 
 	return nil
+}
+
+func (c configReader) Validate() error {
+	if c.Strategy != "local" && c.Strategy != "remote" {
+		return fmt.Errorf("strategy must be either local or remote")
+	}
+
+	re := regexp.MustCompile("git@(github|gitlab|bitbucket).com/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+(.git)?")
+	if !re.MatchString(c.ProviderURL) {
+		return fmt.Errorf("provider url must be a valid git url")
+	}
+
+	if _, err := os.Stat(c.Cache); errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("cache directory does not exists")
+	} else if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func NewConfigReader() *configReader {
+	return &configReader{}
 }

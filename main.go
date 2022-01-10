@@ -44,10 +44,7 @@ func main() {
 		Hidden: true,
 	})
 
-	nest.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		return prerun(cmd.Name())
-	}
-
+	nest.PersistentPreRunE = prerun
 	nest.SilenceErrors = true
 
 	err := nest.Execute()
@@ -64,7 +61,9 @@ func init() {
 	}
 }
 
-func prerun(commandName string) error {
+func prerun(cmd *cobra.Command, _ []string) error {
+	commandName := cmd.Name()
+
 	if _, err := os.Stat(global.ConfigLocatorConfigFile); err != nil {
 		if commandName == "configure" {
 			return nil
@@ -74,7 +73,10 @@ func prerun(commandName string) error {
 	}
 
 	reader, err := common.LoadConfigReader()
-	if err != nil {
+	if err != nil && commandName == "configure" {
+		common.ConfigReader = common.NewConfigReader()
+		return nil
+	} else if err != nil {
 		return err
 	}
 

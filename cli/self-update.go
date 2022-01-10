@@ -22,31 +22,24 @@ func SelfUpdateCommand() *cobra.Command {
 				versionNeeded = args[0]
 			}
 
-			releases, err := global.Repository.Releases(versionNeeded)
+			release, err := global.Repository.Release(versionNeeded)
 			if err != nil {
 				return err
 			}
 
-			if len(releases) == 0 {
-				return fmt.Errorf("no releases found")
+			fmt.Println(release)
+			os.Exit(0)
+			if release.TagName == global.Version {
+				return fmt.Errorf("already using this version")
 			}
 
-			latestRelease := releases[0]
-
-			if latestRelease.TagName == global.Version {
-				fmt.Printf("You are already using the latest version of the CLI.\n")
-				return nil
-			}
-
-			binary := latestRelease.Assets[0]
+			binary := release.Assets[0]
 
 			if binary.State != "uploaded" {
-				fmt.Println("The binary for this release is still being uploaded.")
-				fmt.Println("Please try again in a few seconds.")
-				return nil
+				return fmt.Errorf("binary is being uploaded, retry in a few seconds")
 			}
 
-			fmt.Printf("Downloading %s;\n", binary.BrowserDownloadUrl)
+			fmt.Printf("Downloading %s\n", binary.BrowserDownloadUrl)
 
 			response, err := http.Get(binary.BrowserDownloadUrl)
 			if err != nil {
@@ -65,17 +58,17 @@ func SelfUpdateCommand() *cobra.Command {
 				return err
 			}
 
-			err = os.WriteFile(executable+"_latest", body, 0755)
+			err = os.WriteFile(executable+"_updated", body, 0755)
 			if err != nil {
 				return err
 			}
 
-			err = os.Rename(executable+"_latest", executable)
+			err = os.Rename(executable+"_updated", executable)
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("Successfully updated to the %s.\n", latestRelease.TagName)
+			fmt.Printf("Successfully updated to the %s.\n", release.TagName)
 
 			return nil
 		},

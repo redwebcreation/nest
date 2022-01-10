@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -30,25 +31,30 @@ func (g GithubRepository) newRequest(url string, data interface{}) error {
 	return json.Unmarshal(body, &data)
 }
 
-func (g GithubRepository) String() string {
-	return string(g)
-}
-
-func (g GithubRepository) Releases(version string) ([]GithubRelease, error) {
+func (g GithubRepository) Release(version string) (*GithubRelease, error) {
 	var releases []GithubRelease
-	err := g.newRequest("repos/"+g.String()+"/releases", &releases)
+	err := g.newRequest(
+		fmt.Sprintf("repos/%s/releases", g),
+		&releases,
+	)
 	if err != nil {
 		return nil, err
 	}
-	var filtered []GithubRelease
 
-	for _, release := range releases {
-		if release.TagName != version && version != "" {
-			continue
-		}
-
-		filtered = append(filtered, release)
+	if len(releases) == 0 {
+		return nil, fmt.Errorf("no releases found")
 	}
 
-	return filtered, nil
+	if version == "" {
+		return &releases[0], nil
+	}
+
+	for _, release := range releases {
+		if release.TagName == version {
+			return &release, nil
+		}
+
+	}
+
+	return nil, fmt.Errorf("release '%s' not found", version)
 }
