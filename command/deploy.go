@@ -13,7 +13,7 @@ import (
 
 var deploymentStart int64
 
-func runDeployCommand(_ *cobra.Command, args []string) error {
+func runDeployCommand(cmd *cobra.Command, args []string) error {
 	var deployables common.ServiceMap
 
 	if len(args) == 0 {
@@ -92,7 +92,7 @@ func DeployCommand() *cobra.Command {
 		RunE:  runDeployCommand,
 	}
 
-	return NeedsConfig(cmd)
+	return WithConfig(cmd)
 }
 
 func render(updates map[string]string) {

@@ -13,7 +13,7 @@ var strategy string
 var provider string
 var repository string
 
-func runConfigureCommand(è *cobra.Command, _ []string) error {
+func runConfigureCommand(cmd *cobra.Command, args []string) error {
 	usingFlags := strategy != "" || provider != "" || repository != ""
 
 	if !usingFlags {
@@ -59,5 +59,5 @@ func ConfigureCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&provider, "provider", "p", "", "provider to use")
 	cmd.Flags().StringVarP(&repository, "repository", "r", "", "repository to use")
 
-	return NeedsConfig(cmd)
+	return WithConfig(cmd)
 }

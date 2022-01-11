@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func runMedicCommand(_ *cobra.Command, _ []string) error {
+func runMedicCommand(cmd *cobra.Command, args []string) error {
 	diagnosis := common.DiagnoseConfiguration()
 
 	fmt.Printf("\n  \033[1m\033[38;2;255;60;0mErrors:\033[0m\n")
@@ -46,5 +46,5 @@ func MedicCommand() *cobra.Command {
 		RunE:  runMedicCommand,
 	}
 
-	return NeedsConfig(cmd)
+	return WithConfig(cmd)
 }

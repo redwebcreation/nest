@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func runSelfUpdate(_ *cobra.Command, args []string) error {
+func runSelfUpdate(cmd *cobra.Command, args []string) error {
 	var versionNeeded string
 
 	if len(args) > 0 {
@@ -22,8 +22,6 @@ func runSelfUpdate(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println(release)
-	os.Exit(0)
 	if release.TagName == global.Version {
 		return fmt.Errorf("already using this version")
 	}

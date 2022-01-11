@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func runVersionCommand(_ *cobra.Command, _ []string) error {
+func runVersionCommand(cmd *cobra.Command, args []string) error {
 	fmt.Printf("nest@%s\n", global.Version)
 	return nil
 }

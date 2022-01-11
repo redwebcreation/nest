@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func runConfigCommand(_ *cobra.Command, _ []string) error {
+func runConfigCommand(cmd *cobra.Command, args []string) error {
 	fmt.Println("strategy:", common.ConfigReader.Strategy)
 	fmt.Println("location:", common.ConfigReader.GetRepositoryLocation())
 	fmt.Printf("current commit: %s\n", common.ConfigReader.LatestCommit[:7])
@@ -31,5 +31,5 @@ func ConfigCommand() *cobra.Command {
 		RunE:  runConfigCommand,
 	}
 
-	return NeedsConfig(cmd)
+	return WithConfig(cmd)
 }
