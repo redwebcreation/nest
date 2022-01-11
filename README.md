@@ -5,15 +5,74 @@
 [![codecov](https://codecov.io/gh/redwebcreation/nest/branch/next/graph/badge.svg?token=DWSP4O0YO8)](https://codecov.io/gh/redwebcreation/nest)
 ![PRs not welcome](https://img.shields.io/badge/PRs-not%20welcome-red)
 
+#### Documentation Status
+
+The goal is to write a lot and then eventually make it more concise and improve upon it.
+
+**VERY MUCH WIP, JUST RANDOM THINGS**
+
+## Requirements
+
+* docker
+* git
+
+## What is Nest?
+
+Nest is a tool to help you manage many applications (called "services" from now on) on a single server. You can think of
+it as a supercharged docker-compose.
+
+Features:
+
+* zero downtime deployments
+* built-in reverse proxy
+* versioned configuration
+* powerful configuration diagnosis (if anything looks wrong in your configuration, nest will SCREAM LOUDLY)
+* an api to trigger deployments automatically (CD [What's Continous Deployment (link needed)]() with a single api call)
+
+## Why use Nest?
+
+Nest is the perfect middle ground between messy configuration files all over your server and kubernetes.
+
+## When not to use Nest?
+
+* You have more than two servers
+
+  If you have exactly two servers, you can still use nest very effectively and make your architecture redundant by
+  running them in a Active-Active configuration (or Active-Passive if one is less powerful)
+  . [(link needed)]()
+
+## Concepts
+
+### Config Locator
+
+### Vision
+
+Your configuration should be stored in a single place and versioned.
+
+### Implementation
+
+Your configuration is stored in a git repository. It can either be a local repository (not implemented yet, on roadmap)
+or a remote repository. The remote option is preferred.
+
+When first running nest, you must configure the config locator, the algorithm that will retrieve your configuration.
+
+You may do so by running `nest configure` or alternatively `nest rcfg` (rcfg means reconfigure).
+
+`git` must be installed on your system. If your configuration is stored remotely, you must be able to clone the
+repository using SSH.
+
+* HTTPS is not supported.
+* Only GitHub, GitLab and Bitbucket are supported. (not Github Enterprise or self-hosted Gitlab, this may change in the
+  future)
+
 ## Contributing
 
 ### Creating a new command
 
 Let's say you want to create a new command called `version` that prints out Nest's current version.
 
-* Create your command in `command/version.go`
-
 ```go
+// command/version.go
 package commands
 
 import (
