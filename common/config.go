@@ -39,9 +39,9 @@ func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 			if _, ok := c.Registries[service.Registry.(string)]; !ok {
 				return ErrRegistryNotFound
-			} else {
-				service.Registry = c.Registries[service.Registry.(string)]
 			}
+
+			service.Registry = c.Registries[service.Registry.(string)]
 		default:
 			if service.Registry == nil {
 				continue

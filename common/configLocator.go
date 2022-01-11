@@ -55,9 +55,9 @@ func LoadConfigReader() (*configReader, error) {
 
 	if err = json.Unmarshal(contents, &cr); err != nil && err.Error() == "unknown error: remote: " {
 		return nil, fmt.Errorf("the repository %s does not exists", cr.GetRepositoryLocation())
-	} else {
-		return &cr, err
 	}
+
+	return &cr, err
 }
 
 func (c configReader) getCacheKey() string {
