@@ -30,7 +30,10 @@ func runVersionCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func VersionCommand() *cobra.Command {
+// An helpful description for the command, if you don't know what to write, leave it blank
+// so that it can be spotted by linters
+// VersionCommand prints out the current version
+func /* New[command]Command */ NewVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "version",
 		// Short must be formatted like an error, first-letter should be lowercase and without a period.
@@ -42,5 +45,9 @@ func VersionCommand() *cobra.Command {
 
 	// Do not return directly the command as it makes adding flags harder.
 	return cmd
+	// If you need to access the config or the config locator, use the following:
+	// return WithConfig(cmd)
 }
 ```
+
+> `WithConfig` loads the config locator, downloads the config if needed and parses it. If there's any error in the config detected by the `medic`, it'll exit and ask the user to run `nest medic` to troubleshoot the problem.

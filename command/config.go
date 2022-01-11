@@ -24,7 +24,8 @@ func runConfigCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func ConfigCommand() *cobra.Command {
+// NewConfigCommand prints the current configuration for the config locator
+func NewConfigCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
 		Short: "prints the current configuration",

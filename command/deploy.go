@@ -85,7 +85,8 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func DeployCommand() *cobra.Command {
+// NewDeployCommand creates and configures the services defined in the configuration
+func NewDeployCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy",
 		Short: "deploy the configuration",

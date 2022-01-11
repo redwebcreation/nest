@@ -39,7 +39,8 @@ func runMedicCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func MedicCommand() *cobra.Command {
+// NewMedicCommand analyses the current configuration and returns a list of errors and recommendations
+func NewMedicCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "medic",
 		Short: "diagnose your configuration",

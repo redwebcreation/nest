@@ -44,7 +44,8 @@ func runConfigureCommand(cmd *cobra.Command, args []string) error {
 	return common.ConfigReader.WriteOnDisk()
 }
 
-func ConfigureCommand() *cobra.Command {
+// NewConfigureCommand configures the config locator
+func NewConfigureCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "configure",
 		Aliases: []string{

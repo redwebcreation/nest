@@ -26,12 +26,12 @@ var dataset = []Set{
 }
 
 func Test_ConfigureCommandRuns(t *testing.T) {
-	cmd := ConfigCommand()
+	cmd := NewConfigCommand()
 	cmd.Execute()
 }
 
 func Test_ConfigureCommandUsingFlags(t *testing.T) {
-	cmd := ConfigureCommand()
+	cmd := NewConfigureCommand()
 
 	for _, data := range dataset {
 		cmd.Flags().Set("strategy", data.Strategy)
@@ -55,7 +55,7 @@ func Test_ConfigureCommandUsingFlags(t *testing.T) {
 }
 
 func Test_ConfigureCommandInteractively(t *testing.T) {
-	cmd := ConfigureCommand()
+	cmd := NewConfigureCommand()
 
 	originalStdin := util.Stdin
 

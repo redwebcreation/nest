@@ -66,7 +66,8 @@ func runSelfUpdate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func SelfUpdateCommand() *cobra.Command {
+// NewSelfUpdateCommand updates nest to its latest version
+func NewSelfUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "self-update [version]",
 		Short: "update the CLI to the latest version",

@@ -10,12 +10,12 @@ import (
 )
 
 var commands = []*cobra.Command{
-	command.DeployCommand(),
-	command.MedicCommand(),
-	command.ConfigCommand(),
-	command.SelfUpdateCommand(),
-	command.ConfigureCommand(),
-	command.VersionCommand(),
+	command.NewDeployCommand(),
+	command.NewMedicCommand(),
+	command.NewConfigCommand(),
+	command.NewSelfUpdateCommand(),
+	command.NewConfigureCommand(),
+	command.NewVersionCommand(),
 }
 
 func main() {

@@ -12,7 +12,8 @@ func runVersionCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func VersionCommand() *cobra.Command {
+// NewVersionCommand prints nest's version
+func NewVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "print nest's version",
