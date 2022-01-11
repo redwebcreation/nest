@@ -29,26 +29,24 @@ func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	c.Services = p.Services
 
 	for _, service := range c.Services {
-		switch service.Registry.(type) {
-		case Registry:
+		if service.Registry == nil {
 			continue
-		case string:
-			if service.Registry == "" {
-				continue
-			}
+		}
 
-			if _, ok := c.Registries[service.Registry.(string)]; !ok {
-				return ErrRegistryNotFound
-			}
+		if _, ok := service.Registry.(Registry); ok {
+			continue
+		}
 
-			service.Registry = c.Registries[service.Registry.(string)]
-		default:
-			if service.Registry == nil {
-				continue
-			}
-
+		if _, ok := service.Registry.(string); !ok {
 			return ErrInvalidRegistry
 		}
+
+		registry, ok := c.Registries[service.Registry.(string)]
+		if !ok {
+			return ErrRegistryNotFound
+		}
+
+		service.Registry = registry
 	}
 
 	return nil

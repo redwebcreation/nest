@@ -3,6 +3,7 @@
 [![codebeat badge](https://codebeat.co/badges/7171e9ea-53d7-4c81-82bf-a9a2f222b027)](https://codebeat.co/projects/github-com-redwebcreation-nest-next)
 [![Go Report Card](https://goreportcard.com/badge/github.com/redwebcreation/nest)](https://goreportcard.com/report/github.com/redwebcreation/nest)
 [![codecov](https://codecov.io/gh/redwebcreation/nest/branch/next/graph/badge.svg?token=DWSP4O0YO8)](https://codecov.io/gh/redwebcreation/nest)
+![PRs not welcome](https://img.shields.io/badge/PRs-not%20welcome-red)
 
 ## Contributing
 
@@ -11,7 +12,6 @@
 Let's say you want to create a new command called `version` that prints out Nest's current version.
 
 * Create your command in `command/version.go`
-
 
 ```go
 package commands
