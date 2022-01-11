@@ -1,6 +1,9 @@
 package common
 
-import "testing"
+import (
+	"sort"
+	"testing"
+)
 
 func TestDeployment_ContainerName(t *testing.T) {
 	d := Deployment{
@@ -23,11 +26,13 @@ func TestConvertEnv(t *testing.T) {
 
 	converted := ConvertEnv(env)
 
-	if converted[0] != "foo=bar" {
-		t.Errorf("Expected converted env to be 'foo=bar', got '%s'", converted[0])
+	sort.Strings(converted)
+
+	if converted[0] != "baz=qux" {
+		t.Errorf("Expected converted env to be 'baz=qux', got '%s'", converted[1])
 	}
 
-	if converted[1] != "baz=qux" {
-		t.Errorf("Expected converted env to be 'baz=qux', got '%s'", converted[1])
+	if converted[1] != "foo=bar" {
+		t.Errorf("Expected converted env to be 'foo=bar', got '%s'", converted[0])
 	}
 }
