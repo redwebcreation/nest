@@ -28,9 +28,9 @@ func ConfigureCommand() *cobra.Command {
 				common.ConfigReader.Strategy = util.Prompt("Choose a strategy", "remote", func(input string) bool {
 					return input == "remote" || input == "local"
 				})
-				common.ConfigReader.ProviderURL = fmt.Sprintf("git@%s.com:", util.Prompt("Choose a provider", "github", func(input string) bool {
+				common.ConfigReader.Provider = util.Prompt("Choose a provider", "github", func(input string) bool {
 					return input == "github" || input == "gitlab" || input == "bitbucket"
-				}))
+				})
 				common.ConfigReader.Repository = util.Prompt("Enter a repository URL", common.ConfigReader.Repository, func(input string) bool {
 					re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+")
 
@@ -38,7 +38,7 @@ func ConfigureCommand() *cobra.Command {
 				})
 			} else {
 				common.ConfigReader.Strategy = strategy
-				common.ConfigReader.ProviderURL = fmt.Sprintf("git@%s.com:", provider)
+				common.ConfigReader.Provider = provider
 				common.ConfigReader.Repository = repository
 				err := common.ConfigReader.Validate()
 				if err != nil {
@@ -57,5 +57,5 @@ func ConfigureCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&provider, "provider", "p", "", "provider to use")
 	cmd.Flags().StringVarP(&repository, "repository", "r", "", "repository to use")
 
-	return cmd
+	return Decorate(cmd)
 }

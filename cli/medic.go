@@ -8,7 +8,7 @@ import (
 )
 
 func MedicCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	return Decorate(&cobra.Command{
 		Use:   "medic",
 		Short: "diagnose your configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -42,7 +42,5 @@ func MedicCommand() *cobra.Command {
 
 			return nil
 		},
-	}
-
-	return cmd
+	})
 }

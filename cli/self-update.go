@@ -11,7 +11,7 @@ import (
 )
 
 func SelfUpdateCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "self-update [version]",
 		Short: "update the CLI to the latest version",
 		Args:  cobra.RangeArgs(0, 1),
@@ -73,6 +73,4 @@ func SelfUpdateCommand() *cobra.Command {
 			return nil
 		},
 	}
-
-	return cmd
 }

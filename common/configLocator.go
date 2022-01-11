@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/redwebcreation/nest/global"
 	"github.com/redwebcreation/nest/util"
@@ -16,10 +15,9 @@ import (
 var ConfigReader *configReader
 
 type LocatorConfig struct {
-	Strategy    string
-	ProviderURL string
-	Repository  string
-	Cache       string
+	Strategy   string
+	Provider   string
+	Repository string
 }
 
 type configReader struct {
@@ -43,6 +41,10 @@ func (c configReader) Read(path string) ([]byte, error) {
 	return []byte(data), err
 }
 
+func (c configReader) GetRepositoryLocation() string {
+	return fmt.Sprintf("git@%s.com:%s", c.Provider, c.Repository)
+}
+
 func LoadConfigReader() (*configReader, error) {
 	var cr configReader
 
@@ -52,14 +54,14 @@ func LoadConfigReader() (*configReader, error) {
 	}
 
 	if err = json.Unmarshal(contents, &cr); err != nil && err.Error() == "unknown error: remote: " {
-		return nil, fmt.Errorf("the repository %s does not exists", cr.ProviderURL+cr.Repository)
+		return nil, fmt.Errorf("the repository %s does not exists", cr.GetRepositoryLocation())
 	} else {
 		return &cr, err
 	}
 }
 
 func (c configReader) getCacheKey() string {
-	return base64.StdEncoding.EncodeToString([]byte(c.ProviderURL + c.Repository))
+	return base64.StdEncoding.EncodeToString([]byte(c.GetRepositoryLocation()))
 }
 
 func (c *configReader) UnmarshalJSON(data []byte) error {
@@ -70,26 +72,19 @@ func (c *configReader) UnmarshalJSON(data []byte) error {
 	}
 
 	c.Strategy = lc.Strategy
-	c.ProviderURL = lc.ProviderURL
+	c.Provider = lc.Provider
 	c.Repository = lc.Repository
-	c.Cache = lc.Cache
 
 	err = c.Validate()
 	if err != nil {
 		return err
 	}
 
-	if c.Cache == "" {
-		c.Cache = "/tmp"
-	} else {
-		c.Cache = strings.TrimSuffix(c.Cache, "/")
-	}
-
 	repo := &util.Repository{
-		Path: c.Cache + "/" + c.getCacheKey(),
+		Path: "/tmp/" + c.getCacheKey(),
 	}
 	if _, err := os.Stat(repo.Path); errors.Is(err, os.ErrNotExist) {
-		err = repo.Clone(c.ProviderURL + c.Repository)
+		err = repo.Clone(c.GetRepositoryLocation())
 		if err != nil {
 			return err
 		}
@@ -113,20 +108,24 @@ func (c *configReader) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+var (
+	ErrInvalidStrategy   = fmt.Errorf("strategy must be either local or remote")
+	ErrInvalidProvider   = fmt.Errorf("provider must be either github, gitlab or bitbucket")
+	ErrInvalidRepository = fmt.Errorf("invalid repository name")
+)
+
 func (c configReader) Validate() error {
 	if c.Strategy != "local" && c.Strategy != "remote" {
-		return fmt.Errorf("strategy must be either local or remote")
+		return ErrInvalidStrategy
 	}
 
-	re := regexp.MustCompile("git@(github|gitlab|bitbucket).com/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+(.git)?")
-	if !re.MatchString(c.ProviderURL) {
-		return fmt.Errorf("provider url must be a valid git url")
+	if c.Provider != "github" && c.Provider != "gitlab" && c.Provider != "bitbucket" {
+		return ErrInvalidProvider
 	}
 
-	if _, err := os.Stat(c.Cache); errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("cache directory does not exists")
-	} else if err != nil {
-		return err
+	re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+(.git)?")
+	if !re.MatchString(c.Repository) {
+		return ErrInvalidRepository
 	}
 
 	return nil

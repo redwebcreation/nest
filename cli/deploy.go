@@ -14,7 +14,7 @@ import (
 var deploymentStart int64
 
 func DeployCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	return Decorate(&cobra.Command{
 		Use:   "deploy",
 		Short: "deploy the configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -88,9 +88,7 @@ func DeployCommand() *cobra.Command {
 
 			return nil
 		},
-	}
-
-	return cmd
+	})
 }
 
 func render(updates map[string]string) {

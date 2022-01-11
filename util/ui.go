@@ -1,6 +1,12 @@
 package util
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+	"os"
+)
+
+var Stdin io.Reader = os.Stdin
 
 func Prompt(prompt, defaultValue string, validator func(input string) bool) string {
 	var input = defaultValue
@@ -11,7 +17,7 @@ func Prompt(prompt, defaultValue string, validator func(input string) bool) stri
 			fmt.Printf(" [%s]", defaultValue)
 		}
 		fmt.Print(": ")
-		fmt.Scanln(&input)
+		fmt.Fscanln(Stdin, &input)
 
 		if validator == nil || validator(input) {
 			break

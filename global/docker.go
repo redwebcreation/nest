@@ -2,8 +2,9 @@ package global
 
 import (
 	"fmt"
-	"github.com/docker/docker/client"
 	"os"
+
+	"github.com/docker/docker/client"
 )
 
 var Docker *client.Client
