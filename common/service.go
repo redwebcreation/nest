@@ -15,7 +15,7 @@ type Service struct {
 	Env map[string]string `json:"env" yaml:"env"`
 	// ListeningOn is the port the service listens on.
 	ListeningOn string `json:"listeningOn" yaml:"listening_on"`
-	// Prestart is a list of commands to run before the service is deployed
+	// Prestart is a list of command to run before the service is deployed
 	Prestart []string `json:"prestart" yaml:"prestart"`
 	// The registry to pull the image from.
 	Registry interface{} `json:"registry" yaml:"registry"`

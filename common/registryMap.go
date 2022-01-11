@@ -11,7 +11,7 @@ func (r *RegistryMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	for name, registry := range registries {
 		registry.Name = name
 	}
-	
+
 	*r = registries
 
 	return nil

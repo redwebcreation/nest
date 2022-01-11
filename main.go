@@ -2,23 +2,20 @@ package main
 
 import (
 	"fmt"
+	"github.com/redwebcreation/nest/command"
 	"os"
 	"os/exec"
 
 	"github.com/spf13/cobra"
-
-	"github.com/redwebcreation/nest/cli"
-	"github.com/redwebcreation/nest/cli/proxy"
 )
 
 var commands = []*cobra.Command{
-	proxy.RootCommand(),
-	cli.DeployCommand(),
-	cli.MedicCommand(),
-	cli.ConfigCommand(),
-	cli.SelfUpdateCommand(),
-	cli.ConfigureCommand(),
-	cli.VersionCommand(),
+	command.DeployCommand(),
+	command.MedicCommand(),
+	command.ConfigCommand(),
+	command.SelfUpdateCommand(),
+	command.ConfigureCommand(),
+	command.VersionCommand(),
 }
 
 func main() {
@@ -28,7 +25,13 @@ func main() {
 		Long:  "Nest is a powerful service orchestrator for a single server.",
 	}
 
-	nest.AddCommand(commands...)
+	for _, cmd := range commands {
+		cmd.SilenceUsage = true
+		cmd.SilenceErrors = true
+
+		nest.AddCommand(cmd)
+	}
+
 	nest.SetHelpCommand(&cobra.Command{
 		Use:    "_help",
 		Hidden: true,

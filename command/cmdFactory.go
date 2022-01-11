@@ -1,4 +1,4 @@
-package cli
+package command
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Decorate(cmd *cobra.Command) *cobra.Command {
+func NeedsConfig(cmd *cobra.Command) *cobra.Command {
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		commandName := cmd.Name()
 		common.ConfigReader = common.NewConfigReader()
@@ -58,7 +58,6 @@ func Decorate(cmd *cobra.Command) *cobra.Command {
 
 		return fmt.Errorf("your configuration is invalid, please run `nest medic` to troubleshoot")
 	}
-	cmd.SilenceUsage = true
-	cmd.SilenceErrors = true
+
 	return cmd
 }
