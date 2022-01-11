@@ -2,14 +2,11 @@ package cli
 
 import (
 	"bytes"
-	"os"
-	"strconv"
-	"testing"
-	"time"
-
 	"github.com/redwebcreation/nest/common"
 	"github.com/redwebcreation/nest/global"
 	"github.com/redwebcreation/nest/util"
+	"os"
+	"testing"
 )
 
 type Set struct {
@@ -41,7 +38,7 @@ func Test_ConfigureCommandUsingFlags(t *testing.T) {
 		cmd.Flags().Set("provider", data.Provider)
 		cmd.Flags().Set("repository", data.Repository)
 
-		global.ConfigLocatorConfigFile = "/tmp/" + strconv.Itoa(int(time.Now().UnixMilli())) + ".json"
+		global.ConfigLocatorConfigFile = util.TmpFile().Name()
 
 		err := cmd.Execute()
 		if err != data.Error {
@@ -69,7 +66,7 @@ func Test_ConfigureCommandInteractively(t *testing.T) {
 
 		util.Stdin = bytes.NewBufferString(data.Strategy + "\n" + data.Provider + "\n" + data.Repository + "\n")
 
-		global.ConfigLocatorConfigFile = "/tmp/" + strconv.Itoa(int(time.Now().UnixMilli())) + ".json"
+		global.ConfigLocatorConfigFile = util.TmpFile().Name()
 
 		err := cmd.Execute()
 		if err != data.Error {
