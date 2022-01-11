@@ -27,13 +27,13 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return err
 			}
 
-			parsedService.expandFromConfig(name)
+			parsedService.ExpandFromConfig(name)
 
 			services[name] = parsedService
 			continue
 		}
 
-		service.expandFromConfig(name)
+		service.ExpandFromConfig(name)
 		services[name] = service
 	}
 

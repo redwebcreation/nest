@@ -1,4 +1,4 @@
-package workflows
+package util
 
 import (
 	"errors"
@@ -14,7 +14,7 @@ var (
 type Workflow []interface{}
 
 func (w Workflow) Run(initialArgs ...interface{}) error {
-	var args []interface{}
+	args := initialArgs
 	var err error
 
 	for k, action := range w {
@@ -40,7 +40,7 @@ func (w Workflow) Run(initialArgs ...interface{}) error {
 
 			args = append(args, action)
 		}
-
-		return nil
 	}
+
+	return nil
 }

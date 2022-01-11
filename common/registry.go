@@ -7,13 +7,13 @@ import (
 
 type Registry struct {
 	// The name of the registry.
-	Name string
+	Name string `yaml:"name"`
 	// The URL of the registry.
-	Host string
+	Host string `yaml:"host"`
 	// The username to use when authenticating with the registry.
-	Username string
+	Username string `yaml:"username"`
 	// The password to use when authenticating with the registry.
-	Password string
+	Password string `yaml:"password"`
 }
 
 func (r Registry) IsDefault() bool {

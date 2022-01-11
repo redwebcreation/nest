@@ -1,5 +1,6 @@
 .PHONY: test checks build
 
+tests: test
 test:
 	go test -v ./...
 checks:

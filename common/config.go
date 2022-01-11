@@ -8,8 +8,8 @@ import (
 var Config *Configuration
 
 type Configuration struct {
-	Services   ServiceMap          `yaml:"services"`
-	Registries map[string]Registry `yaml:"registries"`
+	Services   ServiceMap  `yaml:"services"`
+	Registries RegistryMap `yaml:"registries"`
 }
 
 var (
@@ -54,7 +54,7 @@ func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
-func (s *Service) expandFromConfig(serviceName string) {
+func (s *Service) ExpandFromConfig(serviceName string) {
 	s.Name = serviceName
 
 	var expandedHosts []string
