@@ -6,18 +6,28 @@ import (
 )
 
 type Registry struct {
-	// The name of the registry.
+	// Name of the registry.
 	Name string `yaml:"name"`
-	// The URL of the registry.
+	// Host of the registry.
 	Host string `yaml:"host"`
-	// The username to use when authenticating with the registry.
+	// Port of the registry.
+	Port string `yaml:"port"`
+	// Username to use when authenticating with the registry.
 	Username string `yaml:"username"`
-	// The password to use when authenticating with the registry.
+	// Password to use when authenticating with the registry.
 	Password string `yaml:"password"`
 }
 
 func (r Registry) IsDefault() bool {
 	return r.Name == "" || r.Name == "default" || r.Name == "@"
+}
+
+func (r Registry) UrlFor(image string) string {
+	if r.Port != "" {
+		return r.Host + ":" + r.Port + "/" + image
+	}
+
+	return r.Host + "/" + image
 }
 
 func (r Registry) ToBase64() (string, error) {
