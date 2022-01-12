@@ -7,9 +7,16 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/redwebcreation/nest/global"
 	"github.com/redwebcreation/nest/util"
+)
+
+var (
+	ErrInvalidStrategy   = fmt.Errorf("strategy must be either local or remote")
+	ErrInvalidProvider   = fmt.Errorf("provider must be either github, gitlab or bitbucket")
+	ErrInvalidRepository = fmt.Errorf("invalid repository name")
 )
 
 var ConfigReader *configReader
@@ -18,6 +25,7 @@ type LocatorConfig struct {
 	Strategy   string
 	Provider   string
 	Repository string
+	Dir        string
 }
 
 type configReader struct {
@@ -36,7 +44,7 @@ func (c configReader) WriteOnDisk() error {
 }
 
 func (c configReader) Read(path string) ([]byte, error) {
-	data, err := c.Git.ReadFile(path)
+	data, err := c.Git.ReadFile(strings.TrimSuffix(c.Dir, "/") + "/" + path)
 
 	return []byte(data), err
 }
@@ -60,8 +68,8 @@ func LoadConfigReader() (*configReader, error) {
 	return &cr, err
 }
 
-func (c configReader) getCacheKey() string {
-	return base64.StdEncoding.EncodeToString([]byte(c.GetRepositoryLocation()))
+func (c configReader) cachePath() string {
+	return "/tmp/" + base64.StdEncoding.EncodeToString([]byte(c.GetRepositoryLocation()))
 }
 
 func (c *configReader) UnmarshalJSON(data []byte) error {
@@ -74,16 +82,15 @@ func (c *configReader) UnmarshalJSON(data []byte) error {
 	c.Strategy = lc.Strategy
 	c.Provider = lc.Provider
 	c.Repository = lc.Repository
+	c.Dir = lc.Dir
 
 	err = c.Validate()
 	if err != nil {
 		return err
 	}
 
-	repo := &util.Repository{
-		Path: "/tmp/" + c.getCacheKey(),
-	}
-	if _, err := os.Stat(repo.Path); errors.Is(err, os.ErrNotExist) {
+	repo := &util.Repository{Path: c.cachePath()}
+	if _, err = os.Stat(repo.Path); errors.Is(err, os.ErrNotExist) {
 		err = repo.Clone(c.GetRepositoryLocation())
 		if err != nil {
 			return err
@@ -107,12 +114,6 @@ func (c *configReader) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
-
-var (
-	ErrInvalidStrategy   = fmt.Errorf("strategy must be either local or remote")
-	ErrInvalidProvider   = fmt.Errorf("provider must be either github, gitlab or bitbucket")
-	ErrInvalidRepository = fmt.Errorf("invalid repository name")
-)
 
 func (c configReader) Validate() error {
 	if c.Strategy != "local" && c.Strategy != "remote" {

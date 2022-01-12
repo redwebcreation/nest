@@ -13,24 +13,20 @@ type Set struct {
 	Strategy   string
 	Provider   string
 	Repository string
+	Dir        string
 	Error      error
 }
 
 var dataset = []Set{
-	{"remote", "github", "felixdorn/config-test", nil},
-	{"remote", "gitlab", "felixdorn/config-test", nil},
-	{"remote", "bitbucket", "felixdorn/config-test", nil},
-	{"invalidStrategy", "github", "felixdorn/config-test", common.ErrInvalidStrategy},
-	{"remote", "invalidProvider", "felixdorn/config-test", common.ErrInvalidProvider},
-	{"remote", "github", "invalidRepository", common.ErrInvalidRepository},
+	{"remote", "github", "felixdorn/config-test", "", nil},
+	{"remote", "gitlab", "felixdorn/config-test", "", nil},
+	{"remote", "bitbucket", "felixdorn/config-test", "", nil},
+	{"invalidStrategy", "github", "felixdorn/config-test", "", common.ErrInvalidStrategy},
+	{"remote", "invalidProvider", "felixdorn/config-test", "", common.ErrInvalidProvider},
+	{"remote", "github", "invalidRepository", "", common.ErrInvalidRepository},
 }
 
-func Test_ConfigureCommandRuns(t *testing.T) {
-	cmd := NewConfigCommand()
-	cmd.Execute()
-}
-
-func Test_ConfigureCommandUsingFlags(t *testing.T) {
+func TestConfigureCommandUsingFlags(t *testing.T) {
 	cmd := NewConfigureCommand()
 
 	for _, data := range dataset {
@@ -54,7 +50,7 @@ func Test_ConfigureCommandUsingFlags(t *testing.T) {
 
 }
 
-func Test_ConfigureCommandInteractively(t *testing.T) {
+func TestConfigureCommandInteractively(t *testing.T) {
 	cmd := NewConfigureCommand()
 
 	originalStdin := util.Stdin

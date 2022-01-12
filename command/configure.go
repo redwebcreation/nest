@@ -12,9 +12,10 @@ import (
 var strategy string
 var provider string
 var repository string
+var dir string
 
 func runConfigureCommand(cmd *cobra.Command, args []string) error {
-	usingFlags := strategy != "" || provider != "" || repository != ""
+	usingFlags := strategy != "" || provider != "" || repository != "" || dir != ""
 
 	if !usingFlags {
 		common.ConfigReader.Strategy = util.Prompt("Choose a strategy", "remote", func(input string) bool {
@@ -32,6 +33,8 @@ func runConfigureCommand(cmd *cobra.Command, args []string) error {
 		common.ConfigReader.Strategy = strategy
 		common.ConfigReader.Provider = provider
 		common.ConfigReader.Repository = repository
+		common.ConfigReader.Dir = dir
+
 		err := common.ConfigReader.Validate()
 		if err != nil {
 			return err
@@ -59,6 +62,7 @@ func NewConfigureCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&strategy, "strategy", "s", "", "strategy to use")
 	cmd.Flags().StringVarP(&provider, "provider", "p", "", "provider to use")
 	cmd.Flags().StringVarP(&repository, "repository", "r", "", "repository to use")
+	cmd.Flags().StringVarP(&dir, "dir", "d", "", "dir to use")
 
 	return WithConfig(cmd)
 }
