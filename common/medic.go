@@ -2,34 +2,24 @@ package common
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"regexp"
 	"strings"
 )
 
+type Diagnosis struct {
+	Warnings []Warning
+	Errors   []Error
+}
 type Warning struct {
 	Title  string
 	Advice string
 }
-
-func (r Warning) String() string {
-	return r.Title + ": " + r.Advice
-}
-
 type Error struct {
 	Title string
 	Error error
-}
-
-func (e Error) String() string {
-	return e.Title + ": " + e.Error.Error()
-}
-
-type Diagnosis struct {
-	Warnings []Warning
-	Errors   []Error
 }
 
 func DiagnoseConfiguration() *Diagnosis {
@@ -94,11 +84,7 @@ func (d *Diagnosis) EnsureDnsRecordPointsToHost() {
 	}
 	defer response.Body.Close()
 
-	rawPublicIp, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		d.NewError("Couldn't retrieve your public IP address", err)
-		return
-	}
+	rawPublicIp, _ := io.ReadAll(response.Body)
 
 	publicIp := strings.TrimSpace(string(rawPublicIp))
 
@@ -108,7 +94,7 @@ func (d *Diagnosis) EnsureDnsRecordPointsToHost() {
 			if err != nil {
 				d.NewWarning(
 					fmt.Sprintf("DNS record for %s are empty", host),
-					fmt.Sprintf("Create a DNS record for %s pointing to %s", host, publicIp),
+					fmt.Sprintf("Add 'A %s. %s' to your DNS records", host, publicIp),
 				)
 				continue
 			}
@@ -124,7 +110,7 @@ func (d *Diagnosis) EnsureDnsRecordPointsToHost() {
 			if !hasMatchingIp {
 				d.NewWarning(
 					fmt.Sprintf("DNS record for %s does not point to %s", host, publicIp),
-					fmt.Sprintf("Create a DNS record for %s pointing to %s", host, publicIp),
+					"",
 				)
 			}
 		}
