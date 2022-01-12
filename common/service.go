@@ -28,6 +28,30 @@ type Service struct {
 	} `json:"volumes" yaml:"volumes"`
 }
 
+func (s *Service) Normalize(serviceName string) {
+	s.Name = serviceName
+
+	var expandedHosts []string
+
+	for _, host := range s.Hosts {
+		// expand ~example.com into example.com and www.example.com
+		if strings.HasPrefix(host, "~") {
+			expandedHosts = append(expandedHosts, host[1:])
+			expandedHosts = append(expandedHosts, "www."+host[1:])
+		} else {
+			expandedHosts = append(expandedHosts, host)
+		}
+	}
+
+	s.Hosts = expandedHosts
+
+	if s.ListeningOn == "" {
+		s.ListeningOn = "80"
+	} else {
+		s.ListeningOn = strings.TrimPrefix(s.ListeningOn, ":")
+	}
+}
+
 func (s *Service) Accepts(host string) bool {
 	for _, h := range s.Hosts {
 		if h == host {
