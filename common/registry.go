@@ -1,14 +1,11 @@
 package common
 
-import (
-	"encoding/base64"
-	"encoding/json"
-)
+import "github.com/redwebcreation/nest/docker"
 
-type RegistryMap map[string]*Registry
+type RegistryMap map[string]*docker.Registry
 
 func (r *RegistryMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var registries map[string]*Registry
+	var registries map[string]*docker.Registry
 	if err := unmarshal(&registries); err != nil {
 		return err
 	}
@@ -20,42 +17,4 @@ func (r *RegistryMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*r = registries
 
 	return nil
-}
-
-type Registry struct {
-	// Name of the registry.
-	Name string `yaml:"name"`
-	// Host of the registry.
-	Host string `yaml:"host"`
-	// Port of the registry.
-	Port string `yaml:"port"`
-	// Username to use when authenticating with the registry.
-	Username string `yaml:"username"`
-	// Password to use when authenticating with the registry.
-	Password string `yaml:"password"`
-}
-
-func (r Registry) IsDefault() bool {
-	return r.Name == "" || r.Name == "default" || r.Name == "@"
-}
-
-func (r Registry) UrlFor(image string) string {
-	if r.Port != "" {
-		return r.Host + ":" + r.Port + "/" + image
-	}
-
-	return r.Host + "/" + image
-}
-
-func (r Registry) ToBase64() (string, error) {
-	auth, err := json.Marshal(map[string]string{
-		"username": r.Username,
-		"password": r.Password,
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	return base64.StdEncoding.EncodeToString(auth), nil
 }

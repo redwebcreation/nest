@@ -1,4 +1,4 @@
-package common
+package docker
 
 import (
 	"encoding/base64"
@@ -31,34 +31,6 @@ func TestToBase64(t *testing.T) {
 
 	if string(payload) != string(bytes) {
 		t.Errorf("Expected %s, got %s", string(bytes), string(payload))
-	}
-}
-
-func TestIsDefault(t *testing.T) {
-	registry := Registry{
-		Name: "whatever",
-	}
-
-	if registry.IsDefault() {
-		t.Errorf("Expected registry [%s] to not be default", registry.Name)
-	}
-
-	registry.Name = ""
-
-	if !registry.IsDefault() {
-		t.Error("Expected registry [] to be default")
-	}
-
-	registry.Name = "default"
-
-	if !registry.IsDefault() {
-		t.Error("Expected registry [default] to be default")
-	}
-
-	registry.Name = "@"
-
-	if !registry.IsDefault() {
-		t.Error("Expected registry [@] to be default")
 	}
 }
 

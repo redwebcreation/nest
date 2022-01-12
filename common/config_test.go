@@ -1,6 +1,7 @@
 package common
 
 import (
+	"github.com/redwebcreation/nest/docker"
 	"gopkg.in/yaml.v3"
 	"reflect"
 	"sort"
@@ -23,7 +24,7 @@ registries:
 		t.Fatal(err)
 	}
 
-	serviceRegistry := config.Services["example"].Registry.(*Registry)
+	serviceRegistry := config.Services["example"].Registry.(*docker.Registry)
 
 	if serviceRegistry.Name != "default" {
 		t.Errorf("Expected registry name to be 'default', got %s", serviceRegistry.Name)

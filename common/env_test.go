@@ -5,26 +5,13 @@ import (
 	"testing"
 )
 
-func TestDeployment_ContainerName(t *testing.T) {
-	d := Deployment{
-		ImageVersion: "1.2.3",
-		Service: &Service{
-			Name: "test_service",
-		},
-	}
-
-	if d.ContainerName() != "nest_test_service_1.2.3" {
-		t.Errorf("Expected container name to be 'nest_test_service_1.2.3', got '%s'", d.ContainerName())
-	}
-}
-
 func TestConvertEnv(t *testing.T) {
-	env := map[string]string{
+	env := EnvMap{
 		"foo": "bar",
 		"baz": "qux",
 	}
 
-	converted := ConvertEnv(env)
+	converted := env.ToDockerEnv()
 
 	sort.Strings(converted)
 

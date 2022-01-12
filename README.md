@@ -106,3 +106,29 @@ func /* New[command]Command */ NewVersionCommand() *cobra.Command {
 	return cmd
 }
 ```
+
+### Object labels
+
+As per Docker guidelines
+concerning [object labels](https://docs.docker.com/config/labels-custom-metadata/#key-format-recommendations)7, the
+labels must be prefixed with `cloud.usenest.`, the domain name where the managed nest engine is running.
+
+A comprehensible name for the label, however long, is recommended rather than a short name.
+
+Do not use acronyms or abbreviations that isn't commonly used or explicitly mentioned in the below documentation.
+
+#### Definitions
+
+this should remain empty
+
+### Message Bus
+
+Deploying a container is a very complicated process that needs to be done through multiple channels, (cli, api, ...).
+
+In order to allow effective communication between the deployment workflow and the above channels, nest uses a message
+bus.
+
+Currently, the message bus takes a Value to send that is an `interface{}`.
+
+**not enforced yet**: However, when sending a message through the message bus, you should never send an untyped string.
+This makes it hard to know what it is without doing weird `strings.Contains` stuff.

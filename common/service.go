@@ -20,24 +20,25 @@ type Service struct {
 	Hosts []string `yaml:"hosts"`
 
 	// Env variables for the service.
-	Env map[string]string `yaml:"env"`
+	Env EnvMap `yaml:"env"`
 
 	// ListeningOn is the port the service listens on.
 	ListeningOn string `yaml:"listening_on"`
 
 	// Hooks are commands to run during the lifecycle of the service.
 	Hooks struct {
-		// The path to a file containing the service configuration.
-		PreStart string `yaml:"pre_start"`
-		// The path to a file containing the service configuration.
-		PostStart string `yaml:"post_start"`
-		// The path to a file containing the service configuration.
-		PreStop string `yaml:"pre_stop"`
-		// The path to a file containing the service configuration.
-		PostStop string `yaml:"post_stop"`
+		// Prestart is a list of commands to run before the service starts.
+		Prestart []string `yaml:"prestart"`
+		// Poststart is a list of commands to run after the service starts.
+		Poststart []string `yaml:"poststart"`
+		// Preclean is a list of commands to run before the service is removed by the container collector.
+		Preclean []string `yaml:"preclean"`
+		// Postclean is a list of commands to run after the service is removed by the container collector.
+		Postclean []string `yaml:"postclean"`
 	} `yaml:"hooks"`
 
 	// Registry to pull the image from.
+	// It may be a string referencing Config.Registries[%s] or a Registry.
 	Registry interface{} `yaml:"registry"`
 
 	// Volumes to mount for the service.

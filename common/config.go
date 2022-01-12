@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/redwebcreation/nest/docker"
 )
 
 var Config *Configuration
@@ -29,10 +30,11 @@ func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	for _, service := range c.Services {
 		if service.Registry == nil {
+			service.Registry = &docker.Registry{}
 			continue
 		}
 
-		if _, ok := service.Registry.(Registry); ok {
+		if _, ok := service.Registry.(*docker.Registry); ok {
 			continue
 		}
 
