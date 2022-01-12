@@ -47,5 +47,5 @@ func NewMedicCommand() *cobra.Command {
 		RunE:  runMedicCommand,
 	}
 
-	return WithConfig(cmd)
+	return cmd
 }

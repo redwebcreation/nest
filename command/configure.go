@@ -1,7 +1,10 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/redwebcreation/nest/global"
+	"os"
 	"regexp"
 
 	"github.com/redwebcreation/nest/common"
@@ -15,36 +18,50 @@ var repository string
 var dir string
 
 func runConfigureCommand(cmd *cobra.Command, args []string) error {
-	usingFlags := strategy != "" || provider != "" || repository != "" || dir != ""
-
-	if !usingFlags {
-		common.ConfigReader.Strategy = util.Prompt("Choose a strategy", "remote", func(input string) bool {
+	if cmd.Flags().NFlag() == 0 {
+		common.ConfigLocator.Strategy = util.Prompt("Choose a strategy", "remote", func(input string) bool {
 			return input == "remote" || input == "local"
 		})
-		common.ConfigReader.Provider = util.Prompt("Choose a provider", "github", func(input string) bool {
+		common.ConfigLocator.Provider = util.Prompt("Choose a provider", "github", func(input string) bool {
 			return input == "github" || input == "gitlab" || input == "bitbucket"
 		})
-		common.ConfigReader.Repository = util.Prompt("Enter a repository URL", common.ConfigReader.Repository, func(input string) bool {
+		common.ConfigLocator.Repository = util.Prompt("Enter a repository URL", common.ConfigLocator.Repository, func(input string) bool {
 			re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+")
 
 			return re.MatchString(input)
 		})
 	} else {
-		common.ConfigReader.Strategy = strategy
-		common.ConfigReader.Provider = provider
-		common.ConfigReader.Repository = repository
-		common.ConfigReader.Dir = dir
+		if strategy != "" {
+			common.ConfigLocator.Strategy = strategy
+		}
+		if provider != "" {
+			common.ConfigLocator.Provider = provider
+		}
+		if repository != "" {
+			common.ConfigLocator.Repository = repository
+		}
+		if dir != "" {
+			common.ConfigLocator.Dir = dir
+		}
 
-		err := common.ConfigReader.Validate()
+		err := common.ConfigLocator.Validate()
 		if err != nil {
 			return err
 		}
+	}
 
+	contents, err := json.Marshal(common.ConfigLocator)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(global.ConfigLocatorConfigFile, contents, 0600)
+	if err != nil {
+		return err
 	}
 
 	fmt.Println("\nSuccessfully configured the config resolver.")
-
-	return common.ConfigReader.WriteOnDisk()
+	return nil
 }
 
 // NewConfigureCommand configures the config locator
@@ -59,10 +76,12 @@ func NewConfigureCommand() *cobra.Command {
 		RunE:  runConfigureCommand,
 	}
 
-	cmd.Flags().StringVarP(&strategy, "strategy", "s", "", "strategy to use")
-	cmd.Flags().StringVarP(&provider, "provider", "p", "", "provider to use")
-	cmd.Flags().StringVarP(&repository, "repository", "r", "", "repository to use")
-	cmd.Flags().StringVarP(&dir, "dir", "d", "", "dir to use")
+	_ = LoadConf(cmd, nil)
 
-	return WithConfig(cmd)
+	cmd.Flags().StringVarP(&strategy, "strategy", "s", common.ConfigLocator.Strategy, "strategy to use")
+	cmd.Flags().StringVarP(&provider, "provider", "p", common.ConfigLocator.Provider, "provider to use")
+	cmd.Flags().StringVarP(&repository, "repository", "r", common.ConfigLocator.Repository, "repository to use")
+	cmd.Flags().StringVarP(&dir, "dir", "d", common.ConfigLocator.Dir, "dir in repo to use as root")
+
+	return cmd
 }

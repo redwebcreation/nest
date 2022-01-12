@@ -104,9 +104,5 @@ func /* New[command]Command */ NewVersionCommand() *cobra.Command {
 
 	// Do not return directly the command as it makes adding flags harder.
 	return cmd
-	// If you need to access the config or the config locator, use the following:
-	// return WithConfig(cmd)
 }
 ```
-
-> `WithConfig` loads the config locator, downloads the config if needed and parses it. If there's any error in the config detected by the `medic`, it'll exit and ask the user to run `nest medic` to troubleshoot the problem.

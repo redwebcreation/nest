@@ -2,50 +2,64 @@ package util
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
 
-type Repository struct {
-	Path string
+type Repository string
+
+func NewRepository(remote string, path string) (*Repository, error) {
+	if out, err := exec.Command("git", "clone", remote, path).CombinedOutput(); err != nil {
+		return nil, fmt.Errorf("%s: %s", err, out)
+	}
+
+	repo := Repository(path)
+	return &repo, nil
 }
 
-func (r Repository) callGit(args ...string) (string, error) {
+func OpenRepository(path string) (*Repository, error) {
+	if _, err := os.Stat(path); err != nil {
+		return nil, err
+	}
+
+	repo := Repository(path)
+
+	return &repo, nil
+}
+
+func (r Repository) Exec(args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
-	cmd.Dir = r.Path
+	cmd.Dir = string(r)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("%s: %s", err, out)
 	}
-	return string(out), nil
-}
-
-func (r Repository) Clone(url string) error {
-	_, err := r.callGit("clone", url, r.Path)
-
-	return err
+	return strings.TrimSpace(string(out)), nil
 }
 
 func (r Repository) LatestCommit() (string, error) {
-	out, err := r.callGit("rev-parse", "HEAD")
-
-	return strings.TrimSpace(out), err
+	return r.Exec("rev-parse", "HEAD")
 }
 
 func (r Repository) Checkout(commit string) error {
-	_, err := r.callGit("checkout", commit)
+	_, err := r.Exec("checkout", commit)
 	return err
 }
 
-func (r Repository) ReadFile(path string) (string, error) {
-	return r.callGit("show", "HEAD:"+path)
+func (r Repository) Read(path string) (string, error) {
+	return r.Exec("show", "HEAD:"+path)
 }
 
-func (r Repository) Files() ([]string, error) {
-	out, err := r.callGit("ls-tree", "HEAD", "--name-only", "-r")
+func (r Repository) Tree() ([]string, error) {
+	out, err := r.Exec("ls-tree", "-r", "--name-only", "HEAD")
 	if err != nil {
 		return nil, err
 	}
 
-	return strings.Split(strings.TrimSpace(out), "\n"), nil
+	return strings.Split(out, "\n"), nil
+}
+
+func (r Repository) String() string {
+	return string(r)
 }

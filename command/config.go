@@ -9,11 +9,11 @@ import (
 )
 
 func runConfigCommand(cmd *cobra.Command, args []string) error {
-	fmt.Println("strategy:", common.ConfigReader.Strategy)
-	fmt.Println("location:", common.ConfigReader.GetRepositoryLocation())
-	fmt.Printf("current commit: %s\n", common.ConfigReader.LatestCommit[:7])
+	fmt.Println("strategy:", common.ConfigLocator.Strategy)
+	fmt.Println("location:", common.ConfigLocator.GetRepositoryLocation())
+	fmt.Printf("current commit: %s\n", common.ConfigLocator.LatestCommit[:7])
 
-	configFiles, err := common.ConfigReader.Git.Files()
+	configFiles, err := common.ConfigLocator.Git.Tree()
 	if err != nil {
 		return err
 	}
@@ -32,5 +32,5 @@ func NewConfigCommand() *cobra.Command {
 		RunE:  runConfigCommand,
 	}
 
-	return WithConfig(cmd)
+	return cmd
 }

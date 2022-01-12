@@ -3,7 +3,6 @@ package common
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -19,42 +18,33 @@ var (
 	ErrInvalidRepository = fmt.Errorf("invalid repository name")
 )
 
-var ConfigReader *configReader
+var ConfigLocator = &LocatorConfig{}
 
 type LocatorConfig struct {
-	Strategy   string
-	Provider   string
-	Repository string
-	Dir        string
-}
-
-type configReader struct {
-	LocatorConfig
+	Strategy     string
+	Provider     string
+	Repository   string
+	Dir          string
 	LatestCommit string
 	Git          *util.Repository
 }
 
-func (c configReader) WriteOnDisk() error {
-	contents, err := json.Marshal(c)
-	if err != nil {
-		return err
+func (l LocatorConfig) Read(path string) ([]byte, error) {
+	if l.Dir != "" {
+		path = strings.TrimSuffix(l.Dir, "/") + "/" + path
 	}
 
-	return os.WriteFile(global.ConfigLocatorConfigFile, contents, 0644)
-}
-
-func (c configReader) Read(path string) ([]byte, error) {
-	data, err := c.Git.ReadFile(strings.TrimSuffix(c.Dir, "/") + "/" + path)
+	data, err := l.Git.Read(path)
 
 	return []byte(data), err
 }
 
-func (c configReader) GetRepositoryLocation() string {
-	return fmt.Sprintf("git@%s.com:%s", c.Provider, c.Repository)
+func (l LocatorConfig) GetRepositoryLocation() string {
+	return fmt.Sprintf("git@%s.com:%s", l.Provider, l.Repository)
 }
 
-func LoadConfigReader() (*configReader, error) {
-	var cr configReader
+func LoadConfigReader() (*LocatorConfig, error) {
+	var cr LocatorConfig
 
 	contents, err := os.ReadFile(global.ConfigLocatorConfigFile)
 	if err != nil {
@@ -68,35 +58,46 @@ func LoadConfigReader() (*configReader, error) {
 	return &cr, err
 }
 
-func (c configReader) cachePath() string {
-	return "/tmp/" + base64.StdEncoding.EncodeToString([]byte(c.GetRepositoryLocation()))
+func (l LocatorConfig) cachePath() string {
+	return "/tmp/" + base64.StdEncoding.EncodeToString([]byte(l.GetRepositoryLocation()))
 }
 
-func (c *configReader) UnmarshalJSON(data []byte) error {
-	var lc LocatorConfig
+func (l *LocatorConfig) UnmarshalJSON(data []byte) error {
+	var lc struct {
+		Strategy   string
+		Provider   string
+		Repository string
+		Dir        string
+	}
+
 	err := json.Unmarshal(data, &lc)
 	if err != nil {
 		return err
 	}
 
-	c.Strategy = lc.Strategy
-	c.Provider = lc.Provider
-	c.Repository = lc.Repository
-	c.Dir = lc.Dir
+	l.Strategy = lc.Strategy
+	l.Provider = lc.Provider
+	l.Repository = lc.Repository
+	l.Dir = lc.Dir
 
-	err = c.Validate()
+	err = l.Validate()
 	if err != nil {
 		return err
 	}
 
-	repo := &util.Repository{Path: c.cachePath()}
-	if _, err = os.Stat(repo.Path); errors.Is(err, os.ErrNotExist) {
-		err = repo.Clone(c.GetRepositoryLocation())
+	repoPath := l.cachePath()
+	var repo *util.Repository
+
+	if _, err = os.Stat(repoPath); err != nil {
+		repo, err = util.NewRepository(l.GetRepositoryLocation(), repoPath)
 		if err != nil {
 			return err
 		}
 	} else {
-		return err
+		repo, err = util.OpenRepository(repoPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	commit, err := repo.LatestCommit()
@@ -109,29 +110,25 @@ func (c *configReader) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	c.LatestCommit = commit
-	c.Git = repo
+	l.LatestCommit = commit
+	l.Git = repo
 
 	return nil
 }
 
-func (c configReader) Validate() error {
-	if c.Strategy != "local" && c.Strategy != "remote" {
+func (l LocatorConfig) Validate() error {
+	if l.Strategy != "local" && l.Strategy != "remote" {
 		return ErrInvalidStrategy
 	}
 
-	if c.Provider != "github" && c.Provider != "gitlab" && c.Provider != "bitbucket" {
+	if l.Provider != "github" && l.Provider != "gitlab" && l.Provider != "bitbucket" {
 		return ErrInvalidProvider
 	}
 
 	re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+(.git)?")
-	if !re.MatchString(c.Repository) {
+	if !re.MatchString(l.Repository) {
 		return ErrInvalidRepository
 	}
 
 	return nil
-}
-
-func NewConfigReader() *configReader {
-	return &configReader{}
 }

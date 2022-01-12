@@ -93,7 +93,7 @@ func NewDeployCommand() *cobra.Command {
 		RunE:  runDeployCommand,
 	}
 
-	return WithConfig(cmd)
+	return cmd
 }
 
 func render(updates map[string]string) {

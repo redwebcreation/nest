@@ -149,8 +149,8 @@ func StopOldContainers() (int, error) {
 			defer wg.Done()
 			count++
 
-			global.Docker.ContainerStop(context.Background(), container.ID, nil)
-			global.Docker.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{})
+			_ = global.Docker.ContainerStop(context.Background(), container.ID, nil)
+			_ = global.Docker.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{})
 		}(c)
 	}
 

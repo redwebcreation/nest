@@ -51,7 +51,7 @@ func runSelfUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = os.WriteFile(executable+"_updated", body, 0755)
+	err = os.WriteFile(executable+"_updated", body, 0600)
 	if err != nil {
 		return err
 	}

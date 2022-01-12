@@ -30,9 +30,9 @@ func TestConfigureCommandUsingFlags(t *testing.T) {
 	cmd := NewConfigureCommand()
 
 	for _, data := range dataset {
-		cmd.Flags().Set("strategy", data.Strategy)
-		cmd.Flags().Set("provider", data.Provider)
-		cmd.Flags().Set("repository", data.Repository)
+		_ = cmd.Flags().Set("strategy", data.Strategy)
+		_ = cmd.Flags().Set("provider", data.Provider)
+		_ = cmd.Flags().Set("repository", data.Repository)
 
 		global.ConfigLocatorConfigFile = util.TmpFile().Name()
 
@@ -63,7 +63,7 @@ func TestConfigureCommandInteractively(t *testing.T) {
 		util.Stdin = bytes.NewBufferString(data.Strategy + "\n" + data.Provider + "\n" + data.Repository + "\n")
 
 		global.ConfigLocatorConfigFile = util.TmpFile().Name()
-
+		defer os.Remove(global.ConfigLocatorConfigFile)
 		err := cmd.Execute()
 		if err != data.Error {
 			if data.Error == nil {
@@ -73,7 +73,6 @@ func TestConfigureCommandInteractively(t *testing.T) {
 			}
 		}
 
-		_ = os.Remove(global.ConfigLocatorConfigFile)
 	}
 
 	util.Stdin = originalStdin

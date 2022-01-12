@@ -17,7 +17,7 @@ func Prompt(prompt, defaultValue string, validator func(input string) bool) stri
 			fmt.Printf(" [%s]", defaultValue)
 		}
 		fmt.Print(": ")
-		fmt.Fscanln(Stdin, &input)
+		_, _ = fmt.Fscanln(Stdin, &input)
 
 		if validator == nil || validator(input) {
 			break
