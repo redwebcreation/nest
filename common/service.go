@@ -1,31 +1,55 @@
 package common
 
-import "strings"
+import (
+	"fmt"
+	"gopkg.in/yaml.v3"
+	"os"
+	"strings"
+)
 
 type Service struct {
+	// Name of the service.
+	Name string `yaml:"-"`
 	// The path to a file containing the service configuration.
-	Include string `yaml:"include" json:"include"`
+	Include string `yaml:"include"`
 
-	Name string
 	// Image name without a tag or registry server.
-	Image string `json:"image" yaml:"image"`
-	// The lists of hosts the service responds to.
-	Hosts []string `json:"hosts" yaml:"hosts"`
-	// Environment variables for the service.
-	Env map[string]string `json:"env" yaml:"env"`
+	Image string `yaml:"image"`
+
+	// Hosts the service responds to.
+	Hosts []string `yaml:"hosts"`
+
+	// Env variables for the service.
+	Env map[string]string `yaml:"env"`
+
 	// ListeningOn is the port the service listens on.
-	ListeningOn string `json:"listeningOn" yaml:"listening_on"`
-	// Prestart is a list of command to run before the service is deployed
-	Prestart []string `json:"prestart" yaml:"prestart"`
-	// The registry to pull the image from.
-	Registry interface{} `json:"registry" yaml:"registry"`
-	// The volumes to mount for the service.
+	ListeningOn string `yaml:"listening_on"`
+
+	// Hooks are commands to run during the lifecycle of the service.
+	Hooks struct {
+		// The path to a file containing the service configuration.
+		PreStart string `yaml:"pre_start"`
+		// The path to a file containing the service configuration.
+		PostStart string `yaml:"post_start"`
+		// The path to a file containing the service configuration.
+		PreStop string `yaml:"pre_stop"`
+		// The path to a file containing the service configuration.
+		PostStop string `yaml:"post_stop"`
+	} `yaml:"hooks"`
+
+	// Registry to pull the image from.
+	Registry interface{} `yaml:"registry"`
+
+	// Volumes to mount for the service.
 	Volumes []struct {
 		// The path to mount from.
-		From string `json:"from" yaml:"from"`
+		From string `yaml:"from"`
 		// The path to mount to.
-		To string `json:"to" yaml:"to"`
-	} `json:"volumes" yaml:"volumes"`
+		To string `yaml:"to"`
+	} `yaml:"volumes"`
+
+	// Binds from the containers to the local filesystem.
+	Binds []string `yaml:"binds"`
 }
 
 func (s *Service) Normalize(serviceName string) {
@@ -78,4 +102,45 @@ func (s *Service) Accepts(host string) bool {
 	}
 
 	return false
+}
+
+type ServiceMap map[string]*Service
+
+var (
+	ErrServiceNotFound = fmt.Errorf("service not found")
+)
+
+func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var services map[string]*Service
+	if err := unmarshal(&services); err != nil {
+		return err
+	}
+
+	for name, service := range services {
+		if service.Include != "" {
+			bytes, err := os.ReadFile(service.Include)
+			if err != nil {
+				return err
+			}
+
+			var parsedService *Service
+
+			err = yaml.Unmarshal(bytes, &parsedService)
+			if err != nil {
+				return err
+			}
+
+			parsedService.Normalize(name)
+
+			services[name] = parsedService
+			continue
+		}
+
+		service.Normalize(name)
+		services[name] = service
+	}
+
+	*s = services
+
+	return nil
 }

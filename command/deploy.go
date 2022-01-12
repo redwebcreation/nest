@@ -2,65 +2,50 @@ package command
 
 import (
 	"fmt"
-	"io"
-	"sort"
-	"time"
-
 	"github.com/redwebcreation/nest/common"
-	"github.com/redwebcreation/nest/util"
 	"github.com/spf13/cobra"
+	"sort"
 )
 
-var deploymentStart int64
-
 func runDeployCommand(cmd *cobra.Command, args []string) error {
-	var deployables common.ServiceMap
+	var queued map[string]*common.Service
 
 	if len(args) == 0 {
-		deployables = common.Config.Services
+		queued = common.Config.Services
 	} else {
-		deployable := common.Config.Services[args[0]]
+		next := common.Config.Services[args[0]]
 
-		if deployable == nil {
-			return fmt.Errorf("service %s not found", args[0])
+		if next == nil {
+			return common.ErrServiceNotFound
 		}
 
-		deployables = common.ServiceMap{
-			deployable.Name: deployable,
-		}
+		queued = map[string]*common.Service{args[0]: next}
 	}
 
-	deploymentStart = time.Now().UnixMilli()
-	deployableSize := len(deployables)
-	inQueue := deployableSize
-	messages := make(map[string]string, inQueue)
-	updates := make(chan common.Message)
+	inQueue := len(queued)
+	var messages = make(map[string]string, inQueue)
+	var messageBus = make(common.MessageBus)
 
-	for _, service := range deployables {
+	for _, service := range queued {
 		messages[service.Name] = "idle"
-		deployment := common.Deployment{
-			Service:      service,
-			ImageVersion: "latest",
-		}
 
-		go deployment.Start(updates)
+		go func(service *common.Service) {
+			err := service.Deploy(messageBus)
+
+			if err != nil {
+				messageBus <- common.Message{
+					Service: service,
+					Value:   err,
+				}
+			}
+		}(service)
 	}
 
 	render(messages)
 
-	for update := range updates {
-		if update.Value == io.EOF {
-			inQueue--
-
-			if inQueue == 0 {
-				break
-			}
-
-			continue
-		}
-
-		if _, ok := update.Value.(error); ok {
-			messages[update.Service.Name] = update.Value.(error).Error()
+	for message := range messageBus {
+		if _, ok := message.Value.(error); ok {
+			messages[message.Service.Name] = message.Value.(error).Error()
 			inQueue--
 
 			render(messages)
@@ -70,17 +55,12 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 			}
 
 			continue
-		} else {
-			messages[update.Service.Name] = update.Value.(string)
 		}
+
+		messages[message.Service.Name] = message.Value.(string)
 
 		render(messages)
 	}
-
-	fmt.Printf("\nDeployed %d %s in %.3fs.\n", deployableSize, util.Plural(deployableSize, "service", "services"), float64(time.Now().UnixMilli()-deploymentStart)/1000.0)
-
-	stopped, _ := common.StopOldContainers()
-	fmt.Printf("Cleaned up %d older services.\n", stopped)
 
 	return nil
 }
@@ -96,17 +76,15 @@ func NewDeployCommand() *cobra.Command {
 	return cmd
 }
 
-func render(updates map[string]string) {
-	keys := make([]string, 0, len(updates))
-	for k := range updates {
+func render(messages map[string]string) {
+	keys := make([]string, 0, len(messages))
+	for k := range messages {
 		keys = append(keys, k)
 	}
 
 	sort.Strings(keys)
 
-	fmt.Println("\033[H\033[2J")
-
 	for _, k := range keys {
-		fmt.Printf("%s: %s\n", k, updates[k])
+		fmt.Printf("%s: %s\n", k, messages[k])
 	}
 }
