@@ -1,8 +1,11 @@
 package pkg
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/redwebcreation/nest/docker"
+	"github.com/redwebcreation/nest/global"
+	"os"
 )
 
 type Configuration struct {
@@ -49,4 +52,29 @@ func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 
 	return nil
+}
+
+func LoadConfigFromCommit(commit string) error {
+	reader := ConfigLocator{
+		ConfigLocatorConfig: ConfigLocatorConfig{
+			Commit: commit,
+		},
+	}
+
+	contents, err := os.ReadFile(global.ConfigLocatorConfigFile)
+	if err != nil {
+		return err
+	}
+
+	if err = json.Unmarshal(contents, &reader); err != nil && err.Error() == "unknown error: remote: " {
+		return ErrRepositoryNotFound
+	}
+
+	Config = &reader
+
+	return nil
+}
+
+func LoadConfig() error {
+	return LoadConfigFromCommit("")
 }

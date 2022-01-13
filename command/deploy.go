@@ -19,7 +19,7 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 
 	// re-use the previous commit
 	if len(args) == 0 && pkg.Config.Commit != "" {
-		err := LoadConfigFromCommit(pkg.Config.Commit)
+		err := pkg.LoadConfigFromCommit(pkg.Config.Commit)
 		if err != nil {
 			return err
 		}
@@ -49,7 +49,7 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("commit not found")
 		}
 
-		err = LoadConfigFromCommit(commit)
+		err = pkg.LoadConfigFromCommit(commit)
 		if err != nil {
 			return err
 		}

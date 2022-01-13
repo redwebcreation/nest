@@ -44,7 +44,7 @@ func main() {
 				return fmt.Errorf("run `nest configure` to setup nest")
 			}
 
-			err := command.LoadConfig()
+			err := pkg.LoadConfig()
 			if err != nil {
 				return err
 			}

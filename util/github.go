@@ -7,6 +7,11 @@ import (
 	"net/http"
 )
 
+var (
+	ErrNoReleases      = fmt.Errorf("no releases found")
+	ErrReleaseNotFound = fmt.Errorf("release not found")
+)
+
 type GithubRepository string
 
 type GithubRelease struct {
@@ -42,7 +47,7 @@ func (g GithubRepository) Release(version string) (*GithubRelease, error) {
 	}
 
 	if len(releases) == 0 {
-		return nil, fmt.Errorf("no releases found")
+		return nil, ErrNoReleases
 	}
 
 	if version == "" {
@@ -56,5 +61,5 @@ func (g GithubRepository) Release(version string) (*GithubRelease, error) {
 
 	}
 
-	return nil, fmt.Errorf("release '%s' not found", version)
+	return nil, ErrReleaseNotFound
 }

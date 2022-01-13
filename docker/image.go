@@ -11,6 +11,11 @@ import (
 	"github.com/redwebcreation/nest/global"
 )
 
+var (
+	// ErrImageNotFound is returned when the image does not exist
+	ErrImageNotFound = fmt.Errorf("image not found")
+)
+
 type Image string
 
 func (i Image) String() string {
@@ -45,7 +50,7 @@ func (i Image) Pull(handler func(event *PullEvent), registry Registry) error {
 	events, err := global.Docker.ImagePull(context.Background(), image, options)
 	if err != nil {
 		if strings.Contains(err.Error(), "manifest for "+image+" not found") {
-			return fmt.Errorf("image %s not found", i.String())
+			return ErrImageNotFound
 		}
 
 		return err

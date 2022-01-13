@@ -13,10 +13,11 @@ import (
 )
 
 var (
-	ErrInvalidStrategy   = fmt.Errorf("strategy must be either local or remote")
-	ErrInvalidProvider   = fmt.Errorf("provider must be either github, gitlab or bitbucket")
-	ErrInvalidRepository = fmt.Errorf("invalid repository name")
-	ErrEmptyBranch       = fmt.Errorf("branch name cannot be empty")
+	ErrRepositoryNotFound    = fmt.Errorf("repository not found")
+	ErrInvalidStrategy       = fmt.Errorf("strategy must be either local or remote")
+	ErrInvalidProvider       = fmt.Errorf("provider must be either github, gitlab or bitbucket")
+	ErrInvalidRepositoryName = fmt.Errorf("invalid repository name")
+	ErrEmptyBranch           = fmt.Errorf("branch name cannot be empty")
 )
 
 var Config = &ConfigLocator{}
@@ -140,7 +141,7 @@ func (l ConfigLocator) Validate() error {
 
 	re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+(.git)?")
 	if !re.MatchString(l.Repository) {
-		return ErrInvalidRepository
+		return ErrInvalidRepositoryName
 	}
 
 	return nil

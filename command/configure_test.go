@@ -24,7 +24,7 @@ var dataset = []Set{
 	{"remote", "bitbucket", "felixdorn/config-test", "main", "", nil},
 	{"invalidStrategy", "github", "felixdorn/config-test", "main", "", pkg.ErrInvalidStrategy},
 	{"remote", "invalidProvider", "felixdorn/config-test", "main", "", pkg.ErrInvalidProvider},
-	{"remote", "github", "invalidRepository", "main", "", pkg.ErrInvalidRepository},
+	{"remote", "github", "invalidRepository", "main", "", pkg.ErrInvalidRepositoryName},
 }
 
 func TestConfigureCommandUsingFlags(t *testing.T) {
