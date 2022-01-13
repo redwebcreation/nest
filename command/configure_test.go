@@ -13,17 +13,18 @@ type Set struct {
 	Strategy   string
 	Provider   string
 	Repository string
+	Branch     string
 	Dir        string
 	Error      error
 }
 
 var dataset = []Set{
-	{"remote", "github", "felixdorn/config-test", "", nil},
-	{"remote", "gitlab", "felixdorn/config-test", "", nil},
-	{"remote", "bitbucket", "felixdorn/config-test", "", nil},
-	{"invalidStrategy", "github", "felixdorn/config-test", "", pkg.ErrInvalidStrategy},
-	{"remote", "invalidProvider", "felixdorn/config-test", "", pkg.ErrInvalidProvider},
-	{"remote", "github", "invalidRepository", "", pkg.ErrInvalidRepository},
+	{"remote", "github", "felixdorn/config-test", "main", "", nil},
+	{"remote", "gitlab", "felixdorn/config-test", "main", "", nil},
+	{"remote", "bitbucket", "felixdorn/config-test", "main", "", nil},
+	{"invalidStrategy", "github", "felixdorn/config-test", "main", "", pkg.ErrInvalidStrategy},
+	{"remote", "invalidProvider", "felixdorn/config-test", "main", "", pkg.ErrInvalidProvider},
+	{"remote", "github", "invalidRepository", "main", "", pkg.ErrInvalidRepository},
 }
 
 func TestConfigureCommandUsingFlags(t *testing.T) {
@@ -33,6 +34,7 @@ func TestConfigureCommandUsingFlags(t *testing.T) {
 		_ = cmd.Flags().Set("strategy", data.Strategy)
 		_ = cmd.Flags().Set("provider", data.Provider)
 		_ = cmd.Flags().Set("repository", data.Repository)
+		_ = cmd.Flags().Set("branch", data.Branch)
 
 		global.ConfigLocatorConfigFile = util.TmpFile().Name()
 
@@ -60,7 +62,7 @@ func TestConfigureCommandInteractively(t *testing.T) {
 			continue
 		}
 
-		util.Stdin = bytes.NewBufferString(data.Strategy + "\n" + data.Provider + "\n" + data.Repository + "\n")
+		util.Stdin = bytes.NewBufferString(data.Strategy + "\n" + data.Provider + "\n" + data.Repository + "\n" + data.Branch + "\n")
 
 		global.ConfigLocatorConfigFile = util.TmpFile().Name()
 		defer os.Remove(global.ConfigLocatorConfigFile)
