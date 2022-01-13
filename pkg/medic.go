@@ -23,6 +23,7 @@ func DiagnoseConfiguration() *Diagnosis {
 	config, err := Config.Retrieve()
 	if err != nil {
 		return &Diagnosis{
+			Config: config,
 			Errors: []Error{
 				{
 					Title: "Unable to load configuration",
@@ -47,6 +48,22 @@ func (d *Diagnosis) ValidateServicesConfiguration() {
 			d.Errors = append(d.Errors, Error{
 				Title: fmt.Sprintf("Service %s has no image", service.Name),
 			})
+		}
+
+		re := regexp.MustCompile(`^[a-zA-Z0-9-]+:([a-zA-Z0-9]+)$`)
+		if !re.MatchString(service.Image) {
+			d.Errors = append(d.Errors, Error{
+				Title: fmt.Sprintf("Service %s has an invalid image", service.Name),
+				Error: fmt.Errorf("image %s is not in the format <repository>:<tag>", service.Image),
+			})
+		} else {
+			tag := re.FindStringSubmatch(service.Image)[1]
+
+			if tag == "latest" {
+				d.Errors = append(d.Errors, Error{
+					Title: fmt.Sprintf("Service %s uses the `latest` tag, use a specific tag instead.", service.Name),
+				})
+			}
 		}
 
 		if len(service.Hosts) == 0 {
