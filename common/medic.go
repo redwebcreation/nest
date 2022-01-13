@@ -10,16 +10,16 @@ import (
 )
 
 type Diagnosis struct {
-	Warnings []Warning
-	Errors   []Error
+	Warnings []Warning `json:"warnings"`
+	Errors   []Error   `json:"errors"`
 }
 type Warning struct {
-	Title  string
-	Advice string
+	Title  string `json:"title"`
+	Advice string `json:"advice,omitempty"`
 }
 type Error struct {
-	Title string
-	Error error
+	Title string `json:"title"`
+	Error error  `json:"error,omitempty"`
 }
 
 func DiagnoseConfiguration() *Diagnosis {

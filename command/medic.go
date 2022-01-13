@@ -1,6 +1,7 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/redwebcreation/nest/util"
 
@@ -8,32 +9,47 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var jsonFormat bool
+var onlyErrors bool
+var onlyWarnings bool
+
 func runMedicCommand(cmd *cobra.Command, args []string) error {
 	diagnosis := common.DiagnoseConfiguration()
 
-	fmt.Println()
-	fmt.Printf("  %sErrors:%s\n", util.Red, util.Reset)
+	if jsonFormat {
+		out, _ := json.Marshal(diagnosis)
 
-	if len(diagnosis.Errors) == 0 {
-		fmt.Printf("  %s- no errors%s", util.Gray, util.Reset)
-	} else {
-		for _, err := range diagnosis.Errors {
-			fmt.Printf("  %s- %s%s\n", util.White, err, util.Reset)
-			if err.Error != nil {
-				fmt.Printf("    %s%s%s\n", util.Gray, err.Error, util.Reset)
+		fmt.Println(string(out))
+		return nil
+	}
+
+	if !onlyWarnings {
+		fmt.Println()
+		fmt.Printf("  %sErrors:%s\n", util.Red, util.Reset)
+
+		if len(diagnosis.Errors) == 0 {
+			fmt.Printf("  %s- no errors%s\n", util.Gray, util.Reset)
+		} else {
+			for _, err := range diagnosis.Errors {
+				fmt.Printf("  %s- %s%s\n", util.White, err, util.Reset)
+				if err.Error != nil {
+					fmt.Printf("    %s%s%s\n", util.Gray, err.Error, util.Reset)
+				}
 			}
 		}
 	}
 
-	fmt.Printf("\n\n  %sWarnings:%s\n", util.Yellow, util.Reset)
+	if !onlyErrors {
+		fmt.Printf("\n  %sWarnings:%s\n", util.Yellow, util.Reset)
 
-	if len(diagnosis.Warnings) == 0 {
-		fmt.Printf("  %s- no warnings%s", util.Gray, util.Reset)
-	} else {
-		for _, warn := range diagnosis.Warnings {
-			fmt.Printf("  %s- %s%s\n", util.White, warn.Title, util.Reset)
-			if warn.Advice != "" {
-				fmt.Printf("    %s%s%s\n", util.Gray, warn.Advice, util.Reset)
+		if len(diagnosis.Warnings) == 0 {
+			fmt.Printf("  %s- no warnings%s", util.Gray, util.Reset)
+		} else {
+			for _, warn := range diagnosis.Warnings {
+				fmt.Printf("  %s- %s%s\n", util.White, warn.Title, util.Reset)
+				if warn.Advice != "" {
+					fmt.Printf("    %s%s%s\n", util.Gray, warn.Advice, util.Reset)
+				}
 			}
 		}
 	}
@@ -48,6 +64,10 @@ func NewMedicCommand() *cobra.Command {
 		Short: "diagnose your configuration",
 		RunE:  runMedicCommand,
 	}
+
+	cmd.Flags().BoolVarP(&jsonFormat, "jsonFormat", "j", false, "output in jsonFormat format")
+	cmd.Flags().BoolVarP(&onlyErrors, "only-errors", "e", false, "only show errors")
+	cmd.Flags().BoolVarP(&onlyWarnings, "only-warnings", "w", false, "only show warnings")
 
 	return cmd
 }
