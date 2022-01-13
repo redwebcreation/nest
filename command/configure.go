@@ -15,6 +15,7 @@ import (
 var strategy string
 var provider string
 var repository string
+var branch string
 var dir string
 
 func runConfigureCommand(cmd *cobra.Command, args []string) error {
@@ -30,6 +31,9 @@ func runConfigureCommand(cmd *cobra.Command, args []string) error {
 
 			return re.MatchString(input)
 		})
+		common.ConfigLocator.Branch = util.Prompt("Enter a branch", common.ConfigLocator.Branch, func(input string) bool {
+			return input != ""
+		})
 	} else {
 		if strategy != "" {
 			common.ConfigLocator.Strategy = strategy
@@ -42,6 +46,9 @@ func runConfigureCommand(cmd *cobra.Command, args []string) error {
 		}
 		if dir != "" {
 			common.ConfigLocator.Dir = dir
+		}
+		if branch != "" {
+			common.ConfigLocator.Branch = branch
 		}
 
 		err := common.ConfigLocator.Validate()
@@ -81,6 +88,7 @@ func NewConfigureCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&strategy, "strategy", "s", common.ConfigLocator.Strategy, "strategy to use")
 	cmd.Flags().StringVarP(&provider, "provider", "p", common.ConfigLocator.Provider, "provider to use")
 	cmd.Flags().StringVarP(&repository, "repository", "r", common.ConfigLocator.Repository, "repository to use")
+	cmd.Flags().StringVarP(&branch, "branch", "b", common.ConfigLocator.Branch, "branch to use")
 	cmd.Flags().StringVarP(&dir, "dir", "d", common.ConfigLocator.Dir, "dir in repo to use as root")
 
 	return cmd

@@ -12,6 +12,14 @@ import (
 )
 
 func runDeployCommand(cmd *cobra.Command, args []string) error {
+	// re-use the previous commit
+	if len(args) == 0 && common.ConfigLocator.Commit != "" {
+		err := LoadConfigFromCommit(common.ConfigLocator.Commit)
+		if err != nil {
+			return err
+		}
+	}
+
 	if len(args) == 1 {
 		err := common.ConfigLocator.Git.Pull(common.ConfigLocator.Branch)
 		if err != nil {

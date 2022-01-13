@@ -12,6 +12,10 @@ func runConfigCommand(cmd *cobra.Command, args []string) error {
 	fmt.Println("strategy:", common.ConfigLocator.Strategy)
 	fmt.Println("location:", common.ConfigLocator.GetRepositoryLocation())
 	fmt.Printf("current commit: %s\n", common.ConfigLocator.Commit[:7])
+	fmt.Println("branch:", common.ConfigLocator.Branch)
+	if common.ConfigLocator.Dir != "" {
+		fmt.Println("subdir:", common.ConfigLocator.Dir)
+	}
 
 	configFiles, err := common.ConfigLocator.Git.Tree()
 	if err != nil {

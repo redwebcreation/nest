@@ -23,11 +23,10 @@ type LocatorConfig struct {
 	Strategy   string
 	Provider   string
 	Repository string
-	// Todo: make that configurable
-	Branch string
-	Dir    string
-	Commit string
-	Git    *util.Repository
+	Branch     string
+	Dir        string
+	Commit     string
+	Git        *util.Repository
 }
 
 func (l LocatorConfig) Read(path string) ([]byte, error) {
@@ -53,6 +52,7 @@ func (l *LocatorConfig) UnmarshalJSON(data []byte) error {
 		Strategy   string
 		Provider   string
 		Repository string
+		Branch     string
 		Commit     string
 		Dir        string
 	}
@@ -66,8 +66,7 @@ func (l *LocatorConfig) UnmarshalJSON(data []byte) error {
 	l.Provider = lc.Provider
 	l.Repository = lc.Repository
 	l.Dir = lc.Dir
-	// todo: make that configurable
-	l.Branch = "main"
+	l.Branch = lc.Branch
 
 	err = l.Validate()
 	if err != nil {
@@ -115,6 +114,10 @@ func (l LocatorConfig) Validate() error {
 
 	if l.Provider != "github" && l.Provider != "gitlab" && l.Provider != "bitbucket" {
 		return ErrInvalidProvider
+	}
+
+	if l.Branch == "" {
+		l.Branch = "main"
 	}
 
 	re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+(.git)?")
