@@ -1,4 +1,4 @@
-package common
+package pkg
 
 import "github.com/redwebcreation/nest/docker"
 

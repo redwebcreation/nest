@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -28,17 +29,17 @@ func OpenRepository(path string) (*Repository, error) {
 	return &repo, nil
 }
 
-func (r Repository) Exec(args ...string) (string, error) {
+func (r Repository) Exec(args ...string) ([]byte, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = string(r)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("%s: %s", err, out)
+		return nil, fmt.Errorf("%s: %s", err, out)
 	}
-	return strings.TrimSpace(string(out)), nil
+	return bytes.TrimSpace(out), nil
 }
 
-func (r Repository) LatestCommit() (string, error) {
+func (r Repository) LatestCommit() ([]byte, error) {
 	return r.Exec("rev-parse", "HEAD")
 }
 
@@ -52,7 +53,8 @@ func (r Repository) Commits() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return strings.Split(out, "\n"), nil
+
+	return strings.Split(string(out), "\n"), nil
 }
 
 func (r Repository) Pull(branch string) error {
@@ -65,7 +67,7 @@ func (r Repository) Pull(branch string) error {
 	return err
 }
 
-func (r Repository) Read(path string) (string, error) {
+func (r Repository) Read(path string) ([]byte, error) {
 	return r.Exec("show", "HEAD:"+path)
 }
 
@@ -75,9 +77,5 @@ func (r Repository) Tree() ([]string, error) {
 		return nil, err
 	}
 
-	return strings.Split(out, "\n"), nil
-}
-
-func (r Repository) String() string {
-	return string(r)
+	return strings.Split(string(out), "\n"), nil
 }

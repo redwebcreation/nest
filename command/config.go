@@ -3,21 +3,21 @@ package command
 import (
 	"fmt"
 
-	"github.com/redwebcreation/nest/common"
+	"github.com/redwebcreation/nest/pkg"
 	"github.com/redwebcreation/nest/util"
 	"github.com/spf13/cobra"
 )
 
 func runConfigCommand(cmd *cobra.Command, args []string) error {
-	fmt.Println("strategy:", common.ConfigLocator.Strategy)
-	fmt.Println("location:", common.ConfigLocator.GetRepositoryLocation())
-	fmt.Printf("current commit: %s\n", common.ConfigLocator.Commit[:7])
-	fmt.Println("branch:", common.ConfigLocator.Branch)
-	if common.ConfigLocator.Dir != "" {
-		fmt.Println("subdir:", common.ConfigLocator.Dir)
+	fmt.Println("strategy:", pkg.Config.Strategy)
+	fmt.Println("location:", pkg.Config.GetRepositoryLocation())
+	fmt.Printf("current commit: %s\n", pkg.Config.Commit[:7])
+	fmt.Println("branch:", pkg.Config.Branch)
+	if pkg.Config.Dir != "" {
+		fmt.Println("subdir:", pkg.Config.Dir)
 	}
 
-	configFiles, err := common.ConfigLocator.Git.Tree()
+	configFiles, err := pkg.Config.Git.Tree()
 	if err != nil {
 		return err
 	}

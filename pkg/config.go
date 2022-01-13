@@ -1,11 +1,9 @@
-package common
+package pkg
 
 import (
 	"fmt"
 	"github.com/redwebcreation/nest/docker"
 )
-
-var Config *Configuration
 
 type Configuration struct {
 	Services   ServiceMap  `yaml:"services"`

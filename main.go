@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/redwebcreation/nest/command"
-	"github.com/redwebcreation/nest/common"
 	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/pkg"
 	"os"
 	"os/exec"
 
@@ -53,7 +53,7 @@ func main() {
 				return nil
 			}
 
-			diagnosis := common.DiagnoseConfiguration()
+			diagnosis := pkg.DiagnoseConfiguration()
 
 			if len(diagnosis.Errors) == 0 {
 				return nil

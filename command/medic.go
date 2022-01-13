@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/redwebcreation/nest/util"
 
-	"github.com/redwebcreation/nest/common"
+	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +14,7 @@ var onlyErrors bool
 var onlyWarnings bool
 
 func runMedicCommand(cmd *cobra.Command, args []string) error {
-	diagnosis := common.DiagnoseConfiguration()
+	diagnosis := pkg.DiagnoseConfiguration()
 
 	if jsonFormat {
 		out, _ := json.Marshal(diagnosis)

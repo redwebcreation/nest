@@ -3,16 +3,17 @@ package command
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 
-	"github.com/redwebcreation/nest/common"
 	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/pkg"
 )
 
 func LoadConfigFromCommit(commit string) error {
-	reader := common.LocatorConfig{
-		Commit: commit,
+	reader := pkg.ConfigLocator{
+		ConfigLocatorConfig: pkg.ConfigLocatorConfig{
+			Commit: commit,
+		},
 	}
 
 	contents, err := os.ReadFile(global.ConfigLocatorConfigFile)
@@ -24,21 +25,8 @@ func LoadConfigFromCommit(commit string) error {
 		return fmt.Errorf("the repository %s does not exists", reader.GetRepositoryLocation())
 	}
 
-	common.ConfigLocator = &reader
+	pkg.Config = &reader
 
-	contents, err = reader.Read("nest.yaml")
-	if err != nil {
-		return err
-	}
-
-	var config common.Configuration
-
-	err = yaml.Unmarshal(contents, &config)
-	if err != nil {
-		return err
-	}
-
-	common.Config = &config
 	return nil
 }
 

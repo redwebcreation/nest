@@ -1,8 +1,7 @@
-package common
+package pkg
 
 import (
 	"gopkg.in/yaml.v3"
-	"os"
 	"strings"
 )
 
@@ -37,7 +36,7 @@ type Service struct {
 	} `yaml:"hooks"`
 
 	// Registry to pull the image from.
-	// It may be a string referencing Config.Registries[%s] or a Registry.
+	// It may be a string referencing Retrieve.Registries[%s] or a Registry.
 	Registry interface{} `yaml:"registry"`
 
 	// Volumes to mount for the service.
@@ -114,7 +113,7 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	for name, service := range services {
 		if service.Include != "" {
-			bytes, err := os.ReadFile(service.Include)
+			bytes, err := Config.Git.Read(service.Include)
 			if err != nil {
 				return err
 			}

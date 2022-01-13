@@ -2,8 +2,8 @@ package command
 
 import (
 	"bytes"
-	"github.com/redwebcreation/nest/common"
 	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/pkg"
 	"github.com/redwebcreation/nest/util"
 	"os"
 	"testing"
@@ -21,9 +21,9 @@ var dataset = []Set{
 	{"remote", "github", "felixdorn/config-test", "", nil},
 	{"remote", "gitlab", "felixdorn/config-test", "", nil},
 	{"remote", "bitbucket", "felixdorn/config-test", "", nil},
-	{"invalidStrategy", "github", "felixdorn/config-test", "", common.ErrInvalidStrategy},
-	{"remote", "invalidProvider", "felixdorn/config-test", "", common.ErrInvalidProvider},
-	{"remote", "github", "invalidRepository", "", common.ErrInvalidRepository},
+	{"invalidStrategy", "github", "felixdorn/config-test", "", pkg.ErrInvalidStrategy},
+	{"remote", "invalidProvider", "felixdorn/config-test", "", pkg.ErrInvalidProvider},
+	{"remote", "github", "invalidRepository", "", pkg.ErrInvalidRepository},
 }
 
 func TestConfigureCommandUsingFlags(t *testing.T) {

@@ -1,9 +1,10 @@
-package common
+package pkg
 
 import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"os"
 	"regexp"
 	"strings"
@@ -15,47 +16,64 @@ var (
 	ErrInvalidStrategy   = fmt.Errorf("strategy must be either local or remote")
 	ErrInvalidProvider   = fmt.Errorf("provider must be either github, gitlab or bitbucket")
 	ErrInvalidRepository = fmt.Errorf("invalid repository name")
+	ErrEmptyBranch       = fmt.Errorf("branch name cannot be empty")
 )
 
-var ConfigLocator = &LocatorConfig{}
+var Config = &ConfigLocator{}
 
-type LocatorConfig struct {
+type ConfigLocatorConfig struct {
 	Strategy   string
 	Provider   string
 	Repository string
 	Branch     string
 	Dir        string
 	Commit     string
-	Git        *util.Repository
 }
 
-func (l LocatorConfig) Read(path string) ([]byte, error) {
+type ConfigLocator struct {
+	ConfigLocatorConfig
+	Git    *util.Repository
+	config *Configuration
+}
+
+func (l *ConfigLocator) Retrieve() (*Configuration, error) {
+	if l.config != nil {
+		return l.config, nil
+	}
+
+	contents, err := l.Read("nest.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	var config Configuration
+
+	err = yaml.Unmarshal(contents, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+}
+
+func (l ConfigLocator) Read(path string) ([]byte, error) {
 	if l.Dir != "" {
 		path = strings.TrimSuffix(l.Dir, "/") + "/" + path
 	}
 
-	data, err := l.Git.Read(path)
-
-	return []byte(data), err
+	return l.Git.Read(path)
 }
 
-func (l LocatorConfig) GetRepositoryLocation() string {
+func (l ConfigLocator) GetRepositoryLocation() string {
 	return fmt.Sprintf("git@%s.com:%s", l.Provider, l.Repository)
 }
 
-func (l LocatorConfig) cachePath() string {
+func (l ConfigLocator) cachePath() string {
 	return "/tmp/" + base64.StdEncoding.EncodeToString([]byte(l.GetRepositoryLocation()))
 }
 
-func (l *LocatorConfig) UnmarshalJSON(data []byte) error {
-	var lc struct {
-		Strategy   string
-		Provider   string
-		Repository string
-		Branch     string
-		Commit     string
-		Dir        string
-	}
+func (l *ConfigLocator) UnmarshalJSON(data []byte) error {
+	var lc ConfigLocatorConfig
 
 	err := json.Unmarshal(data, &lc)
 	if err != nil {
@@ -94,9 +112,9 @@ func (l *LocatorConfig) UnmarshalJSON(data []byte) error {
 			return err
 		}
 
-		l.Commit = commit
+		l.Commit = string(commit)
 
-		err = repo.Checkout(commit)
+		err = repo.Checkout(l.Commit)
 		if err != nil {
 			return err
 		}
@@ -107,7 +125,7 @@ func (l *LocatorConfig) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (l LocatorConfig) Validate() error {
+func (l ConfigLocator) Validate() error {
 	if l.Strategy != "local" && l.Strategy != "remote" {
 		return ErrInvalidStrategy
 	}
@@ -117,7 +135,7 @@ func (l LocatorConfig) Validate() error {
 	}
 
 	if l.Branch == "" {
-		l.Branch = "main"
+		return ErrEmptyBranch
 	}
 
 	re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+(.git)?")
