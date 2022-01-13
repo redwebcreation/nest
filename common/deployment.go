@@ -7,8 +7,7 @@ import (
 	"github.com/redwebcreation/nest/docker"
 	"github.com/redwebcreation/nest/global"
 	"io"
-	"strconv"
-	"time"
+	"strings"
 )
 
 type MessageBus chan Message
@@ -19,9 +18,9 @@ type Message struct {
 }
 
 type DeployPipeline struct {
-	MessageBus MessageBus
-	Service    *Service
-	Id         string
+	MessageBus   MessageBus
+	Service      *Service
+	DeploymentID string
 }
 
 func (d DeployPipeline) Run() error {
@@ -45,7 +44,7 @@ func (d DeployPipeline) Run() error {
 		return err
 	}
 
-	err = d.RunHooks("poststart", d.Service.Hooks.Poststart)
+	err = d.RunHooks(id, d.Service.Hooks.Poststart)
 	if err != nil {
 		return err
 	}
@@ -58,13 +57,11 @@ func (d DeployPipeline) Run() error {
 	return nil
 }
 
-func (s *Service) Deploy(bus MessageBus) error {
-	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
-
+func (s *Service) Deploy(deploymentID string, bus MessageBus) error {
 	return DeployPipeline{
-		MessageBus: bus,
-		Service:    s,
-		Id:         id,
+		MessageBus:   bus,
+		Service:      s,
+		DeploymentID: deploymentID,
 	}.Run()
 }
 
@@ -76,7 +73,7 @@ func (d DeployPipeline) PullImage() error {
 			Service: d.Service,
 			Value:   event.Status,
 		}
-	}, d.Service.Registry.(*docker.Registry))
+	}, d.Service.Registry.(docker.Registry))
 }
 
 func (d DeployPipeline) CreateContainer() (string, error) {
@@ -84,14 +81,14 @@ func (d DeployPipeline) CreateContainer() (string, error) {
 		Image: d.Service.Image,
 		Labels: map[string]string{
 			"cloud.usenest.service":       d.Service.Name,
-			"cloud.usenest.deployment_id": d.Id,
+			"cloud.usenest.deployment_id": d.DeploymentID,
 		},
 		Env: d.Service.Env.ToDockerEnv(),
 	}, &container.HostConfig{
 		RestartPolicy: container.RestartPolicy{
 			Name: "always",
 		},
-	}, nil, nil, "nest_"+d.Service.Name+"_"+d.Service.Image+"_"+d.Id)
+	}, nil, nil, "nest_"+d.Service.Name+"_"+strings.Replace(d.Service.Image, ":", "_", 1)+"_"+d.DeploymentID)
 
 	if err != nil {
 		return "", err

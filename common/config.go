@@ -30,7 +30,7 @@ func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	for _, service := range c.Services {
 		if service.Registry == nil {
-			service.Registry = &docker.Registry{}
+			service.Registry = docker.Registry{}
 			continue
 		}
 

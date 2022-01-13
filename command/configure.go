@@ -76,7 +76,7 @@ func NewConfigureCommand() *cobra.Command {
 		RunE:  runConfigureCommand,
 	}
 
-	_ = LoadConf(cmd, nil)
+	_ = LoadConfig()
 
 	cmd.Flags().StringVarP(&strategy, "strategy", "s", common.ConfigLocator.Strategy, "strategy to use")
 	cmd.Flags().StringVarP(&provider, "provider", "p", common.ConfigLocator.Provider, "provider to use")

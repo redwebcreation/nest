@@ -1,40 +1,32 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"os"
 
 	"github.com/redwebcreation/nest/common"
 	"github.com/redwebcreation/nest/global"
-	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
-func WithConfig(cmd *cobra.Command) *cobra.Command {
-	cmd.PersistentPreRunE = LoadConf
-
-	return cmd
-}
-
-func LoadConf(cmd *cobra.Command, args []string) error {
-	commandName := cmd.Name()
-
-	if _, err := os.Stat(global.ConfigLocatorConfigFile); err != nil {
-		if commandName == "configure" {
-			return nil
-		}
-
-		return fmt.Errorf("run `nest configure` to setup nest")
+func LoadConfigFromCommit(commit string) error {
+	reader := common.LocatorConfig{
+		Commit: commit,
 	}
 
-	reader, err := common.LoadConfigReader()
+	contents, err := os.ReadFile(global.ConfigLocatorConfigFile)
 	if err != nil {
 		return err
 	}
 
-	common.ConfigLocator = reader
+	if err = json.Unmarshal(contents, &reader); err != nil && err.Error() == "unknown error: remote: " {
+		return fmt.Errorf("the repository %s does not exists", reader.GetRepositoryLocation())
+	}
 
-	contents, err := reader.Read("nest.yaml")
+	common.ConfigLocator = &reader
+
+	contents, err = reader.Read("nest.yaml")
 	if err != nil {
 		return err
 	}
@@ -47,16 +39,9 @@ func LoadConf(cmd *cobra.Command, args []string) error {
 	}
 
 	common.Config = &config
+	return nil
+}
 
-	if commandName == "medic" {
-		return nil
-	}
-
-	diagnosis := common.DiagnoseConfiguration()
-
-	if len(diagnosis.Errors) == 0 {
-		return nil
-	}
-
-	return fmt.Errorf("your configuration is invalid, please run `nest medic` to troubleshoot")
+func LoadConfig() error {
+	return LoadConfigFromCommit("")
 }

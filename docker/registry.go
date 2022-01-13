@@ -18,6 +18,10 @@ type Registry struct {
 	Password string `yaml:"password"`
 }
 
+func (r Registry) IsZero() bool {
+	return r.Name == "" && r.Host == "" && r.Port == "" && r.Username == "" && r.Password == ""
+}
+
 func (r Registry) UrlFor(image string) string {
 	if r.Port != "" {
 		return r.Host + ":" + r.Port + "/" + image

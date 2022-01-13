@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/redwebcreation/nest/global"
 	"github.com/redwebcreation/nest/util"
 )
 
@@ -21,12 +20,14 @@ var (
 var ConfigLocator = &LocatorConfig{}
 
 type LocatorConfig struct {
-	Strategy     string
-	Provider     string
-	Repository   string
-	Dir          string
-	LatestCommit string
-	Git          *util.Repository
+	Strategy   string
+	Provider   string
+	Repository string
+	// Todo: make that configurable
+	Branch string
+	Dir    string
+	Commit string
+	Git    *util.Repository
 }
 
 func (l LocatorConfig) Read(path string) ([]byte, error) {
@@ -43,21 +44,6 @@ func (l LocatorConfig) GetRepositoryLocation() string {
 	return fmt.Sprintf("git@%s.com:%s", l.Provider, l.Repository)
 }
 
-func LoadConfigReader() (*LocatorConfig, error) {
-	var cr LocatorConfig
-
-	contents, err := os.ReadFile(global.ConfigLocatorConfigFile)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = json.Unmarshal(contents, &cr); err != nil && err.Error() == "unknown error: remote: " {
-		return nil, fmt.Errorf("the repository %s does not exists", cr.GetRepositoryLocation())
-	}
-
-	return &cr, err
-}
-
 func (l LocatorConfig) cachePath() string {
 	return "/tmp/" + base64.StdEncoding.EncodeToString([]byte(l.GetRepositoryLocation()))
 }
@@ -67,6 +53,7 @@ func (l *LocatorConfig) UnmarshalJSON(data []byte) error {
 		Strategy   string
 		Provider   string
 		Repository string
+		Commit     string
 		Dir        string
 	}
 
@@ -79,6 +66,8 @@ func (l *LocatorConfig) UnmarshalJSON(data []byte) error {
 	l.Provider = lc.Provider
 	l.Repository = lc.Repository
 	l.Dir = lc.Dir
+	// todo: make that configurable
+	l.Branch = "main"
 
 	err = l.Validate()
 	if err != nil {
@@ -100,17 +89,20 @@ func (l *LocatorConfig) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	commit, err := repo.LatestCommit()
-	if err != nil {
-		return err
+	if l.Commit == "" {
+		commit, err := repo.LatestCommit()
+		if err != nil {
+			return err
+		}
+
+		l.Commit = commit
+
+		err = repo.Checkout(commit)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = repo.Checkout(commit)
-	if err != nil {
-		return err
-	}
-
-	l.LatestCommit = commit
 	l.Git = repo
 
 	return nil

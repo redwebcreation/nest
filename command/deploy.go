@@ -3,34 +3,58 @@ package command
 import (
 	"fmt"
 	"github.com/redwebcreation/nest/common"
+	"github.com/redwebcreation/nest/util"
 	"github.com/spf13/cobra"
 	"sort"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func runDeployCommand(cmd *cobra.Command, args []string) error {
-	var queued map[string]*common.Service
-
-	if len(args) == 0 {
-		queued = common.Config.Services
-	} else {
-		next := common.Config.Services[args[0]]
-
-		if next == nil {
-			return common.ErrServiceNotFound
+	if len(args) == 1 {
+		err := common.ConfigLocator.Git.Pull(common.ConfigLocator.Branch)
+		if err != nil {
+			return err
 		}
 
-		queued = map[string]*common.Service{args[0]: next}
+		commits, err := common.ConfigLocator.Git.Commits()
+		if err != nil {
+			return err
+		}
+
+		var commit string
+
+		for _, c := range commits {
+			if c == args[0] || strings.HasPrefix(c, args[0]) {
+				commit = c
+				break
+			}
+		}
+
+		if commit == "" {
+			return fmt.Errorf("commit not found")
+		}
+
+		err = LoadConfigFromCommit(commit)
+		if err != nil {
+			return err
+		}
 	}
 
-	inQueue := len(queued)
+	inQueue := len(common.Config.Services)
 	var messages = make(map[string]string, inQueue)
 	var messageBus = make(common.MessageBus)
 
-	for _, service := range queued {
+	fmt.Printf("Using %s to deploy services.\n\n", util.White.Fg()+common.ConfigLocator.Commit[:8]+util.Reset)
+
+	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
+
+	for _, service := range common.Config.Services {
 		messages[service.Name] = "idle"
 
 		go func(service *common.Service) {
-			err := service.Deploy(messageBus)
+			err := service.Deploy(id, messageBus)
 
 			if err != nil {
 				messageBus <- common.Message{
@@ -68,9 +92,10 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 // NewDeployCommand creates and configures the services defined in the configuration
 func NewDeployCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deploy",
+		Use:   "deploy [commit]",
 		Short: "deploy the configuration",
 		RunE:  runDeployCommand,
+		Args:  cobra.RangeArgs(0, 1),
 	}
 
 	return cmd

@@ -1,7 +1,6 @@
 package common
 
 import (
-	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
 	"strings"
@@ -106,10 +105,6 @@ func (s *Service) Accepts(host string) bool {
 }
 
 type ServiceMap map[string]*Service
-
-var (
-	ErrServiceNotFound = fmt.Errorf("service not found")
-)
 
 func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var services map[string]*Service

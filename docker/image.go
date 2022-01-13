@@ -27,11 +27,11 @@ type PullEvent struct {
 	} `json:"progressDetail"`
 }
 
-func (i Image) Pull(handler func(event *PullEvent), registry *Registry) error {
+func (i Image) Pull(handler func(event *PullEvent), registry Registry) error {
 	image := i.String()
 	options := types.ImagePullOptions{}
 
-	if registry != nil {
+	if !registry.IsZero() {
 		auth, err := registry.ToBase64()
 		if err != nil {
 			return err

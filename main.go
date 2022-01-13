@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/redwebcreation/nest/command"
+	"github.com/redwebcreation/nest/common"
+	"github.com/redwebcreation/nest/global"
 	"os"
 	"os/exec"
 
@@ -31,8 +33,35 @@ func main() {
 	for _, cmd := range commands {
 		cmd.SilenceUsage = true
 		cmd.SilenceErrors = true
+		cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+			commandName := cmd.Name()
 
-		command.WithConfig(cmd)
+			if _, err := os.Stat(global.ConfigLocatorConfigFile); err != nil {
+				if commandName == "configure" {
+					return nil
+				}
+
+				return fmt.Errorf("run `nest configure` to setup nest")
+			}
+
+			err := command.LoadConfig()
+			if err != nil {
+				return err
+			}
+
+			if commandName == "medic" {
+				return nil
+			}
+
+			diagnosis := common.DiagnoseConfiguration()
+
+			if len(diagnosis.Errors) == 0 {
+				return nil
+			}
+
+			return fmt.Errorf("your configuration is invalid, please run `nest medic` to troubleshoot")
+		}
+
 		nest.AddCommand(cmd)
 	}
 

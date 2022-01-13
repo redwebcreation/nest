@@ -47,6 +47,24 @@ func (r Repository) Checkout(commit string) error {
 	return err
 }
 
+func (r Repository) Commits() ([]string, error) {
+	out, err := r.Exec("log", "--pretty=%H")
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(out, "\n"), nil
+}
+
+func (r Repository) Pull(branch string) error {
+	_, err := r.Exec("checkout", branch)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.Exec("pull")
+	return err
+}
+
 func (r Repository) Read(path string) (string, error) {
 	return r.Exec("show", "HEAD:"+path)
 }
