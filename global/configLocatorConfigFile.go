@@ -2,6 +2,7 @@ package global
 
 import "github.com/mitchellh/go-homedir"
 
+// ConfigLocatorConfigFile is the path to the config locator file
 var ConfigLocatorConfigFile string
 
 func init() {

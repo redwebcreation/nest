@@ -3,11 +3,13 @@ package pkg
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+
 	"github.com/redwebcreation/nest/docker"
 	"github.com/redwebcreation/nest/global"
-	"os"
 )
 
+// Configuration represents nest's configuration
 type Configuration struct {
 	Services   ServiceMap  `yaml:"services"`
 	Registries RegistryMap `yaml:"registries"`
@@ -18,6 +20,7 @@ var (
 	ErrInvalidRegistry  = fmt.Errorf("invalid registry")
 )
 
+// UnmarshalYAML implements yaml.Unmarshaler
 func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type plain Configuration
 	var p plain
@@ -54,6 +57,7 @@ func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
+// LoadConfigFromCommit loads the configuration globally from the given commit
 func LoadConfigFromCommit(commit string) error {
 	reader := ConfigLocator{
 		ConfigLocatorConfig: ConfigLocatorConfig{
@@ -75,6 +79,7 @@ func LoadConfigFromCommit(commit string) error {
 	return nil
 }
 
+// LoadConfig loads the configuration globally
 func LoadConfig() error {
 	return LoadConfigFromCommit("")
 }

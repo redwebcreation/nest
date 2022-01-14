@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/docker/docker/api/types"
 	"io"
 	"strings"
+
+	"github.com/docker/docker/api/types"
 
 	"github.com/redwebcreation/nest/global"
 )
@@ -16,22 +17,21 @@ var (
 	ErrImageNotFound = fmt.Errorf("image not found")
 )
 
+// Image represents a docker image name
 type Image string
 
+// String returns the string representation of the image
 func (i Image) String() string {
 	return string(i)
 }
 
+// PullEvent represents a docker image pull event
 type PullEvent struct {
-	Status         string `json:"status"`
-	Error          string `json:"error"`
-	Progress       string `json:"progress"`
-	ProgressDetail struct {
-		Current int `json:"current"`
-		Total   int `json:"total"`
-	} `json:"progressDetail"`
+	// Status is the current status of the pull
+	Status string `json:"status"`
 }
 
+// Pull pulls an image from a registry
 func (i Image) Pull(handler func(event *PullEvent), registry Registry) error {
 	image := i.String()
 	options := types.ImagePullOptions{}

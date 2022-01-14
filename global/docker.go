@@ -7,6 +7,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
+// Docker is the global docker client
 var Docker *client.Client
 
 func init() {
