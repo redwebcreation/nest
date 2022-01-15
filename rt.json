@@ -6,7 +6,9 @@
   "before_release": [
     "go build -ldflags='-w -s -X github.com/redwebcreation/nest/globals.Version=:version' -gcflags=all='-l'"
   ],
-  "after_release": [],
+  "after_release": [
+    "rm nest"
+  ],
   "assets": [
     "./nest"
   ],
