@@ -73,6 +73,10 @@ func NewSelfUpdateCommand() *cobra.Command {
 		Short: "update the CLI to the latest version",
 		Args:  cobra.RangeArgs(0, 1),
 		RunE:  runSelfUpdate,
+		Annotations: map[string]string{
+			"medic":  "false",
+			"config": "false",
+		},
 	}
 
 	return cmd

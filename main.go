@@ -15,9 +15,6 @@ var commands = []*cobra.Command{
 	command.NewDeployCommand(),
 	command.NewMedicCommand(),
 	command.NewConfigCommand(),
-}
-
-var standalone = []*cobra.Command{
 	command.NewConfigureCommand(),
 	command.NewVersionCommand(),
 	command.NewSelfUpdateCommand(),
@@ -31,44 +28,7 @@ var nest = &cobra.Command{
 
 func main() {
 	for _, cmd := range commands {
-		cmd.SilenceUsage = true
-		cmd.SilenceErrors = true
-		cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-			commandName := cmd.Name()
-
-			if _, err := os.Stat(global.ConfigLocatorConfigFile); err != nil {
-				if commandName == "configure" {
-					return nil
-				}
-
-				return fmt.Errorf("run `nest configure` to setup nest")
-			}
-
-			err := pkg.LoadConfig()
-			if err != nil {
-				return err
-			}
-
-			if commandName == "medic" {
-				return nil
-			}
-
-			diagnosis := pkg.DiagnoseConfiguration()
-
-			if len(diagnosis.Errors) == 0 {
-				return nil
-			}
-
-			return fmt.Errorf("your configuration is invalid, please run `nest medic` to troubleshoot")
-		}
-
-		nest.AddCommand(cmd)
-	}
-
-	for _, cmd := range standalone {
-		cmd.SilenceUsage = true
-		cmd.SilenceErrors = true
-
+		configure(cmd)
 		nest.AddCommand(cmd)
 	}
 
@@ -76,6 +36,32 @@ func main() {
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, "error: "+err.Error())
 		os.Exit(1)
+	}
+}
+
+func configure(cmd *cobra.Command) {
+	cmd.SilenceUsage = true
+	cmd.SilenceErrors = true
+
+	_, disableMedic := cmd.Annotations["config"]
+	_, disableConfigLocator := cmd.Annotations["medic"]
+
+	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if !disableConfigLocator {
+			if _, err := os.Stat(global.ConfigLocatorConfigFile); err != nil {
+				return fmt.Errorf("run `nest configure` to setup nest")
+			}
+
+			if err := pkg.LoadConfig(); err != nil {
+				return err
+			}
+		}
+
+		if disableMedic {
+			return nil
+		}
+
+		return pkg.DiagnoseConfiguration().MustPass()
 	}
 }
 

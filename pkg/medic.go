@@ -19,6 +19,14 @@ type Error struct {
 	Error error  `json:"error,omitempty"`
 }
 
+func (d *Diagnosis) MustPass() error {
+	if len(d.Errors) == 0 {
+		return nil
+	}
+
+	return fmt.Errorf("invalid configuration (run `nest diagnose` for details)")
+}
+
 func DiagnoseConfiguration() *Diagnosis {
 	config, err := Config.Retrieve()
 	if err != nil {

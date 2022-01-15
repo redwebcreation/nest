@@ -1,4 +1,5 @@
 # Nest
+
 [![Tests](https://github.com/redwebcreation/nest/actions/workflows/tests.yml/badge.svg?branch=next)](https://github.com/redwebcreation/nest/actions/workflows/tests.yml)
 [![codebeat badge](https://codebeat.co/badges/7171e9ea-53d7-4c81-82bf-a9a2f222b027)](https://codebeat.co/projects/github-com-redwebcreation-nest-next)
 [![Go Report Card](https://goreportcard.com/badge/github.com/redwebcreation/nest)](https://goreportcard.com/report/github.com/redwebcreation/nest)
@@ -132,3 +133,12 @@ Currently, the message bus takes a Value to send that is an `interface{}`.
 
 **not enforced yet**: However, when sending a message through the message bus, you should never send an untyped string.
 This makes it hard to know what it is without doing weird `strings.Contains` stuff.
+
+### Command annotations
+
+Sometimes, meta-commands don't need to access the configuration, a good example of this is the `version` command as well
+as the `self-update` command. Therefore, you can label your commands with the following to disable various pre-run
+checks:
+
+* `medic: "false"`, this will disable the check that ensures the config is valid before a command runs.
+* `config: "false"`, this won't load the config (and thus avoid any errors, such as a non-existent config).

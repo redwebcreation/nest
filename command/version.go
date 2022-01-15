@@ -18,6 +18,10 @@ func NewVersionCommand() *cobra.Command {
 		Use:   "version",
 		Short: "print nest's version",
 		RunE:  runVersionCommand,
+		Annotations: map[string]string{
+			"medic":  "false",
+			"config": "false",
+		},
 	}
 
 	return cmd

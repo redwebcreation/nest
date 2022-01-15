@@ -81,6 +81,10 @@ func NewConfigureCommand() *cobra.Command {
 		},
 		Short: "update the global configuration",
 		RunE:  runConfigureCommand,
+		Annotations: map[string]string{
+			"medic":  "false",
+			"config": "false",
+		},
 	}
 
 	_ = pkg.LoadConfig()

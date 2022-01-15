@@ -63,6 +63,9 @@ func NewMedicCommand() *cobra.Command {
 		Use:   "medic",
 		Short: "diagnose your configuration",
 		RunE:  runMedicCommand,
+		Annotations: map[string]string{
+			"medic": "false",
+		},
 	}
 
 	cmd.Flags().BoolVarP(&jsonFormat, "jsonFormat", "j", false, "output in jsonFormat format")
