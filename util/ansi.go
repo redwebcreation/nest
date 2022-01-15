@@ -20,19 +20,26 @@ var Reset = "\x1b[0m"
 
 var AnsiEnabled = true
 
-func init() {
+func CheckAnsi(args []string) bool {
 	if os.Getenv("GOOS") == "windows" {
-		AnsiEnabled = false
-	} else if os.Getenv("TERM") == "dumb" {
-		AnsiEnabled = false
-	} else {
-		for _, arg := range os.Args {
-			if arg == "--no-ansi" {
-				AnsiEnabled = false
-				return
-			}
+		return false
+	}
+
+	if os.Getenv("TERM") == "dumb" {
+		return false
+	}
+
+	for _, arg := range args {
+		if arg == "--no-ansi" {
+			return false
 		}
 	}
+
+	return true
+}
+
+func init() {
+	AnsiEnabled = CheckAnsi(os.Args)
 
 	if !AnsiEnabled {
 		Reset = ""
