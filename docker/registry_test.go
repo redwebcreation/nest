@@ -65,3 +65,53 @@ func TestRegistry_UrlFor(t *testing.T) {
 		}
 	}
 }
+
+func TestRegistry_IsZero(t *testing.T) {
+	var dataset = []struct {
+		input  Registry
+		output bool
+	}{
+		{
+			input:  Registry{},
+			output: true,
+		},
+		{
+			input: Registry{
+				Name: "default",
+			},
+			output: false,
+		},
+		{
+			input: Registry{
+				Host: "registry.test",
+			},
+			output: false,
+		},
+		{
+			input: Registry{
+				Port: "5000",
+			},
+			output: false,
+		},
+		{
+			input: Registry{
+				Username: "username",
+			},
+			output: false,
+		},
+		{
+			input: Registry{
+				Password: "password",
+			},
+			output: false,
+		},
+	}
+
+	for _, set := range dataset {
+		output := set.input.IsZero()
+
+		if output != set.output {
+			t.Errorf("Expected %t, got %t", set.output, output)
+		}
+	}
+}

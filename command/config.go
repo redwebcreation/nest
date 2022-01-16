@@ -34,9 +34,6 @@ func NewConfigCommand() *cobra.Command {
 		Use:   "config",
 		Short: "prints the current configuration",
 		RunE:  runConfigCommand,
-		Annotations: map[string]string{
-			"medic": "false",
-		},
 	}
 
 	return cmd

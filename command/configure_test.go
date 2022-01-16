@@ -6,7 +6,9 @@ import (
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/redwebcreation/nest/util"
 	"os"
+	"strconv"
 	"testing"
+	"time"
 )
 
 type Set struct {
@@ -36,14 +38,10 @@ func TestSetupCommandUsingFlags(t *testing.T) {
 		_ = cmd.Flags().Set("repository", data.Repository)
 		_ = cmd.Flags().Set("branch", data.Branch)
 
-		tmpConfig, err := util.TmpFile()
-		if err != nil {
-			t.Errorf("Error creating tmp file: %s", err)
-		}
-
-		global.ConfigLocatorConfigFile = tmpConfig.Name()
-
-		err = cmd.Execute()
+		global.ConfigLocatorConfigFile = TmpConfig(t).Name()
+		defer os.Remove(global.ConfigLocatorConfigFile)
+		
+		err := cmd.Execute()
 		if err != data.Error {
 			if data.Error == nil {
 				t.Errorf("Expected no error, got %s", err)
@@ -69,14 +67,9 @@ func TestSetupCommandInteractively(t *testing.T) {
 
 		util.Stdin = bytes.NewBufferString(data.Strategy + "\n" + data.Provider + "\n" + data.Repository + "\n" + data.Branch + "\n")
 
-		tmpConfig, err := util.TmpFile()
-		if err != nil {
-			t.Errorf("Error creating tmp file: %s", err)
-		}
-
-		global.ConfigLocatorConfigFile = tmpConfig.Name()
+		global.ConfigLocatorConfigFile = TmpConfig(t).Name()
 		defer os.Remove(global.ConfigLocatorConfigFile)
-		err = cmd.Execute()
+		err := cmd.Execute()
 		if err != data.Error {
 			if data.Error == nil {
 				t.Errorf("Expected no error, got %s", err)
@@ -88,4 +81,13 @@ func TestSetupCommandInteractively(t *testing.T) {
 	}
 
 	util.Stdin = originalStdin
+}
+
+func TmpConfig(t *testing.T) *os.File {
+	f, err := os.Create("/tmp/" + strconv.Itoa(int(time.Now().UnixNano())) + ".tmp")
+	if err != nil {
+		t.Errorf("Error creating tmp file: %s", err)
+	}
+
+	return f
 }
