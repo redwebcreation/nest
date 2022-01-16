@@ -16,11 +16,9 @@ var Green Color = [3]uint8{16, 185, 129}
 var White Color = [3]uint8{255, 255, 255}
 var Gray Color = [3]uint8{147, 148, 153}
 
-var Reset = "\x1b[0m"
-
 var AnsiEnabled = true
 
-func CheckAnsi(args []string) bool {
+func checkAnsi(args []string) bool {
 	if os.Getenv("GOOS") == "windows" {
 		return false
 	}
@@ -39,11 +37,7 @@ func CheckAnsi(args []string) bool {
 }
 
 func init() {
-	AnsiEnabled = CheckAnsi(os.Args)
-
-	if !AnsiEnabled {
-		Reset = ""
-	}
+	AnsiEnabled = checkAnsi(os.Args)
 }
 
 func (c Color) String() string {
@@ -64,4 +58,12 @@ func (c Color) Bg() string {
 	}
 
 	return fmt.Sprintf("\x1b[1m\x1b[48;2;%d;%d;%dm", c[0], c[1], c[2])
+}
+
+func Reset() string {
+	if !AnsiEnabled {
+		return ""
+	}
+
+	return "\x1b[0m"
 }

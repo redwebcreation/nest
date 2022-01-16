@@ -59,7 +59,7 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 	var messages = make(map[string]string, inQueue)
 	var messageBus = make(pkg.MessageBus)
 
-	fmt.Printf("Using %s to deploy services.\n\n", util.White.Fg()+pkg.Config.Commit[:8]+util.Reset)
+	fmt.Printf("Using %s to deploy services.\n\n", util.White.Fg()+pkg.Config.Commit[:8]+util.Reset())
 
 	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
 

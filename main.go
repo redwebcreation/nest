@@ -43,8 +43,8 @@ func configure(cmd *cobra.Command) {
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
-	_, disableMedic := cmd.Annotations["config"]
-	_, disableConfigLocator := cmd.Annotations["medic"]
+	_, disableConfigLocator := cmd.Annotations["config"]
+	_, disableMedic := cmd.Annotations["medic"]
 
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if !disableConfigLocator {

@@ -6,17 +6,18 @@ import (
 	"os"
 )
 
-var Stdin io.Reader = os.Stdin
+var Stdin io.ReadWriter = os.Stdin
+var Stdout io.ReadWriter = os.Stdout
 
 func Prompt(prompt, defaultValue string, validator func(input string) bool) string {
 	var input = defaultValue
 
 	for {
-		fmt.Print(prompt)
+		_, _ = fmt.Fprint(Stdout, prompt)
 		if defaultValue != "" {
-			fmt.Printf(" [%s]", defaultValue)
+			_, _ = fmt.Fprintf(Stdout, " [%s]", defaultValue)
 		}
-		fmt.Print(": ")
+		_, _ = fmt.Fprint(Stdout, ": ")
 		_, _ = fmt.Fscanln(Stdin, &input)
 
 		if validator == nil || validator(input) {

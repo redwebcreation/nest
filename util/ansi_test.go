@@ -7,30 +7,30 @@ import (
 
 func TestCheckAnsi(t *testing.T) {
 	testUsingEnv(t, "GOOS", "windows", func() {
-		if CheckAnsi(nil) {
+		if checkAnsi(nil) {
 			t.Error("ANSI should be disabled on windows")
 		}
 	})
 
 	testUsingEnv(t, "TERM", "dumb", func() {
-		if CheckAnsi(nil) {
+		if checkAnsi(nil) {
 			t.Error("ANSI should be disabled on dumb terminals")
 		}
 	})
 
 	testUsingEnv(t, "GOOS", "linux", func() {
 		testUsingEnv(t, "TERM", "xterm", func() {
-			if !CheckAnsi(nil) {
+			if !checkAnsi(nil) {
 				t.Error("ANSI should be enabled on std terminals")
 			}
 		})
 	})
 
-	if CheckAnsi([]string{"--no-ansi"}) {
+	if checkAnsi([]string{"--no-ansi"}) {
 		t.Error("--no-ansi should disable ANSI")
 	}
 
-	if !CheckAnsi([]string{"--any-arg"}) {
+	if !checkAnsi([]string{"--any-arg"}) {
 		t.Error("--any-arg should not disable ANSI")
 	}
 }
@@ -66,6 +66,12 @@ func TestColor_Fg(t *testing.T) {
 	if color.Fg() != "\x1b[1m\x1b[38;2;42;15;82m" {
 		t.Error("Color.Fg() should return the foreground color with bold text")
 	}
+
+	AnsiEnabled = false
+	if color.Fg() != "" {
+		t.Error("Color.Fg() should return an empty string when ANSI is disabled")
+	}
+	AnsiEnabled = true
 }
 
 func TestColor_Bg(t *testing.T) {
@@ -74,4 +80,22 @@ func TestColor_Bg(t *testing.T) {
 	if color.Bg() != "\u001B[1m\x1b[48;2;1;10;0m" {
 		t.Error("Color.Bg() should return the background color with bold text")
 	}
+
+	AnsiEnabled = false
+	if color.Bg() != "" {
+		t.Error("Color.Bg() should return an empty string when ANSI is disabled")
+	}
+	AnsiEnabled = true
+}
+
+func TestReset(t *testing.T) {
+	if Reset() != "\x1b[0m" {
+		t.Error("Reset() should return the reset ANSI code")
+	}
+
+	AnsiEnabled = false
+	if Reset() != "" {
+		t.Error("Reset() should return an empty string when ANSI is disabled")
+	}
+	AnsiEnabled = true
 }

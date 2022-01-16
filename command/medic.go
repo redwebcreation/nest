@@ -25,30 +25,30 @@ func runMedicCommand(cmd *cobra.Command, args []string) error {
 
 	if !onlyWarnings {
 		fmt.Println()
-		fmt.Printf("  %sErrors:%s\n", util.Red, util.Reset)
+		fmt.Printf("  %sErrors:%s\n", util.Red, util.Reset())
 
 		if len(diagnosis.Errors) == 0 {
-			fmt.Printf("  %s- no errors%s\n", util.Gray, util.Reset)
+			fmt.Printf("  %s- no errors%s\n", util.Gray, util.Reset())
 		} else {
 			for _, err := range diagnosis.Errors {
-				fmt.Printf("  %s- %s%s\n", util.White, err.Title, util.Reset)
+				fmt.Printf("  %s- %s%s\n", util.White, err.Title, util.Reset())
 				if err.Error != nil {
-					fmt.Printf("    %s%s%s\n", util.Gray, err.Error, util.Reset)
+					fmt.Printf("    %s%s%s\n", util.Gray, err.Error, util.Reset())
 				}
 			}
 		}
 	}
 
 	if !onlyErrors {
-		fmt.Printf("\n  %sWarnings:%s\n", util.Yellow, util.Reset)
+		fmt.Printf("\n  %sWarnings:%s\n", util.Yellow, util.Reset())
 
 		if len(diagnosis.Warnings) == 0 {
-			fmt.Printf("  %s- no warnings%s\n", util.Gray, util.Reset)
+			fmt.Printf("  %s- no warnings%s\n", util.Gray, util.Reset())
 		} else {
 			for _, warn := range diagnosis.Warnings {
-				fmt.Printf("  %s- %s%s\n", util.White, warn.Title, util.Reset)
+				fmt.Printf("  %s- %s%s\n", util.White, warn.Title, util.Reset())
 				if warn.Advice != "" {
-					fmt.Printf("    %s%s%s\n", util.Gray, warn.Advice, util.Reset)
+					fmt.Printf("    %s%s%s\n", util.Gray, warn.Advice, util.Reset())
 				}
 			}
 		}

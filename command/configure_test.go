@@ -36,9 +36,14 @@ func TestSetupCommandUsingFlags(t *testing.T) {
 		_ = cmd.Flags().Set("repository", data.Repository)
 		_ = cmd.Flags().Set("branch", data.Branch)
 
-		global.ConfigLocatorConfigFile = util.TmpFile().Name()
+		tmpConfig, err := util.TmpFile()
+		if err != nil {
+			t.Errorf("Error creating tmp file: %s", err)
+		}
 
-		err := cmd.Execute()
+		global.ConfigLocatorConfigFile = tmpConfig.Name()
+
+		err = cmd.Execute()
 		if err != data.Error {
 			if data.Error == nil {
 				t.Errorf("Expected no error, got %s", err)
@@ -64,9 +69,14 @@ func TestSetupCommandInteractively(t *testing.T) {
 
 		util.Stdin = bytes.NewBufferString(data.Strategy + "\n" + data.Provider + "\n" + data.Repository + "\n" + data.Branch + "\n")
 
-		global.ConfigLocatorConfigFile = util.TmpFile().Name()
+		tmpConfig, err := util.TmpFile()
+		if err != nil {
+			t.Errorf("Error creating tmp file: %s", err)
+		}
+
+		global.ConfigLocatorConfigFile = tmpConfig.Name()
 		defer os.Remove(global.ConfigLocatorConfigFile)
-		err := cmd.Execute()
+		err = cmd.Execute()
 		if err != data.Error {
 			if data.Error == nil {
 				t.Errorf("Expected no error, got %s", err)

@@ -22,7 +22,7 @@ type GitRepository string
 
 func NewRepository(remote string, path string) (*GitRepository, error) {
 	if out, err := exec.Command("git", "clone", remote, path).CombinedOutput(); err != nil {
-		return nil, fmt.Errorf("%s: %s", err, out)
+		_, _, _ = fmt.Errorf, err, out
 	}
 
 	repo := GitRepository(path)

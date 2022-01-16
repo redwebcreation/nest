@@ -11,7 +11,7 @@ type Node map[string]Node
 func NewTree(files []string) Node {
 	tree := make(Node)
 	for _, file := range files {
-		parts := strings.Split(file, "/")
+		parts := strings.Split(strings.TrimPrefix(file, "/"), "/")
 		node := tree
 		for _, part := range parts {
 			if _, ok := node[part]; !ok {
@@ -25,7 +25,7 @@ func NewTree(files []string) Node {
 
 func (n Node) Print(depth int) {
 	if depth == 0 {
-		fmt.Println("<root>")
+		_, _ = fmt.Fprintln(Stdout, "<root>")
 	}
 	nodeSlice := make([]string, 0, len(n))
 	for key := range n {
@@ -43,7 +43,7 @@ func (n Node) Print(depth int) {
 			symbol = "└──"
 		}
 
-		fmt.Printf("%s%s %s\n", strings.Repeat("│   ", depth), symbol, file)
+		_, _ = fmt.Fprintf(Stdout, "%s%s %s\n", strings.Repeat("│   ", depth), symbol, file)
 
 		if len(n[file]) != 0 {
 			n[file].Print(depth + 1)
