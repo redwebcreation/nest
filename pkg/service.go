@@ -1,8 +1,13 @@
 package pkg
 
 import (
+	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
+)
+
+var (
+	ErrMissingService = fmt.Errorf("missing service")
 )
 
 type Service struct {
@@ -35,20 +40,12 @@ type Service struct {
 		Postclean []string `yaml:"postclean"`
 	} `yaml:"hooks"`
 
+	// Requires is a list of services that must be running before this service.
+	Requires []string `yaml:"requires"`
+
 	// Registry to pull the image from.
 	// It may be a string referencing Retrieve.Registries[%s] or a Registry.
 	Registry interface{} `yaml:"registry"`
-
-	// Volumes to mount for the service.
-	Volumes []struct {
-		// The path to mount from.
-		From string `yaml:"from"`
-		// The path to mount to.
-		To string `yaml:"to"`
-	} `yaml:"volumes"`
-
-	// Binds from the containers to the local filesystem.
-	Binds []string `yaml:"binds"`
 }
 
 func (s *Service) Normalize(serviceName string) {
@@ -74,36 +71,6 @@ func (s *Service) Normalize(serviceName string) {
 		s.ListeningOn = strings.TrimPrefix(s.ListeningOn, ":")
 	}
 }
-
-func (s *Service) Accepts(host string) bool {
-	for _, h := range s.Hosts {
-		if h == host {
-			return true
-		}
-
-		accepted := strings.Split(h, ".")
-		comparison := strings.Split(host, ".")
-
-		for i := range comparison {
-			if accepted[i] == "*" {
-				comparison[i] = "*"
-				continue
-			}
-
-			if accepted[i] != comparison[i] {
-				break
-			}
-		}
-
-		if strings.Join(comparison, ".") == strings.Join(accepted, ".") {
-			return true
-		}
-	}
-
-	return false
-}
-
-type ServiceMap map[string]*Service
 
 func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var services map[string]*Service
@@ -135,7 +102,53 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		services[name] = service
 	}
 
+	for _, service := range services {
+		for _, require := range service.Requires {
+			if _, ok := services[require]; !ok {
+				return ErrMissingService
+			}
+		}
+	}
+
 	*s = services
 
 	return nil
+}
+
+type ServiceMap map[string]*Service
+
+func (s ServiceMap) BuildDependencyPlan() [][]*Service {
+	graph := NewDependencyGraph(s)
+	sortedServices := make([][]*Service, 0)
+	maxDepth := 0
+
+	Walker{}.Walk(graph, func(node *Node) {
+		if node.Depth > maxDepth {
+			for len(sortedServices) < node.Depth {
+				sortedServices = append(sortedServices, []*Service{})
+			}
+
+			maxDepth = node.Depth
+		}
+
+		sortedServices[node.Depth-1] = append(sortedServices[node.Depth-1], node.Service)
+	})
+
+	for i, j := 0, len(sortedServices)-1; i < j; i, j = i+1, j-1 {
+		sortedServices[i], sortedServices[j] = sortedServices[j], sortedServices[i]
+	}
+
+	return sortedServices
+}
+
+func (s ServiceMap) hasDependent(name string) bool {
+	for _, dep := range s {
+		for _, require := range dep.Requires {
+			if require == name {
+				return true
+			}
+		}
+	}
+
+	return false
 }

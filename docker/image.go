@@ -35,7 +35,6 @@ type PullEvent struct {
 func (i Image) Pull(handler func(event *PullEvent), registry Registry) error {
 	image := i.String()
 	options := types.ImagePullOptions{}
-
 	if !registry.IsZero() {
 		auth, err := registry.ToBase64()
 		if err != nil {
@@ -55,7 +54,6 @@ func (i Image) Pull(handler func(event *PullEvent), registry Registry) error {
 
 		return err
 	}
-
 	decoder := json.NewDecoder(events)
 
 	var event *PullEvent

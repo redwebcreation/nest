@@ -2,7 +2,6 @@ package global
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/docker/docker/client"
 )
@@ -10,12 +9,20 @@ import (
 // Docker is the global docker client
 var Docker *client.Client
 
-func init() {
+func LoadDocker() (*client.Client, error) {
 	docker, err := client.NewClientWithOpts(client.FromEnv)
 
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Docker client could not be initialized: %s\n", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("error loading docker client: %s", err)
+	}
+
+	return docker, nil
+}
+
+func init() {
+	docker, err := LoadDocker()
+	if err != nil {
+		panic(err)
 	}
 
 	Docker = docker

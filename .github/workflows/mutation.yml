@@ -1,0 +1,20 @@
+name: Mutation Testing
+
+on:
+  workflow_dispatch:
+
+jobs:
+  go-mutesting:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.5
+      - name: Install go-mutesting
+        run: |
+          go get -t -v github.com/zimmski/go-mutesting/...
+      - name: Run tests
+        run: go-mutesting ./...

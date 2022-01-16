@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/util"
 	"github.com/spf13/cobra"
 )
 
 func runVersionCommand(cmd *cobra.Command, args []string) error {
-	fmt.Printf("nest@%s\n", global.Version)
+	_, _ = fmt.Fprintf(util.Stdout, "nest@%s\n", global.Version)
 	return nil
 }
 

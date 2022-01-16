@@ -28,7 +28,7 @@ func (d *Diagnosis) MustPass() error {
 }
 
 func DiagnoseConfiguration() *Diagnosis {
-	config, err := Config.Retrieve()
+	config, err := Config.Resolve()
 	if err != nil {
 		return &Diagnosis{
 			Config: config,
@@ -58,7 +58,7 @@ func (d *Diagnosis) ValidateServicesConfiguration() {
 			})
 		}
 
-		re := regexp.MustCompile(`^[a-zA-Z0-9-]+:([a-zA-Z0-9]+)$`)
+		re := regexp.MustCompile(`^[a-zA-Z0-9-]+:([a-zA-Z0-9.]+)$`)
 		if !re.MatchString(service.Image) {
 			d.Errors = append(d.Errors, Error{
 				Title: fmt.Sprintf("Service %s has an invalid image", service.Name),
@@ -74,11 +74,12 @@ func (d *Diagnosis) ValidateServicesConfiguration() {
 			}
 		}
 
-		if len(service.Hosts) == 0 {
-			d.Errors = append(d.Errors, Error{
-				Title: fmt.Sprintf("Service %s has no hosts", service.Name),
-			})
-		}
+		// TODO: Hosts can be empty if the service is required by another service
+		//if len(service.Hosts) == 0 {
+		//	d.Errors = append(d.Errors, Error{
+		//		Title: fmt.Sprintf("Service %s has no hosts", service.Name),
+		//	})
+		//}
 
 		for k := range service.Env {
 			envKeyRegex := regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)

@@ -4,45 +4,9 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"reflect"
 	"strings"
 	"testing"
 )
-
-func TestNewTree(t *testing.T) {
-	dataset := []struct {
-		Files    []string
-		Expected Node
-	}{
-		{
-			[]string{},
-			Node{},
-		},
-		{
-			[]string{"/tmp"},
-			Node{
-				"tmp": Node{},
-			},
-		},
-		{
-			[]string{"/tmp", "/tmp/a", "/tmp/b"},
-			Node{
-				"tmp": Node{
-					"a": Node{},
-					"b": Node{},
-				},
-			},
-		},
-	}
-
-	for _, set := range dataset {
-		tree := NewTree(set.Files)
-
-		if reflect.DeepEqual(tree, set.Expected) == false {
-			t.Errorf("Expected %v, got %v", set.Expected, tree)
-		}
-	}
-}
 
 func TestNode_Print(t *testing.T) {
 	defer func() {
@@ -57,16 +21,11 @@ func TestNode_Print(t *testing.T) {
 	}
 
 	datasets := []struct {
-		Node     Node
+		Files    []string
 		Expected string
 	}{
 		{
-			Node{
-				"tmp": Node{
-					"a": Node{},
-					"b": Node{},
-				},
-			},
+			[]string{"/tmp/a", "/tmp/b"},
 			`
 <root>
 └── tmp
@@ -75,13 +34,7 @@ func TestNode_Print(t *testing.T) {
 `,
 		},
 		{
-			Node{
-				"etc": Node{},
-				"tmp": Node{
-					"a": Node{},
-					"b": Node{},
-				},
-			},
+			[]string{"/etc", "/tmp/a", "/tmp/b"},
 			`
 <root>
 ├── etc
@@ -94,7 +47,7 @@ func TestNode_Print(t *testing.T) {
 
 	for _, set := range datasets {
 		Stdout = &bytes.Buffer{}
-		set.Node.Print(0)
+		PrintTree(set.Files)
 
 		out, _ := io.ReadAll(Stdout)
 		if string(out) != strings.TrimPrefix(set.Expected, "\n") {

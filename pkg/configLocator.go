@@ -4,10 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"regexp"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/redwebcreation/nest/util"
 )
@@ -37,7 +38,7 @@ type ConfigLocator struct {
 	config *Configuration
 }
 
-func (l *ConfigLocator) Retrieve() (*Configuration, error) {
+func (l *ConfigLocator) Resolve() (*Configuration, error) {
 	if l.config != nil {
 		return l.config, nil
 	}

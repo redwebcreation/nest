@@ -29,7 +29,7 @@ var dataset = []Set{
 	{"remote", "github", "invalidRepository", "main", "", pkg.ErrInvalidRepositoryName},
 }
 
-func TestSetupCommandUsingFlags(t *testing.T) {
+func TestNewSetupCommand(t *testing.T) {
 	cmd := NewSetupCommand()
 
 	for _, data := range dataset {
@@ -40,7 +40,7 @@ func TestSetupCommandUsingFlags(t *testing.T) {
 
 		global.ConfigLocatorConfigFile = TmpConfig(t).Name()
 		defer os.Remove(global.ConfigLocatorConfigFile)
-		
+
 		err := cmd.Execute()
 		if err != data.Error {
 			if data.Error == nil {
@@ -55,7 +55,7 @@ func TestSetupCommandUsingFlags(t *testing.T) {
 
 }
 
-func TestSetupCommandInteractively(t *testing.T) {
+func TestNewSetupCommand2(t *testing.T) {
 	cmd := NewSetupCommand()
 
 	originalStdin := util.Stdin

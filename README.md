@@ -1,7 +1,18 @@
+* For the first layer:
+  * create the containers
+
+* Until all layers are processed:
+  * for each service in the layer:
+    * create a network %name_%unix
+    * connect edges to the network
+    * create container
+    * connect container to the network
+
+
 # Nest
 
 [![Tests](https://github.com/redwebcreation/nest/actions/workflows/tests.yml/badge.svg?branch=next)](https://github.com/redwebcreation/nest/actions/workflows/tests.yml)
-[![codebeat badge](https://codebeat.co/badges/7171e9ea-53d7-4c81-82bf-a9a2f222b027)](https://codebeat.co/projects/github-com-redwebcreation-nest-next)
+[![CodeBeat badge](https://codebeat.co/badges/7171e9ea-53d7-4c81-82bf-a9a2f222b027)](https://codebeat.co/projects/github-com-redwebcreation-nest-next)
 [![Go Report Card](https://goreportcard.com/badge/github.com/redwebcreation/nest)](https://goreportcard.com/report/github.com/redwebcreation/nest)
 [![codecov](https://codecov.io/gh/redwebcreation/nest/branch/next/graph/badge.svg?token=DWSP4O0YO8)](https://codecov.io/gh/redwebcreation/nest)
 ![PRs not welcome](https://img.shields.io/badge/PRs-not%20welcome-red)
@@ -124,15 +135,12 @@ this should remain empty
 
 ### Message Bus
 
-Deploying a container is a very complicated process that needs to be done through multiple channels, (cli, api, ...).
+Deploying a container is a complicated process that needs to be done through multiple channels, (cli, api, ...).
 
 In order to allow effective communication between the deployment workflow and the above channels, nest uses a message
 bus.
 
 Currently, the message bus takes a Value to send that is an `interface{}`.
-
-**not enforced yet**: However, when sending a message through the message bus, you should never send an untyped string.
-This makes it hard to know what it is without doing weird `strings.Contains` stuff.
 
 ### Command annotations
 

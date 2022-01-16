@@ -6,24 +6,26 @@ import (
 	"strings"
 )
 
-type Node map[string]Node
+type node map[string]node
 
-func NewTree(files []string) Node {
-	tree := make(Node)
+// PrintTree prints a tree from a list of files.
+func PrintTree(files []string) {
+	tree := make(node)
 	for _, file := range files {
 		parts := strings.Split(strings.TrimPrefix(file, "/"), "/")
-		node := tree
+		child := tree
 		for _, part := range parts {
-			if _, ok := node[part]; !ok {
-				node[part] = make(Node)
+			if _, ok := child[part]; !ok {
+				child[part] = make(node)
 			}
-			node = node[part]
+			child = child[part]
 		}
 	}
-	return tree
+
+	tree.printRecursively(0)
 }
 
-func (n Node) Print(depth int) {
+func (n node) printRecursively(depth int) {
 	if depth == 0 {
 		_, _ = fmt.Fprintln(Stdout, "<root>")
 	}
@@ -46,7 +48,7 @@ func (n Node) Print(depth int) {
 		_, _ = fmt.Fprintf(Stdout, "%s%s %s\n", strings.Repeat("│   ", depth), symbol, file)
 
 		if len(n[file]) != 0 {
-			n[file].Print(depth + 1)
+			n[file].printRecursively(depth + 1)
 		}
 	}
 }

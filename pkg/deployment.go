@@ -28,7 +28,6 @@ func (d DeployPipeline) Run() error {
 	if err != nil {
 		return err
 	}
-
 	id, err := d.CreateContainer()
 	if err != nil {
 		return err

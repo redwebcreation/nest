@@ -2,23 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/redwebcreation/nest/command"
-	"github.com/redwebcreation/nest/global"
-	"github.com/redwebcreation/nest/pkg"
 	"os"
 	"os/exec"
 
+	"github.com/redwebcreation/nest/command"
+	"github.com/redwebcreation/nest/command/config"
+
 	"github.com/spf13/cobra"
 )
-
-var commands = []*cobra.Command{
-	command.NewDeployCommand(),
-	command.NewMedicCommand(),
-	command.NewConfigCommand(),
-	command.NewSetupCommand(),
-	command.NewVersionCommand(),
-	command.NewSelfUpdateCommand(),
-}
 
 var nest = &cobra.Command{
 	Use:   "nest",
@@ -26,9 +17,19 @@ var nest = &cobra.Command{
 	Long:  "Nest is a powerful service orchestrator for a single server.",
 }
 
+var commands = []*cobra.Command{
+	command.NewDeployCommand(),
+	command.NewMedicCommand(),
+	config.NewRootConfigCommand(),
+	command.NewSetupCommand(),
+	command.NewVersionCommand(),
+	command.NewSelfUpdateCommand(),
+}
+
 func main() {
 	for _, cmd := range commands {
-		configure(cmd)
+		command.Configure(cmd)
+
 		nest.AddCommand(cmd)
 	}
 
@@ -36,32 +37,6 @@ func main() {
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, "error: "+err.Error())
 		os.Exit(1)
-	}
-}
-
-func configure(cmd *cobra.Command) {
-	cmd.SilenceUsage = true
-	cmd.SilenceErrors = true
-
-	_, disableConfigLocator := cmd.Annotations["config"]
-	_, disableMedic := cmd.Annotations["medic"]
-
-	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if !disableConfigLocator {
-			if _, err := os.Stat(global.ConfigLocatorConfigFile); err != nil {
-				return fmt.Errorf("run `nest setup` to setup nest")
-			}
-
-			if err := pkg.LoadConfig(); err != nil {
-				return err
-			}
-		}
-
-		if disableMedic {
-			return nil
-		}
-
-		return pkg.DiagnoseConfiguration().MustPass()
 	}
 }
 

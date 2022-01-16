@@ -1,4 +1,4 @@
-package command
+package config
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func runConfigCommand(cmd *cobra.Command, args []string) error {
+func runShowCommand(cmd *cobra.Command, args []string) error {
 	fmt.Println("strategy:", pkg.Config.Strategy)
 	fmt.Println("location:", pkg.Config.GetRepositoryLocation())
 	fmt.Printf("current commit: %s\n", pkg.Config.Commit[:7])
@@ -23,17 +23,17 @@ func runConfigCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println()
-	util.NewTree(configFiles).Print(0)
+	util.PrintTree(configFiles)
 
 	return nil
 }
 
-// NewConfigCommand prints the current configuration for the config locator
-func NewConfigCommand() *cobra.Command {
+// NewShowCommand prints the current configuration for the config locator
+func NewShowCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "config",
+		Use:   "show",
 		Short: "prints the current configuration",
-		RunE:  runConfigCommand,
+		RunE:  runShowCommand,
 	}
 
 	return cmd

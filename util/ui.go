@@ -6,9 +6,13 @@ import (
 	"os"
 )
 
+// Stdin is a reader that reads from stdin.
 var Stdin io.ReadWriter = os.Stdin
+
+// Stdout is a writer that writes to stdout.
 var Stdout io.ReadWriter = os.Stdout
 
+// Prompt asks the user for input, validates it and returns it.
 func Prompt(prompt, defaultValue string, validator func(input string) bool) string {
 	var input = defaultValue
 
