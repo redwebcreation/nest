@@ -33,7 +33,7 @@ type ConfigLocatorConfig struct {
 
 type ConfigLocator struct {
 	ConfigLocatorConfig
-	Git    *util.Repository
+	Git    util.Repository
 	config *Configuration
 }
 
@@ -93,7 +93,7 @@ func (l *ConfigLocator) UnmarshalJSON(data []byte) error {
 	}
 
 	repoPath := l.cachePath()
-	var repo *util.Repository
+	var repo util.Repository
 
 	if _, err = os.Stat(repoPath); err != nil {
 		repo, err = util.NewRepository(l.GetRepositoryLocation(), repoPath)
