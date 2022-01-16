@@ -15,7 +15,7 @@ var commands = []*cobra.Command{
 	command.NewDeployCommand(),
 	command.NewMedicCommand(),
 	command.NewConfigCommand(),
-	command.NewConfigureCommand(),
+	command.NewSetupCommand(),
 	command.NewVersionCommand(),
 	command.NewSelfUpdateCommand(),
 }
@@ -49,7 +49,7 @@ func configure(cmd *cobra.Command) {
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if !disableConfigLocator {
 			if _, err := os.Stat(global.ConfigLocatorConfigFile); err != nil {
-				return fmt.Errorf("run `nest configure` to setup nest")
+				return fmt.Errorf("run `nest setup` to setup nest")
 			}
 
 			if err := pkg.LoadConfig(); err != nil {

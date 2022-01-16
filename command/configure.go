@@ -18,7 +18,7 @@ var repository string
 var branch string
 var dir string
 
-func runConfigureCommand(cmd *cobra.Command, args []string) error {
+func runSetupCommand(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().NFlag() == 0 {
 		pkg.Config.Strategy = util.Prompt("Choose a strategy", "remote", func(input string) bool {
 			return input == "remote" || input == "local"
@@ -71,16 +71,12 @@ func runConfigureCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// NewConfigureCommand configures the config locator
-func NewConfigureCommand() *cobra.Command {
+// NewSetupCommand configures the config locator
+func NewSetupCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "configure",
-		Aliases: []string{
-			"rcfg",
-			"reconfigure",
-		},
+		Use:   "setup",
 		Short: "update the global configuration",
-		RunE:  runConfigureCommand,
+		RunE:  runSetupCommand,
 		Annotations: map[string]string{
 			"medic":  "false",
 			"config": "false",

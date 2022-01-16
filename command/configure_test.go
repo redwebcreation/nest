@@ -27,8 +27,8 @@ var dataset = []Set{
 	{"remote", "github", "invalidRepository", "main", "", pkg.ErrInvalidRepositoryName},
 }
 
-func TestConfigureCommandUsingFlags(t *testing.T) {
-	cmd := NewConfigureCommand()
+func TestSetupCommandUsingFlags(t *testing.T) {
+	cmd := NewSetupCommand()
 
 	for _, data := range dataset {
 		_ = cmd.Flags().Set("strategy", data.Strategy)
@@ -52,8 +52,8 @@ func TestConfigureCommandUsingFlags(t *testing.T) {
 
 }
 
-func TestConfigureCommandInteractively(t *testing.T) {
-	cmd := NewConfigureCommand()
+func TestSetupCommandInteractively(t *testing.T) {
+	cmd := NewSetupCommand()
 
 	originalStdin := util.Stdin
 

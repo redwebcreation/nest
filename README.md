@@ -55,9 +55,9 @@ Your configuration should be stored in a single place and versioned.
 Your configuration is stored in a git repository. It can either be a local repository (not implemented yet, on roadmap)
 or a remote repository. The remote option is preferred.
 
-When first running nest, you must configure the config locator, the algorithm that will retrieve your configuration.
+When first running nest, you must set up the config locator, the algorithm that will retrieve your configuration.
 
-You may do so by running `nest configure` or alternatively `nest rcfg` (rcfg means reconfigure).
+You may do so by running `nest setup` or alternatively `nest rcfg` (rcfg means reconfigure).
 
 `git` must be installed on your system. If your configuration is stored remotely, you must be able to clone the
 repository using SSH.
