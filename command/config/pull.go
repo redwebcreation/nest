@@ -8,12 +8,12 @@ import (
 )
 
 func runPullCommand(cmd *cobra.Command, args []string) error {
-	err := pkg.Config.Git.Pull(pkg.Config.Branch)
+	out, err := pkg.Config.Git.Pull(pkg.Config.Branch)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Updated.")
+	fmt.Println(string(out))
 
 	return nil
 }

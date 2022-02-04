@@ -13,7 +13,7 @@ type Repository interface {
 	LatestCommit() ([]byte, error)
 	Checkout(string) error
 	Commits() ([]string, error)
-	Pull(branch string) error
+	Pull(branch string) ([]byte, error)
 	Read(string) ([]byte, error)
 	Tree() ([]string, error)
 }
@@ -67,14 +67,14 @@ func (r GitRepository) Commits() ([]string, error) {
 	return strings.Split(string(out), "\n"), nil
 }
 
-func (r GitRepository) Pull(branch string) error {
+func (r GitRepository) Pull(branch string) ([]byte, error) {
 	_, err := r.Exec("checkout", branch)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = r.Exec("pull")
-	return err
+	out, err := r.Exec("pull")
+	return out, err
 }
 
 func (r GitRepository) Read(path string) ([]byte, error) {
