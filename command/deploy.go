@@ -15,9 +15,16 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
-	messageBus := make(pkg.MessageBus)
 	graph := config.Services.BuildDependencyPlan()
+
+	deployment := &pkg.Deployment{
+		Id:  strconv.FormatInt(time.Now().UnixMilli(), 10),
+		Bus: make(pkg.MessageBus),
+		Manifest: &pkg.Manifest{
+			Containers: make(map[string]string),
+			Networks:   make(map[string]string),
+		},
+	}
 
 	for k, layer := range graph {
 		fmt.Printf("Deploying layer %d/%d\n", k+1, len(graph))
@@ -28,10 +35,10 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 			messages[service.Name] = "idle"
 
 			go func(service *pkg.Service) {
-				err = service.Deploy(id, messageBus)
+				err = service.Deploy(deployment, k)
 
 				if err != nil {
-					messageBus <- pkg.Message{
+					deployment.Bus <- pkg.Message{
 						Service: service,
 						Value:   err,
 					}
@@ -41,7 +48,7 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 
 		render(messages)
 
-		for message := range messageBus {
+		for message := range deployment.Bus {
 			if _, ok := message.Value.(error); ok {
 				messages[message.Service.Name] = message.Value.(error).Error()
 				inQueue--

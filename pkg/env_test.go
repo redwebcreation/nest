@@ -11,7 +11,7 @@ func TestConvertEnv(t *testing.T) {
 		"baz": "qux",
 	}
 
-	converted := env.ToDockerEnv()
+	converted := env.ForDocker()
 
 	sort.Strings(converted)
 
