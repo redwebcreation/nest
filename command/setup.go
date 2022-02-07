@@ -62,7 +62,7 @@ func runSetupCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = os.WriteFile(global.ConfigLocatorConfigFile, contents, 0600)
+	err = os.WriteFile(global.LocatorConfigFile, contents, 0600)
 	if err != nil {
 		return err
 	}

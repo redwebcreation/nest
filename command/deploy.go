@@ -1,11 +1,16 @@
 package command
 
 import (
+	"context"
 	"fmt"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/redwebcreation/nest/global"
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -21,7 +26,7 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 		Id:  strconv.FormatInt(time.Now().UnixMilli(), 10),
 		Bus: make(pkg.MessageBus),
 		Manifest: &pkg.Manifest{
-			Containers: make(map[string]string),
+			Containers: make(map[string][]*pkg.Container),
 			Networks:   make(map[string]string),
 		},
 	}
@@ -68,7 +73,84 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	err = deployment.Manifest.Save(global.ConfigHome + "/manifest.json")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Cleaning up old objects")
+	removed, err := cleanup(deployment)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Removed %d objects\n", removed)
+
 	return nil
+}
+
+func cleanup(deployment *pkg.Deployment) (int, error) {
+	containers, err := global.Docker.ContainerList(context.Background(), types.ContainerListOptions{
+		Filters: filters.NewArgs(
+			filters.Arg("label", "cloud.usenest.deployment_id"),
+		),
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	networks, err := global.Docker.NetworkList(context.Background(), types.NetworkListOptions{
+		Filters: filters.NewArgs(
+			filters.Arg("label", "cloud.usenest.deployment_id"),
+		),
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	var containersWg sync.WaitGroup
+	var removed int
+
+	for _, container := range containers {
+		if container.Labels["cloud.usenest.deployment_id"] != deployment.Id {
+			containersWg.Add(1)
+			go func(container types.Container) {
+				defer containersWg.Done()
+				err = global.Docker.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{
+					Force: true,
+				})
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					removed++
+				}
+			}(container)
+		}
+	}
+
+	containersWg.Wait()
+
+	var networksWg sync.WaitGroup
+
+	for _, network := range networks {
+		if network.Labels["cloud.usenest.deployment_id"] != deployment.Id {
+			networksWg.Add(1)
+			go func(network types.NetworkResource) {
+				defer networksWg.Done()
+				err = global.Docker.NetworkRemove(context.Background(), network.ID)
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					removed++
+				}
+			}(network)
+		}
+	}
+
+	networksWg.Wait()
+
+	return removed, nil
 }
 
 // NewDeployCommand creates and configures the services defined in the configuration

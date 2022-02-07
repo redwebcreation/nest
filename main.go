@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/redwebcreation/nest/command/proxy"
+	"github.com/redwebcreation/nest/global"
 	"os"
 	"os/exec"
 
@@ -21,6 +23,7 @@ var commands = []*cobra.Command{
 	command.NewDeployCommand(),
 	command.NewMedicCommand(),
 	config.NewRootConfigCommand(),
+	proxy.NewRootProxyCommand(),
 	command.NewSetupCommand(),
 	command.NewVersionCommand(),
 	command.NewSelfUpdateCommand(),
@@ -32,6 +35,8 @@ func main() {
 
 		nest.AddCommand(cmd)
 	}
+
+	nest.PersistentFlags().StringVarP(&global.ConfigHome, "config", "c", global.ConfigHome, "set the config locator config file path")
 
 	err := nest.Execute()
 	if err != nil {

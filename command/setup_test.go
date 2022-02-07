@@ -38,8 +38,8 @@ func TestNewSetupCommand(t *testing.T) {
 		_ = cmd.Flags().Set("repository", data.Repository)
 		_ = cmd.Flags().Set("branch", data.Branch)
 
-		global.ConfigLocatorConfigFile = TmpConfig(t).Name()
-		defer os.Remove(global.ConfigLocatorConfigFile)
+		global.LocatorConfigFile = TmpConfig(t).Name()
+		defer os.Remove(global.LocatorConfigFile)
 
 		err := cmd.Execute()
 		if err != data.Error {
@@ -50,7 +50,7 @@ func TestNewSetupCommand(t *testing.T) {
 			}
 		}
 
-		_ = os.Remove(global.ConfigLocatorConfigFile)
+		_ = os.Remove(global.LocatorConfigFile)
 	}
 
 }
@@ -67,8 +67,8 @@ func TestNewSetupCommand2(t *testing.T) {
 
 		util.Stdin = bytes.NewBufferString(data.Strategy + "\n" + data.Provider + "\n" + data.Repository + "\n" + data.Branch + "\n")
 
-		global.ConfigLocatorConfigFile = TmpConfig(t).Name()
-		defer os.Remove(global.ConfigLocatorConfigFile)
+		global.LocatorConfigFile = TmpConfig(t).Name()
+		defer os.Remove(global.LocatorConfigFile)
 		err := cmd.Execute()
 		if err != data.Error {
 			if data.Error == nil {

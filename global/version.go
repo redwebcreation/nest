@@ -1,4 +1,4 @@
 package global
 
-// Version is the current version of nest (updated by the build script)
+// Version is the current version of nest (updated at compile time)
 var Version = "dev"

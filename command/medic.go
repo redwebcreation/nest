@@ -19,7 +19,7 @@ func runMedicCommand(cmd *cobra.Command, args []string) error {
 	if jsonFormat {
 		out, _ := json.Marshal(diagnosis)
 
-		fmt.Println(string(out))
+		fmt.Printf("%s\n", out)
 		return nil
 	}
 

@@ -18,7 +18,7 @@ func Configure(cmd *cobra.Command) {
 
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if !disableConfigLocator {
-			if _, err := os.Stat(global.ConfigLocatorConfigFile); err != nil {
+			if _, err := os.Stat(global.LocatorConfigFile); err != nil {
 				return fmt.Errorf("run `nest setup` to setup nest")
 			}
 

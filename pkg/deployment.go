@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -9,6 +10,7 @@ import (
 	"github.com/redwebcreation/nest/docker"
 	"github.com/redwebcreation/nest/global"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -19,9 +21,23 @@ type Message struct {
 	Value   interface{}
 }
 
+type Container struct {
+	ID string
+	Ip string
+}
+
 type Manifest struct {
-	Containers map[string]string
+	Containers map[string][]*Container
 	Networks   map[string]string
+}
+
+func (m Manifest) Save(path string) error {
+	bytes, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, bytes, 0600)
 }
 
 type Deployment struct {
@@ -105,8 +121,8 @@ func (d *DeployPipeline) CreateServiceNetwork() (string, error) {
 
 	net, err := global.Docker.NetworkCreate(context.Background(), name, types.NetworkCreate{
 		Labels: map[string]string{
-			"cloud.usenest.service":    d.Service.Name,
-			"cloud.usenest.deployment": d.Deployment.Id,
+			"cloud.usenest.service":       d.Service.Name,
+			"cloud.usenest.deployment_id": d.Deployment.Id,
 		},
 	})
 
@@ -119,11 +135,14 @@ func (d *DeployPipeline) CreateServiceNetwork() (string, error) {
 	return net.ID, nil
 }
 
-func (d *DeployPipeline) ConnectRequiredServices(id string) error {
+func (d *DeployPipeline) ConnectRequiredServices(networkId string) error {
 	for _, require := range d.Service.Requires {
-		err := global.Docker.NetworkConnect(context.Background(), id, d.Deployment.Manifest.Containers[require], nil)
-		if err != nil {
-			return err
+		for _, requiredContainer := range d.Deployment.Manifest.Containers[require] {
+			err := global.Docker.NetworkConnect(context.Background(), networkId, requiredContainer.ID, nil)
+
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -162,7 +181,15 @@ func (d *DeployPipeline) CreateContainer() (string, error) {
 		return "", err
 	}
 
-	d.Deployment.Manifest.Containers[d.Service.Name] = c.ID
+	inspection, err := global.Docker.ContainerInspect(context.Background(), c.ID)
+	if err != nil {
+		return "", err
+	}
+
+	d.Deployment.Manifest.Containers[d.Service.Name] = append(d.Deployment.Manifest.Containers[d.Service.Name], &Container{
+		ID: inspection.ID,
+		Ip: inspection.NetworkSettings.Networks[d.Deployment.Manifest.Networks[d.Service.Name]].IPAddress,
+	})
 
 	return c.ID, nil
 }

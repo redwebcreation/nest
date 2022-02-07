@@ -65,7 +65,7 @@ func LoadConfigFromCommit(commit string) error {
 		},
 	}
 
-	contents, err := os.ReadFile(global.ConfigLocatorConfigFile)
+	contents, err := os.ReadFile(global.LocatorConfigFile)
 	if err != nil {
 		return err
 	}
