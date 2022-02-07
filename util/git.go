@@ -22,7 +22,14 @@ type GitRepository string
 
 func NewRepository(remote string, path string) (*GitRepository, error) {
 	if out, err := exec.Command("git", "clone", remote, path).CombinedOutput(); err != nil {
-		return nil, fmt.Errorf("%s: %s", err, out)
+		// split out by newline
+		for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+			fmt.Fprintf(os.Stderr, "\n  "+Gray.Fg()+"|  "+line+Reset())
+		}
+
+		fmt.Fprintln(os.Stderr)
+
+		return nil, fmt.Errorf("could not clone the configuration")
 	}
 
 	repo := GitRepository(path)
@@ -43,10 +50,8 @@ func (r GitRepository) Exec(args ...string) ([]byte, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = string(r)
 	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("%s: %s", err, out)
-	}
-	return bytes.TrimSpace(out), nil
+
+	return bytes.TrimSpace(out), err
 }
 
 func (r GitRepository) LatestCommit() ([]byte, error) {

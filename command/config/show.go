@@ -17,7 +17,12 @@ func runShowCommand(cmd *cobra.Command, args []string) error {
 		fmt.Println("subdir:", pkg.Config.Dir)
 	}
 
-	configFiles, err := pkg.Config.Git.Tree()
+	repo, err := pkg.Config.Repo()
+	if err != nil {
+		return err
+	}
+
+	configFiles, err := repo.Tree()
 	if err != nil {
 		return err
 	}

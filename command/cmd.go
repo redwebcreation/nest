@@ -22,7 +22,7 @@ func Configure(cmd *cobra.Command) {
 				return fmt.Errorf("run `nest setup` to setup nest")
 			}
 
-			if err := pkg.LoadConfig(); err != nil {
+			if err := pkg.LoadConfigFromCommit(""); err != nil {
 				return err
 			}
 		}

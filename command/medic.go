@@ -1,7 +1,6 @@
 package command
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/redwebcreation/nest/util"
 
@@ -9,19 +8,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var jsonFormat bool
 var onlyErrors bool
 var onlyWarnings bool
 
 func runMedicCommand(cmd *cobra.Command, args []string) error {
 	diagnosis := pkg.DiagnoseConfiguration()
-
-	if jsonFormat {
-		out, _ := json.Marshal(diagnosis)
-
-		fmt.Printf("%s\n", out)
-		return nil
-	}
 
 	if !onlyWarnings {
 		fmt.Println()
@@ -68,7 +59,6 @@ func NewMedicCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&jsonFormat, "jsonFormat", "j", false, "output in jsonFormat format")
 	cmd.Flags().BoolVarP(&onlyErrors, "only-errors", "e", false, "only show errors")
 	cmd.Flags().BoolVarP(&onlyWarnings, "only-warnings", "w", false, "only show warnings")
 

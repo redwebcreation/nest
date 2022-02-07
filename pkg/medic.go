@@ -24,7 +24,7 @@ func (d *Diagnosis) MustPass() error {
 		return nil
 	}
 
-	return fmt.Errorf("invalid configuration (run `nest diagnose` for details)")
+	return fmt.Errorf("invalid configuration (run `nest medic` for details)")
 }
 
 func DiagnoseConfiguration() *Diagnosis {
@@ -34,8 +34,7 @@ func DiagnoseConfiguration() *Diagnosis {
 			Config: config,
 			Errors: []Error{
 				{
-					Title: "Unable to load configuration",
-					Error: err,
+					Title: "Unable to load the configuration",
 				},
 			},
 		}

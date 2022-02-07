@@ -80,7 +80,7 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	for name, service := range services {
 		if service.Include != "" {
-			bytes, err := Config.Git.Read(service.Include)
+			bytes, err := Config.repo.Read(service.Include)
 			if err != nil {
 				return err
 			}

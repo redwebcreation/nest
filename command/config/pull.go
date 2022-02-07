@@ -8,7 +8,12 @@ import (
 )
 
 func runPullCommand(cmd *cobra.Command, args []string) error {
-	out, err := pkg.Config.Git.Pull(pkg.Config.Branch)
+	git, err := pkg.Config.Repo()
+	if err != nil {
+		return err
+	}
+
+	out, err := git.Pull(pkg.Config.Branch)
 	if err != nil {
 		return err
 	}

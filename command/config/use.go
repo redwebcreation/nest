@@ -11,7 +11,12 @@ import (
 
 func runUseCommand(cmd *cobra.Command, args []string) error {
 	fmt.Println()
-	commits, err := pkg.Config.Git.Commits()
+	repo, err := pkg.Config.Repo()
+	if err != nil {
+		return err
+	}
+
+	commits, err := repo.Commits()
 	if err != nil {
 		return err
 	}

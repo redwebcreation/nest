@@ -69,14 +69,11 @@ func LoadConfigFromCommit(commit string) error {
 
 	if err = json.Unmarshal(contents, &reader); err != nil && err.Error() == "unknown error: remote: " {
 		return ErrRepositoryNotFound
+	} else if err != nil {
+		return err
 	}
 
 	Config = &reader
 
 	return nil
-}
-
-// LoadConfig loads the configuration globally
-func LoadConfig() error {
-	return LoadConfigFromCommit("")
 }

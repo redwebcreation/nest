@@ -30,7 +30,7 @@ type Locator struct {
 	Branch     string
 	Dir        string
 	Commit     string
-	Git        util.Repository
+	repo       util.Repository
 	config     *Configuration
 }
 
@@ -59,11 +59,16 @@ func (l Locator) Read(path string) ([]byte, error) {
 		path = strings.TrimSuffix(l.Dir, "/") + "/" + path
 	}
 
-	return l.Git.Read(path)
+	repo, err := l.Repo()
+	if err != nil {
+		return nil, err
+	}
+
+	return repo.Read(path)
 }
 
 func (l Locator) GetRepositoryLocation() string {
-	return fmt.Sprintf("git@%s.com:%s", l.Provider, l.Repository)
+	return fmt.Sprintf("repo@%s.com:%s", l.Provider, l.Repository)
 }
 
 func (l Locator) cachePath() string {
@@ -90,37 +95,6 @@ func (l *Locator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	repoPath := l.cachePath()
-	var repo util.Repository
-
-	if _, err = os.Stat(repoPath); err != nil {
-		repo, err = util.NewRepository(l.GetRepositoryLocation(), repoPath)
-		if err != nil {
-			return err
-		}
-	} else {
-		repo, err = util.OpenRepository(repoPath)
-		if err != nil {
-			return err
-		}
-	}
-
-	if l.Commit == "" {
-		commit, err := repo.LatestCommit()
-		if err != nil {
-			return err
-		}
-
-		l.Commit = string(commit)
-
-		err = repo.Checkout(l.Commit)
-		if err != nil {
-			return err
-		}
-	}
-
-	l.Git = repo
-
 	return nil
 }
 
@@ -137,10 +111,56 @@ func (l Locator) Validate() error {
 		return ErrEmptyBranch
 	}
 
-	re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+(.git)?")
+	re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+(.repo)?")
 	if !re.MatchString(l.Repository) {
 		return ErrInvalidRepositoryName
 	}
 
 	return nil
+}
+
+func (l *Locator) Repo() (util.Repository, error) {
+	if l.repo != nil {
+		return l.repo, nil
+	}
+
+	repoPath := l.cachePath()
+	var repo util.Repository
+
+	if _, err := os.Stat(repoPath); err != nil {
+		repo, err = util.NewRepository(l.GetRepositoryLocation(), repoPath)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		repo, err = util.OpenRepository(repoPath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if l.Branch != "" {
+		err := repo.Checkout(l.Branch)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if l.Commit == "" {
+		commit, err := repo.LatestCommit()
+		if err != nil {
+			return nil, err
+		}
+
+		l.Commit = string(commit)
+
+		err = repo.Checkout(l.Commit)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	l.repo = repo
+
+	return repo, nil
 }

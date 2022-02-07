@@ -83,7 +83,7 @@ func NewSetupCommand() *cobra.Command {
 		},
 	}
 
-	_ = pkg.LoadConfig()
+	_ = pkg.LoadConfigFromCommit("")
 
 	cmd.Flags().StringVarP(&strategy, "strategy", "s", pkg.Config.Strategy, "strategy to use")
 	cmd.Flags().StringVarP(&provider, "provider", "p", pkg.Config.Provider, "provider to use")
