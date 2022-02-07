@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 
 	"github.com/redwebcreation/nest/util"
 )
@@ -21,24 +21,20 @@ var (
 	ErrEmptyBranch           = fmt.Errorf("branch name cannot be empty")
 )
 
-var Config = &ConfigLocator{}
+var Config = &Locator{}
 
-type ConfigLocatorConfig struct {
+type Locator struct {
 	Strategy   string
 	Provider   string
 	Repository string
 	Branch     string
 	Dir        string
 	Commit     string
+	Git        util.Repository
+	config     *Configuration
 }
 
-type ConfigLocator struct {
-	ConfigLocatorConfig
-	Git    util.Repository
-	config *Configuration
-}
-
-func (l *ConfigLocator) Resolve() (*Configuration, error) {
+func (l *Locator) Resolve() (*Configuration, error) {
 	if l.config != nil {
 		return l.config, nil
 	}
@@ -58,7 +54,7 @@ func (l *ConfigLocator) Resolve() (*Configuration, error) {
 	return &config, nil
 }
 
-func (l ConfigLocator) Read(path string) ([]byte, error) {
+func (l Locator) Read(path string) ([]byte, error) {
 	if l.Dir != "" {
 		path = strings.TrimSuffix(l.Dir, "/") + "/" + path
 	}
@@ -66,27 +62,28 @@ func (l ConfigLocator) Read(path string) ([]byte, error) {
 	return l.Git.Read(path)
 }
 
-func (l ConfigLocator) GetRepositoryLocation() string {
+func (l Locator) GetRepositoryLocation() string {
 	return fmt.Sprintf("git@%s.com:%s", l.Provider, l.Repository)
 }
 
-func (l ConfigLocator) cachePath() string {
+func (l Locator) cachePath() string {
 	return "/tmp/" + base64.StdEncoding.EncodeToString([]byte(l.GetRepositoryLocation()))
 }
 
-func (l *ConfigLocator) UnmarshalJSON(data []byte) error {
-	var lc ConfigLocatorConfig
+func (l *Locator) UnmarshalJSON(data []byte) error {
+	type plain Locator
+	var p plain
 
-	err := json.Unmarshal(data, &lc)
+	err := json.Unmarshal(data, &p)
 	if err != nil {
 		return err
 	}
 
-	l.Strategy = lc.Strategy
-	l.Provider = lc.Provider
-	l.Repository = lc.Repository
-	l.Dir = lc.Dir
-	l.Branch = lc.Branch
+	l.Strategy = p.Strategy
+	l.Provider = p.Provider
+	l.Repository = p.Repository
+	l.Dir = p.Dir
+	l.Branch = p.Branch
 
 	err = l.Validate()
 	if err != nil {
@@ -127,7 +124,7 @@ func (l *ConfigLocator) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (l ConfigLocator) Validate() error {
+func (l Locator) Validate() error {
 	if l.Strategy != "local" && l.Strategy != "remote" {
 		return ErrInvalidStrategy
 	}

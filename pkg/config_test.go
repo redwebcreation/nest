@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"github.com/redwebcreation/nest/docker"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 	"reflect"
 	"sort"
 	"strings"

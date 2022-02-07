@@ -24,8 +24,7 @@ var (
 func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type plain Configuration
 	var p plain
-	err := unmarshal(&p)
-	if err != nil {
+	if err := unmarshal(&p); err != nil {
 		return err
 	}
 
@@ -59,10 +58,8 @@ func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // LoadConfigFromCommit loads the configuration globally from the given commit
 func LoadConfigFromCommit(commit string) error {
-	reader := ConfigLocator{
-		ConfigLocatorConfig: ConfigLocatorConfig{
-			Commit: commit,
-		},
+	reader := Locator{
+		Commit: commit,
 	}
 
 	contents, err := os.ReadFile(global.LocatorConfigFile)
