@@ -122,7 +122,7 @@ func (s ServiceMap) BuildDependencyPlan() [][]*Service {
 	sortedServices := make([][]*Service, 0)
 	maxDepth := 0
 
-	Walker{}.Walk(graph, func(node *Node) {
+	Walker{}.Walk(graph, func(node Node) {
 		if node.Depth > maxDepth {
 			for len(sortedServices) < node.Depth {
 				sortedServices = append(sortedServices, []*Service{})

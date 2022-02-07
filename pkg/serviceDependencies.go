@@ -13,7 +13,7 @@ func (n *Node) AddEdge(node Node) {
 	n.Edges = append(n.Edges, node)
 }
 
-func NewDependencyGraph(services ServiceMap) *Node {
+func NewDependencyGraph(services ServiceMap) Node {
 	root := Node{}
 
 	// sorting for reproducibility
@@ -33,7 +33,7 @@ func NewDependencyGraph(services ServiceMap) *Node {
 		root.AddEdge(graphNode(root, key, services))
 	}
 
-	return &root
+	return root
 }
 
 func graphNode(parent Node, key string, services ServiceMap) Node {
@@ -52,13 +52,13 @@ func graphNode(parent Node, key string, services ServiceMap) Node {
 
 type Walker map[string]bool
 
-func (w Walker) Walk(node *Node, f func(*Node)) {
+func (w Walker) Walk(node Node, f func(Node)) {
 	for _, edge := range node.Edges {
 		if w[edge.Service.Name] {
 			continue
 		}
 
-		w.Walk(&edge, f)
+		w.Walk(edge, f)
 	}
 
 	// Skip the root node.

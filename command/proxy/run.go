@@ -69,6 +69,7 @@ func runRunCommand(cmd *cobra.Command, args []string) error {
 	server := &http.Server{
 		Addr: ":443",
 		TLSConfig: &tls.Config{
+			MinVersion:     tls.VersionTLS13,
 			GetCertificate: certificateManager.GetCertificate,
 		},
 		Handler: handler,
