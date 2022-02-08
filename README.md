@@ -1,28 +1,3 @@
-a -> b 
-a -> c
-c -> d
-
-a -> (b, c) -> d
-d -> (b, c) -> a
-
-a 
-  -> e
-  -> b
-    -> e
-  -> c
-    -> d
-
-* For the first layer:
-  * create the containers
-
-* Until all layers are processed:
-  * for each service in the layer:
-    * create a network %name_%unix
-    * connect edges to the network
-    * create container
-    * connect container to the network
-
-
 # Nest
 
 [![Tests](https://github.com/redwebcreation/nest/actions/workflows/tests.yml/badge.svg?branch=next)](https://github.com/redwebcreation/nest/actions/workflows/tests.yml)

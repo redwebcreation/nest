@@ -30,7 +30,7 @@ func TestGithubRepository_Release(t *testing.T) {
 		t.Errorf("Expected v0.1.0, got %s", release.TagName)
 	}
 
-	release, err = GithubRepository("redwebcreation/nest").Release("v0.0.2")
+	_, err = GithubRepository("redwebcreation/nest").Release("v0.0.2")
 	if err != ErrReleaseNotFound {
 		t.Errorf("Expected ErrReleaseNotFound, got %s", err)
 	}
@@ -63,7 +63,7 @@ func serverMock() *httptest.Server {
 	handler.HandleFunc("/repos/redwebcreation/nest/releases", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`[{"tag_name": "v0.1.0"}, {"tag_name": "v1.0.0", "assets": [{"state": "uploaded", "browser_download_url": "example.com/download"}]}]`))
+		_, _ = w.Write([]byte(`[{"tag_name": "v0.1.0"}, {"tag_name": "v1.0.0", "assets": [{"state": "uploaded", "browser_download_url": "example.com/download"}]}]`))
 	})
 
 	srv := httptest.NewServer(handler)
