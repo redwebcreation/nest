@@ -10,14 +10,14 @@ import (
 
 func runShowCommand(cmd *cobra.Command, args []string) error {
 	fmt.Println("strategy:", pkg.Config.Strategy)
-	fmt.Println("location:", pkg.Config.GetRepositoryLocation())
+	fmt.Println("location:", pkg.Config.GetRemoteURL())
 	fmt.Printf("current commit: %s\n", pkg.Config.Commit[:7])
 	fmt.Println("branch:", pkg.Config.Branch)
 	if pkg.Config.Dir != "" {
 		fmt.Println("subdir:", pkg.Config.Dir)
 	}
 
-	repo, err := pkg.Config.Repo()
+	repo, err := pkg.Config.LocalClone()
 	if err != nil {
 		return err
 	}

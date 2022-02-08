@@ -10,7 +10,7 @@ import (
 
 type Repository interface {
 	Exec(...string) ([]byte, error)
-	LatestCommit() ([]byte, error)
+	LatestCommit() (string, error)
 	Checkout(string) error
 	Commits() ([]string, error)
 	Pull(branch string) ([]byte, error)
@@ -54,8 +54,13 @@ func (r GitRepository) Exec(args ...string) ([]byte, error) {
 	return bytes.TrimSpace(out), err
 }
 
-func (r GitRepository) LatestCommit() ([]byte, error) {
-	return r.Exec("rev-parse", "HEAD")
+func (r GitRepository) LatestCommit() (string, error) {
+	out, err := r.Exec("rev-parse", "HEAD")
+	if err != nil {
+		return "", err
+	}
+
+	return string(bytes.TrimSpace(out)), nil
 }
 
 func (r GitRepository) Checkout(commit string) error {

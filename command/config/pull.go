@@ -8,7 +8,7 @@ import (
 )
 
 func runPullCommand(cmd *cobra.Command, args []string) error {
-	git, err := pkg.Config.Repo()
+	git, err := pkg.Config.LocalClone()
 	if err != nil {
 		return err
 	}

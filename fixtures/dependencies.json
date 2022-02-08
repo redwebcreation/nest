@@ -1,0 +1,65 @@
+[
+  {
+    "services": {
+      "example": []
+    },
+    "sorted": [["example"]]
+  },
+  {
+    "services": {
+      "a": ["b"],
+      "b": ["a"]
+    },
+    "error": true
+  },
+  {
+    "services": {
+      "a": ["b"],
+      "b": ["c"],
+      "c": ["a"]
+    },
+    "error": true
+  },
+  {
+    "services": {
+      "a": ["b"],
+      "b": ["a"],
+      "c": []
+    },
+    "error": true
+  },
+  {
+    "services": {
+      "example": [
+        "database", "cache", "queue"
+      ],
+      "database": ["s3"],
+      "s3": [],
+      "cache": [],
+      "queue": [
+        "rabbitmq", "redis"
+      ],
+      "rabbitmq": [],
+      "redis": ["s3"]
+    },
+    "sorted": [
+      ["s3", "rabbitmq"],
+      ["redis"],
+      ["database", "cache", "queue"],
+      ["example"]
+    ]
+  },
+  {
+    "services": {
+      "example": ["mysql"],
+      "mysql": ["fastdfs", "logger"],
+      "fastdfs": [],
+      "logger": []
+    },
+    "sorted": [
+      ["fastdfs", "logger"],
+      ["mysql"],
+      ["example"]
+    ]
+  }
+]

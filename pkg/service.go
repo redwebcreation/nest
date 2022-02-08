@@ -80,7 +80,7 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	for name, service := range services {
 		if service.Include != "" {
-			bytes, err := Config.repo.Read(service.Include)
+			bytes, err := Config.Read(service.Include)
 			if err != nil {
 				return err
 			}
@@ -117,8 +117,12 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type ServiceMap map[string]*Service
 
-func (s ServiceMap) BuildDependencyPlan() [][]*Service {
-	graph := NewDependencyGraph(s)
+func (s ServiceMap) BuildDependencyPlan() ([][]*Service, error) {
+	graph, err := NewDependencyGraph(s)
+	if err != nil {
+		return nil, err
+	}
+
 	sortedServices := make([][]*Service, 0)
 	maxDepth := 0
 
@@ -138,17 +142,5 @@ func (s ServiceMap) BuildDependencyPlan() [][]*Service {
 		sortedServices[i], sortedServices[j] = sortedServices[j], sortedServices[i]
 	}
 
-	return sortedServices
-}
-
-func (s ServiceMap) hasDependent(name string) bool {
-	for _, dep := range s {
-		for _, require := range dep.Requires {
-			if require == name {
-				return true
-			}
-		}
-	}
-
-	return false
+	return sortedServices, nil
 }

@@ -11,7 +11,7 @@ import (
 
 func runUseCommand(cmd *cobra.Command, args []string) error {
 	fmt.Println()
-	repo, err := pkg.Config.Repo()
+	repo, err := pkg.Config.LocalClone()
 	if err != nil {
 		return err
 	}

@@ -20,7 +20,10 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	graph := config.Services.BuildDependencyPlan()
+	graph, err := config.Services.BuildDependencyPlan()
+	if err != nil {
+		return err
+	}
 
 	deployment := &pkg.Deployment{
 		Id:  strconv.FormatInt(time.Now().UnixMilli(), 10),

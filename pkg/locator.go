@@ -1,9 +1,10 @@
 package pkg
 
 import (
-	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/redwebcreation/nest/global"
 	"os"
 	"regexp"
 	"strings"
@@ -30,15 +31,9 @@ type Locator struct {
 	Branch     string
 	Dir        string
 	Commit     string
-	repo       util.Repository
-	config     *Configuration
 }
 
 func (l *Locator) Resolve() (*Configuration, error) {
-	if l.config != nil {
-		return l.config, nil
-	}
-
 	contents, err := l.Read("nest.yaml")
 	if err != nil {
 		return nil, err
@@ -59,7 +54,7 @@ func (l Locator) Read(path string) ([]byte, error) {
 		path = strings.TrimSuffix(l.Dir, "/") + "/" + path
 	}
 
-	repo, err := l.Repo()
+	repo, err := l.LocalClone()
 	if err != nil {
 		return nil, err
 	}
@@ -67,12 +62,48 @@ func (l Locator) Read(path string) ([]byte, error) {
 	return repo.Read(path)
 }
 
-func (l Locator) GetRepositoryLocation() string {
-	return fmt.Sprintf("repo@%s.com:%s", l.Provider, l.Repository)
-}
+func (l Locator) LocalClone() (util.Repository, error) {
+	var repo util.Repository
+	localClone := global.ConfigStoreDir + "/" + strings.Replace(l.Repository, "/", "-", -1)
 
-func (l Locator) cachePath() string {
-	return "/tmp/" + base64.StdEncoding.EncodeToString([]byte(l.GetRepositoryLocation()))
+	if _, err := os.Stat(localClone); errors.Is(err, os.ErrNotExist) {
+		repo, err = util.NewRepository(l.GetRemoteURL(), localClone)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	} else {
+		repo, err = util.OpenRepository(localClone)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if l.Branch != "" {
+		err := repo.Checkout(l.Branch)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	commit := l.Commit
+
+	if commit == "" {
+		latest, err := repo.LatestCommit()
+		if err != nil {
+			return nil, err
+		}
+
+		commit = latest
+	}
+
+	err := repo.Checkout(commit)
+	if err != nil {
+		return nil, err
+	}
+
+	return repo, nil
 }
 
 func (l *Locator) UnmarshalJSON(data []byte) error {
@@ -119,48 +150,6 @@ func (l Locator) Validate() error {
 	return nil
 }
 
-func (l *Locator) Repo() (util.Repository, error) {
-	if l.repo != nil {
-		return l.repo, nil
-	}
-
-	repoPath := l.cachePath()
-	var repo util.Repository
-
-	if _, err := os.Stat(repoPath); err != nil {
-		repo, err = util.NewRepository(l.GetRepositoryLocation(), repoPath)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		repo, err = util.OpenRepository(repoPath)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if l.Branch != "" {
-		err := repo.Checkout(l.Branch)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if l.Commit == "" {
-		commit, err := repo.LatestCommit()
-		if err != nil {
-			return nil, err
-		}
-
-		l.Commit = string(commit)
-
-		err = repo.Checkout(l.Commit)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	l.repo = repo
-
-	return repo, nil
+func (l *Locator) GetRemoteURL() string {
+	return fmt.Sprintf("git@%s.com:%s", l.Provider, l.Repository)
 }

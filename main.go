@@ -36,7 +36,7 @@ func main() {
 		nest.AddCommand(cmd)
 	}
 
-	nest.PersistentFlags().StringVarP(&global.ConfigHome, "config", "c", global.ConfigHome, "set the config locator config file path")
+	nest.PersistentFlags().StringVarP(&global.ConfigHome, "config", "c", global.ConfigHome, "set the global config path")
 
 	err := nest.Execute()
 	if err != nil {

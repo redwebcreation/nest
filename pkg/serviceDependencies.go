@@ -1,6 +1,9 @@
 package pkg
 
-import "sort"
+import (
+	"fmt"
+	"sort"
+)
 
 type Node struct {
 	Parent  *Node
@@ -13,15 +16,30 @@ func (n *Node) AddEdge(node Node) {
 	n.Edges = append(n.Edges, node)
 }
 
-func NewDependencyGraph(services ServiceMap) Node {
+type Resolver struct {
+	resolved   map[string]bool
+	unresolved map[string]bool
+	services   ServiceMap
+}
+
+var (
+	ErrCircularDependency = fmt.Errorf("circular dependency detected")
+)
+
+func NewDependencyGraph(services ServiceMap) (Node, error) {
 	root := Node{}
 
 	// sorting for reproducibility
 	var keys []string
+
 	for key := range services {
-		// We're only interested in the top level services
-		if services.hasDependent(key) {
-			continue
+		// continue if the service has dependents
+		for _, service := range services {
+			for _, require := range service.Requires {
+				if require == key {
+					continue
+				}
+			}
 		}
 
 		keys = append(keys, key)
@@ -29,32 +47,56 @@ func NewDependencyGraph(services ServiceMap) Node {
 
 	sort.Strings(keys)
 
-	for _, key := range keys {
-		root.AddEdge(graphNode(root, key, services))
+	resolver := Resolver{
+		resolved:   make(map[string]bool),
+		unresolved: make(map[string]bool),
+		services:   services,
 	}
 
-	return root
+	for _, key := range keys {
+		edge, err := resolver.graphNode(root, key)
+		if err != nil {
+			return Node{}, err
+		}
+
+		root.AddEdge(edge)
+	}
+
+	return root, nil
 }
 
-func graphNode(parent Node, key string, services ServiceMap) Node {
+func (r *Resolver) graphNode(parent Node, key string) (Node, error) {
+	r.unresolved[key] = true
+
 	node := Node{
 		Parent:  &parent,
-		Service: services[key],
+		Service: r.services[key],
 		Depth:   parent.Depth + 1,
 	}
 
-	for _, require := range services[key].Requires {
-		node.AddEdge(graphNode(node, require, services))
+	for _, require := range r.services[key].Requires {
+		if r.unresolved[require] {
+			return Node{}, ErrCircularDependency
+		}
+
+		edge, err := r.graphNode(node, require)
+		if err != nil {
+			return Node{}, err
+		}
+
+		node.AddEdge(edge)
 	}
 
-	return node
+	r.unresolved[key] = false
+
+	return node, nil
 }
 
 type Walker map[string]bool
 
 func (w Walker) Walk(node Node, f func(Node)) {
 	for _, edge := range node.Edges {
-		if w[edge.Service.Name] {
+		if !w[edge.Service.Name] {
 			continue
 		}
 

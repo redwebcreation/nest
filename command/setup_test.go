@@ -59,6 +59,7 @@ func TestNewSetupCommand2(t *testing.T) {
 	cmd := NewSetupCommand()
 
 	originalStdin := util.Stdin
+	originalStdout := util.Stdout
 
 	for _, data := range dataset {
 		if data.Error != nil {
@@ -66,27 +67,29 @@ func TestNewSetupCommand2(t *testing.T) {
 		}
 
 		util.Stdin = bytes.NewBufferString(data.Strategy + "\n" + data.Provider + "\n" + data.Repository + "\n" + data.Branch + "\n")
+		util.Stdout = new(bytes.Buffer)
 
 		global.LocatorConfigFile = TmpConfig(t).Name()
 		defer os.Remove(global.LocatorConfigFile)
 		err := cmd.Execute()
 		if err != data.Error {
 			if data.Error == nil {
-				t.Errorf("Expected no error, got %s", err)
+				t.Errorf("Expected no error, got %s, output: %s", err, util.Stdout.(*bytes.Buffer).String())
 			} else {
-				t.Errorf("Expected %s, got %s", data.Error, err)
+				t.Errorf("Expected %s, got %s, output: %s", data.Error, err, util.Stdout.(*bytes.Buffer).String())
 			}
 		}
 
 	}
 
 	util.Stdin = originalStdin
+	util.Stdout = originalStdout
 }
 
 func TmpConfig(t *testing.T) *os.File {
 	f, err := os.Create("/tmp/" + strconv.Itoa(int(time.Now().UnixNano())) + ".tmp")
 	if err != nil {
-		t.Errorf("Error creating tmp file: %s", err)
+		t.Fatalf("Error creating tmp file: %s", err)
 	}
 
 	return f

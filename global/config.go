@@ -12,6 +12,8 @@ var ConfigHome string
 // LocatorConfigFile is the path to the locator config.
 var LocatorConfigFile string
 
+var ConfigStoreDir string
+
 func init() {
 	home, err := homedir.Dir()
 	if err != nil {
@@ -20,6 +22,7 @@ func init() {
 
 	ConfigHome = home + "/.nest"
 	LocatorConfigFile = ConfigHome + "/locator.json"
+	ConfigStoreDir = ConfigHome + "/git_store"
 
 	// Create the config directory if it doesn't exist.
 	if _, err = os.Stat(ConfigHome); errors.Is(err, os.ErrNotExist) {
@@ -31,6 +34,7 @@ func init() {
 
 	directories := []string{
 		"certs",
+		"git_store",
 	}
 
 	for _, directory := range directories {
