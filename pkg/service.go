@@ -117,15 +117,11 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type ServiceMap map[string]*Service
 
-func (s ServiceMap) BuildDependencyPlan() ([][]*Service, error) {
+func (s ServiceMap) GroupServicesInLayers() ([][]*Service, error) {
 	graph, err := s.NewGraph()
 	if err != nil {
 		return nil, err
 	}
 
-	return SortNodes(graph), nil
-}
-
-func (s Service) String() string {
-	return s.Name
+	return sortNodes(graph), nil
 }

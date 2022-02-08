@@ -87,18 +87,7 @@ func (l Locator) LocalClone() (util.Repository, error) {
 		}
 	}
 
-	commit := l.Commit
-
-	if commit == "" {
-		latest, err := repo.LatestCommit()
-		if err != nil {
-			return nil, err
-		}
-
-		commit = latest
-	}
-
-	err := repo.Checkout(commit)
+	err := repo.Checkout(l.Commit)
 	if err != nil {
 		return nil, err
 	}
@@ -120,6 +109,19 @@ func (l *Locator) UnmarshalJSON(data []byte) error {
 	l.Repository = p.Repository
 	l.Dir = p.Dir
 	l.Branch = p.Branch
+	l.Commit = p.Commit
+
+	if l.Commit == "" {
+		repo, err := l.LocalClone()
+		if err != nil {
+			return err
+		}
+
+		l.Commit, err = repo.LatestCommit()
+		if err != nil {
+			return err
+		}
+	}
 
 	err = l.Validate()
 	if err != nil {

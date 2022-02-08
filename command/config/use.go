@@ -25,7 +25,7 @@ func runUseCommand(cmd *cobra.Command, args []string) error {
 
 	var commit string
 
-	if args[0] != "" {
+	if len(args) > 0 {
 		var possibilities []string
 
 		for _, c := range commits {
@@ -57,7 +57,8 @@ func runUseCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf(util.Green.Fg()+"  Updated the locator config. Now using %s.\n"+util.Reset(), commit)
+	// Using pkg.Config.Commit rather than commit to get the real commit used if no arguments were passed
+	fmt.Printf(util.Green.Fg()+"  Updated the locator config. Now using %s.\n"+util.Reset(), pkg.Config.Commit[:7])
 
 	return nil
 }

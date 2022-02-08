@@ -20,7 +20,7 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	graph, err := config.Services.BuildDependencyPlan()
+	graph, err := config.Services.GroupServicesInLayers()
 	if err != nil {
 		return err
 	}

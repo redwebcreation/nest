@@ -11,6 +11,9 @@ var (
 	ErrNoReleases      = fmt.Errorf("no releases found")
 	ErrReleaseNotFound = fmt.Errorf("release not found")
 )
+var (
+	GithubAPIURL = "https://api.github.com"
+)
 
 type GithubRepository string
 
@@ -23,7 +26,7 @@ type GithubRelease struct {
 }
 
 func (g GithubRepository) newRequest(url string, data interface{}) error {
-	response, err := http.Get("https://api.github.com/" + url)
+	response, err := http.Get(GithubAPIURL + "/" + url)
 	if err != nil {
 		return err
 	}

@@ -70,7 +70,7 @@ func (s ServiceMap) graph(parent *Node, name string, unresolved map[string]bool)
 	return &node, nil
 }
 
-func SortNodes(node *Node) [][]*Service {
+func sortNodes(node *Node) [][]*Service {
 	nodeDepth := map[*Service]int{}
 	depthNode := map[int][]*Service{}
 

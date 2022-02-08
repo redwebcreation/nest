@@ -1,28 +1,70 @@
 package pkg
 
 import (
-	"encoding/json"
-	"os"
 	"sort"
 	"testing"
 )
 
 func TestServiceMap_BuildDependencyPlan(t *testing.T) {
-	contents, err := os.ReadFile("../fixtures/dependencies.json")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var datasets []struct {
+	type Set struct {
 		Services map[string][]string `json:"services"`
 		Expected [][]string          `json:"sorted"`
 		Cyclic   bool                `json:"cyclic"`
 	}
 
-	err = json.Unmarshal(contents, &datasets)
-	if err != nil {
-		t.Fatal(err)
+	datasets := []Set{
+		{
+			Services: map[string][]string{
+				"example": {},
+			},
+			Expected: [][]string{
+				{"example"},
+			},
+		},
+		{
+			Services: map[string][]string{
+				"a": {"b"},
+				"b": {"a"},
+			},
+			Cyclic: true,
+		},
+		{
+			Services: map[string][]string{
+				"a": {"b"},
+				"b": {"c"},
+				"c": {"a"},
+			},
+			Cyclic: true,
+		},
+		{
+			Services: map[string][]string{
+				"laravel": {"mysql", "redis", "elastic"},
+				"redis":   {},
+				"mysql":   {"fs"},
+				"elastic": {"minio"},
+				"minio":   {"fs"},
+				"fs":      {},
+			},
+			Expected: [][]string{
+				{"fs"},
+				{"minio"},
+				{"mysql", "redis", "elastic"},
+				{"laravel"},
+			},
+		},
+		{
+			Services: map[string][]string{
+				"example":  {"mysql"},
+				"mysql":    {"fast-dfs", "logger"},
+				"fast-dfs": {},
+				"logger":   {},
+			},
+			Expected: [][]string{
+				{"fast-dfs", "logger"},
+				{"mysql"},
+				{"example"},
+			},
+		},
 	}
 
 	for k, dataset := range datasets {
@@ -37,7 +79,7 @@ func TestServiceMap_BuildDependencyPlan(t *testing.T) {
 			serviceMap[name] = service
 		}
 
-		sorted, err := serviceMap.BuildDependencyPlan()
+		sorted, err := serviceMap.GroupServicesInLayers()
 
 		if dataset.Cyclic {
 			if err == nil {
