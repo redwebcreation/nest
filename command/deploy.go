@@ -76,7 +76,7 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	err = deployment.Manifest.Save(global.ConfigHome + "/manifest.json")
+	err = deployment.Manifest.Save(global.ContainerManifestFile)
 	if err != nil {
 		return err
 	}

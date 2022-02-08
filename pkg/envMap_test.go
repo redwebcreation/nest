@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestConvertEnv(t *testing.T) {
+func TestEnvMap_ForDocker(t *testing.T) {
 	env := EnvMap{
 		"foo": "bar",
 		"baz": "qux",

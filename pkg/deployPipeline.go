@@ -23,7 +23,7 @@ type Message struct {
 
 type Container struct {
 	ID string
-	Ip string
+	IP string
 }
 
 type Manifest struct {
@@ -95,14 +95,6 @@ func (d DeployPipeline) Run() error {
 	}
 
 	return nil
-}
-
-func (s *Service) Deploy(deployment *Deployment, layer int) error {
-	return DeployPipeline{
-		Deployment:      deployment,
-		Service:         s,
-		HasDependencies: layer > 0 && len(s.Requires) > 0,
-	}.Run()
 }
 
 func (d *DeployPipeline) PullImage() error {
@@ -188,7 +180,7 @@ func (d *DeployPipeline) CreateContainer() (string, error) {
 
 	d.Deployment.Manifest.Containers[d.Service.Name] = append(d.Deployment.Manifest.Containers[d.Service.Name], &Container{
 		ID: inspection.ID,
-		Ip: inspection.NetworkSettings.Networks[d.Deployment.Manifest.Networks[d.Service.Name]].IPAddress,
+		IP: inspection.NetworkSettings.Networks[d.Deployment.Manifest.Networks[d.Service.Name]].IPAddress,
 	})
 
 	return c.ID, nil

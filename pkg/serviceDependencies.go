@@ -98,5 +98,3 @@ func sortNodes(node *Node) [][]*Service {
 
 	return reversed
 }
-
-type Services []*Service

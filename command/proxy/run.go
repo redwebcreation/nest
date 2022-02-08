@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -14,6 +15,9 @@ import (
 	"net/url"
 	"os"
 )
+
+var httpPort string
+var httpsPort string
 
 func runRunCommand(cmd *cobra.Command, args []string) error {
 	config, err := pkg.Config.Resolve()
@@ -30,6 +34,19 @@ func runRunCommand(cmd *cobra.Command, args []string) error {
 	err = json.Unmarshal(contents, manifest)
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		comparison, err := os.ReadFile(global.ConfigHome + "/manifest.json")
+		if err == nil {
+			if bytes.Compare(contents, comparison) != 0 {
+				var newManifest *pkg.Manifest
+				err = json.Unmarshal(comparison, newManifest)
+				if err != nil {
+					panic(err)
+				}
+
+				manifest = newManifest
+			}
+		}
+
 		service := config.Services[r.Host]
 
 		if service == nil {
@@ -59,7 +76,7 @@ func runRunCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	go func() {
-		err = http.ListenAndServe(":80", certificateManager.HTTPHandler(nil))
+		err = http.ListenAndServe(":"+httpPort, certificateManager.HTTPHandler(nil))
 
 		if err != nil {
 			fmt.Println(err)
@@ -67,7 +84,7 @@ func runRunCommand(cmd *cobra.Command, args []string) error {
 	}()
 
 	server := &http.Server{
-		Addr: ":443",
+		Addr: ":" + httpsPort,
 		TLSConfig: &tls.Config{
 			MinVersion:     tls.VersionTLS13,
 			GetCertificate: certificateManager.GetCertificate,
@@ -84,6 +101,9 @@ func NewRunCommand() *cobra.Command {
 		Short: "Starts the proxy",
 		RunE:  runRunCommand,
 	}
+
+	cmd.Flags().StringVar(&httpPort, "http", "80", "HTTP port")
+	cmd.Flags().StringVar(&httpsPort, "https", "443", "HTTPS port")
 
 	return cmd
 }

@@ -70,3 +70,11 @@ func (s *Service) Normalize(serviceName string) {
 		s.ListeningOn = strings.TrimPrefix(s.ListeningOn, ":")
 	}
 }
+
+func (s *Service) Deploy(deployment *Deployment, layer int) error {
+	return DeployPipeline{
+		Deployment:      deployment,
+		Service:         s,
+		HasDependencies: layer > 0 && len(s.Requires) > 0,
+	}.Run()
+}
