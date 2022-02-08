@@ -14,9 +14,9 @@ func TestServiceMap_BuildDependencyPlan(t *testing.T) {
 	}
 
 	var datasets []struct {
-		Services map[string][]string
-		Sorted   [][]string
-		Error    bool
+		Services map[string][]string `json:"services"`
+		Expected [][]string          `json:"sorted"`
+		Cyclic   bool                `json:"cyclic"`
 	}
 
 	err = json.Unmarshal(contents, &datasets)
@@ -24,7 +24,7 @@ func TestServiceMap_BuildDependencyPlan(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, dataset := range datasets {
+	for k, dataset := range datasets {
 		serviceMap := ServiceMap{}
 
 		for name, dependencies := range dataset.Services {
@@ -38,18 +38,30 @@ func TestServiceMap_BuildDependencyPlan(t *testing.T) {
 
 		sorted, err := serviceMap.BuildDependencyPlan()
 
-		if err != nil && !dataset.Error {
-			t.Errorf("Unexpected error: %s", err)
-		} else if err == nil && dataset.Error {
-			t.Errorf("Expected error, but got none")
-		} else if err != nil && dataset.Error {
+		if dataset.Cyclic {
+			if err == nil {
+				t.Errorf("%d: expected error, got nil", k)
+			}
+
 			continue
 		}
 
-		for kl, layer := range sorted {
+		if err != nil {
+			t.Errorf("%d: unexpected error: %s", k, err)
+		}
+
+		if len(sorted) != len(dataset.Expected) {
+			t.Fatalf("%d: expected %d services, got %d", k, len(dataset.Expected), len(sorted))
+		}
+
+		for kl, layer := range dataset.Expected {
+			if len(layer) != len(sorted[kl]) {
+				t.Fatalf("%d: expected %d services in layer %d, got %d", k, len(layer), kl, len(sorted[kl]))
+			}
+
 			for ks, service := range layer {
-				if service.Name != dataset.Sorted[kl][ks] {
-					t.Errorf("Layer %d, service %d: expected %s, got %s", kl, ks, dataset.Sorted[kl][ks], service)
+				if sorted[kl][ks].Name != service {
+					t.Errorf("%d: expected %s, got %s", k, service, sorted[kl][ks].Name)
 				}
 			}
 		}

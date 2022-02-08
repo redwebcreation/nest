@@ -1,3 +1,17 @@
+a -> b 
+a -> c
+c -> d
+
+a -> (b, c) -> d
+d -> (b, c) -> a
+
+a 
+  -> e
+  -> b
+    -> e
+  -> c
+    -> d
+
 * For the first layer:
   * create the containers
 

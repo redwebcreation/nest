@@ -2,61 +2,47 @@ package pkg
 
 import (
 	"fmt"
-	"sort"
 )
 
 type Node struct {
 	Parent  *Node
 	Service *Service
-	Edges   []Node
+	Edges   []*Node
 	Depth   int
 }
 
-func (n *Node) AddEdge(node Node) {
-	n.Edges = append(n.Edges, node)
+func (n *Node) AddEdge(e *Node) {
+	n.Edges = append(n.Edges, e)
 }
 
-type Resolver struct {
-	resolved   map[string]bool
-	unresolved map[string]bool
-	services   ServiceMap
+func (n Node) String() string {
+	if n.Service == nil {
+		return "root"
+	}
+
+	return n.Service.Name
 }
 
-var (
-	ErrCircularDependency = fmt.Errorf("circular dependency detected")
-)
-
-func NewDependencyGraph(services ServiceMap) (Node, error) {
-	root := Node{}
-
-	// sorting for reproducibility
-	var keys []string
-
-	for key := range services {
-		// continue if the service has dependents
-		for _, service := range services {
-			for _, require := range service.Requires {
-				if require == key {
-					continue
-				}
-			}
-		}
-
-		keys = append(keys, key)
+func (n *Node) Walk(f func(n *Node)) {
+	if n.Service != nil {
+		f(n)
 	}
 
-	sort.Strings(keys)
-
-	resolver := Resolver{
-		resolved:   make(map[string]bool),
-		unresolved: make(map[string]bool),
-		services:   services,
+	for _, edge := range n.Edges {
+		edge.Walk(f)
 	}
+}
 
-	for _, key := range keys {
-		edge, err := resolver.graphNode(root, key)
+func (s ServiceMap) NewGraph() (*Node, error) {
+	graph := Graph{
+		unresolved: map[string]bool{},
+	}
+	root := &Node{}
+
+	for serviceName := range s {
+		edge, err := graph.graph(root, serviceName, s)
 		if err != nil {
-			return Node{}, err
+			return nil, err
 		}
 
 		root.AddEdge(edge)
@@ -65,49 +51,57 @@ func NewDependencyGraph(services ServiceMap) (Node, error) {
 	return root, nil
 }
 
-func (r *Resolver) graphNode(parent Node, key string) (Node, error) {
-	r.unresolved[key] = true
+type Graph struct {
+	unresolved map[string]bool
+}
 
+func (g Graph) graph(parent *Node, name string, services ServiceMap) (*Node, error) {
 	node := Node{
-		Parent:  &parent,
-		Service: r.services[key],
+		Parent:  parent,
+		Service: services[name],
 		Depth:   parent.Depth + 1,
 	}
 
-	for _, require := range r.services[key].Requires {
-		if r.unresolved[require] {
-			return Node{}, ErrCircularDependency
+	g.unresolved[name] = true
+
+	for _, require := range services[name].Requires {
+		if g.unresolved[require] {
+			return nil, fmt.Errorf("circular dependency detected: %s -> %s", name, require)
 		}
 
-		edge, err := r.graphNode(node, require)
+		edge, err := g.graph(&node, require, services)
 		if err != nil {
-			return Node{}, err
+			return nil, err
 		}
 
 		node.AddEdge(edge)
 	}
 
-	r.unresolved[key] = false
+	g.unresolved[name] = false
 
-	return node, nil
+	return &node, nil
 }
 
-type Walker map[string]bool
+func SortNodes(node *Node, services ServiceMap) [][]*Service {
+	nodeDepth := map[string]int{}
 
-func (w Walker) Walk(node Node, f func(Node)) {
-	for _, edge := range node.Edges {
-		if !w[edge.Service.Name] {
-			continue
+	node.Walk(func(n *Node) {
+		if nodeDepth[n.Service.Name] < n.Depth {
+			nodeDepth[n.Service.Name] = n.Depth
 		}
+	})
 
-		w.Walk(edge, f)
+	depthForNodes := map[int][]*Service{}
+
+	for name, depth := range nodeDepth {
+		depthForNodes[depth] = append(depthForNodes[depth], services[name])
 	}
 
-	// Skip the root node.
-	if node.Service == nil {
-		return
+	sorted := make([][]*Service, len(depthForNodes))
+
+	for key, nodes := range depthForNodes {
+		sorted[len(depthForNodes)-key] = nodes
 	}
 
-	f(node)
-	w[node.Service.Name] = true
+	return sorted
 }

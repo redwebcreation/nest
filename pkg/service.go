@@ -118,29 +118,14 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type ServiceMap map[string]*Service
 
 func (s ServiceMap) BuildDependencyPlan() ([][]*Service, error) {
-	graph, err := NewDependencyGraph(s)
+	graph, err := s.NewGraph()
 	if err != nil {
 		return nil, err
 	}
 
-	sortedServices := make([][]*Service, 0)
-	maxDepth := 0
+	return SortNodes(graph, s), nil
+}
 
-	Walker{}.Walk(graph, func(node Node) {
-		if node.Depth > maxDepth {
-			for len(sortedServices) < node.Depth {
-				sortedServices = append(sortedServices, []*Service{})
-			}
-
-			maxDepth = node.Depth
-		}
-
-		sortedServices[node.Depth-1] = append(sortedServices[node.Depth-1], node.Service)
-	})
-
-	for i, j := 0, len(sortedServices)-1; i < j; i, j = i+1, j-1 {
-		sortedServices[i], sortedServices[j] = sortedServices[j], sortedServices[i]
-	}
-
-	return sortedServices, nil
+func (s Service) String() string {
+	return fmt.Sprintf("%s", s.Name)
 }

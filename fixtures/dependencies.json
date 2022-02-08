@@ -10,7 +10,7 @@
       "a": ["b"],
       "b": ["a"]
     },
-    "error": true
+    "cyclic": true
   },
   {
     "services": {
@@ -18,7 +18,7 @@
       "b": ["c"],
       "c": ["a"]
     },
-    "error": true
+    "cyclic": true
   },
   {
     "services": {
@@ -26,38 +26,37 @@
       "b": ["a"],
       "c": []
     },
-    "error": true
+    "cyclic": true
   },
   {
     "services": {
-      "example": [
-        "database", "cache", "queue"
+      "laravel": [
+        "mysql",
+        "redis",
+        "elastic"
       ],
-      "database": ["s3"],
-      "s3": [],
-      "cache": [],
-      "queue": [
-        "rabbitmq", "redis"
-      ],
-      "rabbitmq": [],
-      "redis": ["s3"]
+      "redis": [],
+      "mysql": ["fs"],
+      "elastic": ["minio"],
+      "minio": ["fs"],
+      "fs": []
     },
     "sorted": [
-      ["s3", "rabbitmq"],
-      ["redis"],
-      ["database", "cache", "queue"],
-      ["example"]
+      ["fs"],
+      ["minio"],
+      ["mysql", "redis", "elastic"],
+      ["laravel"]
     ]
   },
   {
     "services": {
       "example": ["mysql"],
-      "mysql": ["fastdfs", "logger"],
-      "fastdfs": [],
+      "mysql": ["fast-dfs", "logger"],
+      "fast-dfs": [],
       "logger": []
     },
     "sorted": [
-      ["fastdfs", "logger"],
+      ["fast-dfs", "logger"],
       ["mysql"],
       ["example"]
     ]
