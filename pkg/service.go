@@ -123,9 +123,9 @@ func (s ServiceMap) BuildDependencyPlan() ([][]*Service, error) {
 		return nil, err
 	}
 
-	return SortNodes(graph, s), nil
+	return SortNodes(graph), nil
 }
 
 func (s Service) String() string {
-	return fmt.Sprintf("%s", s.Name)
+	return s.Name
 }

@@ -3,6 +3,7 @@ package pkg
 import (
 	"encoding/json"
 	"os"
+	"sort"
 	"testing"
 )
 
@@ -59,9 +60,11 @@ func TestServiceMap_BuildDependencyPlan(t *testing.T) {
 				t.Fatalf("%d: expected %d services in layer %d, got %d", k, len(layer), kl, len(sorted[kl]))
 			}
 
+			sort.Strings(layer)
+
 			for ks, service := range layer {
 				if sorted[kl][ks].Name != service {
-					t.Errorf("%d: expected %s, got %s", k, service, sorted[kl][ks].Name)
+					t.Errorf("%d: expected %s, got %s (%v instead of %v)", k, service, sorted[kl][ks].Name, sorted[kl], layer)
 				}
 			}
 		}

@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"sort"
 )
 
 type Node struct {
@@ -15,15 +16,8 @@ func (n *Node) AddEdge(e *Node) {
 	n.Edges = append(n.Edges, e)
 }
 
-func (n Node) String() string {
-	if n.Service == nil {
-		return "root"
-	}
-
-	return n.Service.Name
-}
-
 func (n *Node) Walk(f func(n *Node)) {
+	// skip the root node
 	if n.Service != nil {
 		f(n)
 	}
@@ -34,13 +28,11 @@ func (n *Node) Walk(f func(n *Node)) {
 }
 
 func (s ServiceMap) NewGraph() (*Node, error) {
-	graph := Graph{
-		unresolved: map[string]bool{},
-	}
 	root := &Node{}
+	unresolved := map[string]bool{}
 
 	for serviceName := range s {
-		edge, err := graph.graph(root, serviceName, s)
+		edge, err := s.graph(root, serviceName, unresolved)
 		if err != nil {
 			return nil, err
 		}
@@ -51,25 +43,21 @@ func (s ServiceMap) NewGraph() (*Node, error) {
 	return root, nil
 }
 
-type Graph struct {
-	unresolved map[string]bool
-}
-
-func (g Graph) graph(parent *Node, name string, services ServiceMap) (*Node, error) {
+func (s ServiceMap) graph(parent *Node, name string, unresolved map[string]bool) (*Node, error) {
 	node := Node{
 		Parent:  parent,
-		Service: services[name],
+		Service: s[name],
 		Depth:   parent.Depth + 1,
 	}
 
-	g.unresolved[name] = true
+	unresolved[name] = true
 
-	for _, require := range services[name].Requires {
-		if g.unresolved[require] {
+	for _, require := range s[name].Requires {
+		if unresolved[require] {
 			return nil, fmt.Errorf("circular dependency detected: %s -> %s", name, require)
 		}
 
-		edge, err := g.graph(&node, require, services)
+		edge, err := s.graph(&node, require, unresolved)
 		if err != nil {
 			return nil, err
 		}
@@ -77,31 +65,38 @@ func (g Graph) graph(parent *Node, name string, services ServiceMap) (*Node, err
 		node.AddEdge(edge)
 	}
 
-	g.unresolved[name] = false
+	unresolved[name] = false
 
 	return &node, nil
 }
 
-func SortNodes(node *Node, services ServiceMap) [][]*Service {
-	nodeDepth := map[string]int{}
+func SortNodes(node *Node) [][]*Service {
+	nodeDepth := map[*Service]int{}
+	depthNode := map[int][]*Service{}
 
 	node.Walk(func(n *Node) {
-		if nodeDepth[n.Service.Name] < n.Depth {
-			nodeDepth[n.Service.Name] = n.Depth
+		if nodeDepth[n.Service] < n.Depth {
+			nodeDepth[n.Service] = n.Depth
 		}
 	})
 
-	depthForNodes := map[int][]*Service{}
-
-	for name, depth := range nodeDepth {
-		depthForNodes[depth] = append(depthForNodes[depth], services[name])
+	for service, depth := range nodeDepth {
+		depthNode[depth] = append(depthNode[depth], service)
 	}
 
-	sorted := make([][]*Service, len(depthForNodes))
+	reversed := make([][]*Service, len(depthNode))
 
-	for key, nodes := range depthForNodes {
-		sorted[len(depthForNodes)-key] = nodes
+	for key, nodes := range depthNode {
+		// sort nodes for reproducibility
+		sort.Slice(nodes, func(i, j int) bool {
+			return nodes[i].Name < nodes[j].Name
+		})
+
+		// reverse the order of the nodes so that the node with the highest depth comes first
+		reversed[len(depthNode)-key] = nodes
 	}
 
-	return sorted
+	return reversed
 }
+
+type Services []*Service
