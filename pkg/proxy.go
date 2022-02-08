@@ -3,10 +3,11 @@ package pkg
 import (
 	"context"
 	"crypto/tls"
-	"encoding/json"
+	"fmt"
 	"github.com/pseidemann/finish"
 	"github.com/redwebcreation/nest/global"
 	"golang.org/x/crypto/acme/autocert"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -23,44 +24,28 @@ type Proxy struct {
 	HostToIp           map[string]string
 }
 
-func NewProxy() *Proxy {
+func NewProxy(http string, https string, services ServiceMap, manifest *Manifest) *Proxy {
 	proxy := &Proxy{
-		Http:     "80",
-		Https:    "443",
+		Http:     http,
+		Https:    https,
 		Logger:   ProxyLogger,
 		HostToIp: make(map[string]string),
 	}
 
-	proxy.UpdateServicesHostAndIps()
+	for _, service := range services {
+		for _, host := range service.Hosts {
+			proxy.HostToIp[host] = manifest.Containers[service.Name][0].IP
+		}
+	}
 
 	proxy.CertificateManager = &autocert.Manager{
 		Prompt: autocert.AcceptTOS,
 		HostPolicy: func(ctx context.Context, host string) error {
-			config, err := Config.Resolve()
-			if err != nil {
-				return err
+			if _, ok := proxy.HostToIp[host]; ok {
+				return nil
 			}
 
-			contents, err := os.ReadFile(global.ContainerManifestFile)
-			if err != nil {
-				return err
-			}
-
-			var manifest Manifest
-			err = json.Unmarshal(contents, &manifest)
-			if err != nil {
-				return err
-			}
-
-			for _, service := range config.Services {
-				for _, comparison := range service.Hosts {
-					if comparison == host {
-						return nil
-					}
-				}
-			}
-
-			return nil
+			return fmt.Errorf("acme/autocert: host %s not configured", host)
 		},
 		Cache: autocert.DirCache(global.CertsDir),
 	}
@@ -87,13 +72,13 @@ func (p *Proxy) start(proxy *http.Server) {
 		Log:     p.Logger,
 	}
 
-	httpToHttps := p.newRedirector()
+	certsHandler := p.certificateCreationHandler()
 
-	finisher.Add(httpToHttps)
+	finisher.Add(certsHandler)
 	finisher.Add(proxy)
 
 	go func() {
-		err := httpToHttps.ListenAndServe()
+		err := certsHandler.ListenAndServe()
 		if err != nil {
 			p.Logger.Error(err)
 			os.Exit(1)
@@ -111,50 +96,13 @@ func (p *Proxy) start(proxy *http.Server) {
 	finisher.Wait()
 }
 
-func (p *Proxy) UpdateServicesHostAndIps() error {
-	config, err := Config.Resolve()
-	if err != nil {
-		return err
-	}
-
-	contents, err := os.ReadFile(global.ContainerManifestFile)
-	if err != nil {
-		return err
-	}
-
-	var manifest *Manifest
-	err = json.Unmarshal(contents, &manifest)
-	if err != nil {
-		return err
-	}
-
-	p.Services = config.Services
-
-	for _, service := range p.Services {
-		for _, host := range service.Hosts {
-			p.HostToIp[host] = manifest.Containers[service.Name][0].IP
-		}
-	}
-
-	return nil
-}
-
 func (p *Proxy) handler(w http.ResponseWriter, r *http.Request) {
 	ip := p.HostToIp[r.Host]
 
 	if ip == "" {
-		err := p.UpdateServicesHostAndIps()
-		if err != nil {
-			p.Logger.Error(err)
-		}
-
-		ip = p.HostToIp[r.Host]
-
-		if ip == "" {
-			p.Log(r, LevelInfo, "host not found")
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
+		p.Log(r, LevelInfo, "host not found")
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
 	httputil.NewSingleHostReverseProxy(&url.URL{
@@ -182,13 +130,29 @@ func (p *Proxy) Log(r *http.Request, level Level, message string) {
 	)
 }
 
-func (p *Proxy) newRedirector() *http.Server {
+func (p *Proxy) certificateCreationHandler() *http.Server {
 	return &http.Server{
 		Addr: ":" + p.Http,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			p.CertificateManager.HTTPHandler(nil).ServeHTTP(w, r)
+			p.CertificateManager.HTTPHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != "GET" && r.Method != "HEAD" {
+					http.Error(w, "Use HTTPS", http.StatusBadRequest)
+					return
+				}
+
+				target := "https://" + replacePort(r.Host, p.Https) + r.URL.RequestURI()
+				http.Redirect(w, r, target, http.StatusFound)
+			})).ServeHTTP(w, r)
 
 			p.Log(r, LevelInfo, "redirecting to https")
 		}),
 	}
+}
+
+func replacePort(url string, newPort string) string {
+	host, _, err := net.SplitHostPort(url)
+	if err != nil {
+		return url
+	}
+	return net.JoinHostPort(host, newPort)
 }

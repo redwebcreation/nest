@@ -24,7 +24,8 @@ const (
 )
 
 type Logger struct {
-	Path string
+	Path   string
+	Stdout bool
 }
 
 type Field struct {
@@ -47,18 +48,22 @@ func (l Logger) Log(level Level, message string, fields ...*Field) {
 
 	defer f.Close()
 
-	event := make([]*Field, len(fields)+3)
-	event[0] = NewField("level", level)
-	event[1] = NewField("time", time.Now().Format("2006-01-02 15:04:05"))
-	event[2] = NewField("message", message)
+	event := make(map[string]interface{}, len(fields)+3)
+	event["level"] = level
+	event["time"] = time.Now().Format("2006-01-02 15:04:05")
+	event["message"] = message
 
-	for i, field := range fields {
-		event[i+3] = field
+	for _, field := range fields {
+		event[field.Key] = field.Val
 	}
 
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		panic(err)
+	}
+
+	if l.Stdout {
+		fmt.Printf("%s\n", bytes)
 	}
 
 	_, err = f.Write(bytes)
@@ -85,9 +90,11 @@ func (l Logger) Error(err error) {
 
 func init() {
 	ProxyLogger = &Logger{
-		Path: global.ProxyLogFile,
+		Path:   global.ProxyLogFile,
+		Stdout: true,
 	}
 	InternalLogger = &Logger{
-		Path: global.InternalLogFile,
+		Path:   global.InternalLogFile,
+		Stdout: false,
 	}
 }

@@ -109,7 +109,7 @@ func (d *DeployPipeline) PullImage() error {
 }
 
 func (d *DeployPipeline) CreateServiceNetwork() (string, error) {
-	name := fmt.Sprintf("%s_%s", d.Deployment.Id, d.Service.Name)
+	name := fmt.Sprintf("%s_%s", d.Service.Name, d.Deployment.Id)
 
 	net, err := global.Docker.NetworkCreate(context.Background(), name, types.NetworkCreate{
 		Labels: map[string]string{
@@ -173,16 +173,6 @@ func (d *DeployPipeline) CreateContainer() (string, error) {
 		return "", err
 	}
 
-	inspection, err := global.Docker.ContainerInspect(context.Background(), c.ID)
-	if err != nil {
-		return "", err
-	}
-
-	d.Deployment.Manifest.Containers[d.Service.Name] = append(d.Deployment.Manifest.Containers[d.Service.Name], &Container{
-		ID: inspection.ID,
-		IP: inspection.NetworkSettings.Networks[d.Deployment.Manifest.Networks[d.Service.Name]].IPAddress,
-	})
-
 	return c.ID, nil
 }
 
@@ -209,6 +199,27 @@ func (d *DeployPipeline) RunHooks(id string, commands []string) error {
 	return nil
 }
 
-func (d *DeployPipeline) StartContainer(id string) error {
-	return global.Docker.ContainerStart(context.Background(), id, types.ContainerStartOptions{})
+func (d *DeployPipeline) StartContainer(containerID string) error {
+	err := global.Docker.ContainerStart(context.Background(), containerID, types.ContainerStartOptions{})
+	if err != nil {
+		return err
+	}
+
+	inspection, err := global.Docker.ContainerInspect(context.Background(), containerID)
+	if err != nil {
+		return err
+	}
+
+	net := "bridge"
+
+	if d.HasDependencies {
+		net = d.Service.Name
+	}
+
+	d.Deployment.Manifest.Containers[d.Service.Name] = append(d.Deployment.Manifest.Containers[d.Service.Name], &Container{
+		ID: inspection.ID,
+		IP: inspection.NetworkSettings.Networks[net].IPAddress,
+	})
+
+	return nil
 }
