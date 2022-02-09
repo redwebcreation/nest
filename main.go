@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/redwebcreation/nest/command"
 	"github.com/redwebcreation/nest/command/config"
 	"github.com/redwebcreation/nest/command/proxy"
 	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/util"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -43,7 +43,7 @@ func main() {
 	err := nest.Execute()
 	if err != nil {
 		global.InternalLogger.Error(err)
-		_, _ = fmt.Fprintln(os.Stderr, "error: "+err.Error())
+		util.Fatal("error: " + err.Error())
 		os.Exit(1)
 	}
 }
