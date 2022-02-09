@@ -9,10 +9,11 @@ var (
 	ErrMissingService = fmt.Errorf("missing service")
 )
 
+// Service contains the information about a service.
 type Service struct {
 	// Name of the service.
 	Name string `yaml:"-"`
-	// The path to a file containing the service configuration.
+	// Include is the path to a file containing the service configuration.
 	Include string `yaml:"include"`
 
 	// Image name without a tag or registry server.
@@ -47,7 +48,8 @@ type Service struct {
 	Registry interface{} `yaml:"registry"`
 }
 
-func (s *Service) Normalize(serviceName string) {
+// ApplyDefaults sets default values and transforms certain defined patterns of a unmarshalled service.
+func (s *Service) ApplyDefaults(serviceName string) {
 	s.Name = serviceName
 
 	var expandedHosts []string
@@ -71,6 +73,8 @@ func (s *Service) Normalize(serviceName string) {
 	}
 }
 
+// Deploy starts a deployment pipeline for the service.
+// todo: refactor out unclear layer parameter (the depth of the service in the graph)
 func (s *Service) Deploy(deployment *Deployment, layer int) error {
 	return DeployPipeline{
 		Deployment:      deployment,

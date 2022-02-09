@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewRootProxyCommand returns a new instance of the proxy root command
 func NewRootProxyCommand() *cobra.Command {
 	root := &cobra.Command{
 		Use:   "proxy",

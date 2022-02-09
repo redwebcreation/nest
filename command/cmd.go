@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Configure sets defaults for the given command
 func Configure(cmd *cobra.Command) {
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true

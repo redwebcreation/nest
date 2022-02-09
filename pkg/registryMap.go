@@ -2,8 +2,10 @@ package pkg
 
 import "github.com/redwebcreation/nest/docker"
 
+// RegistryMap maps registry names to their respective docker.Registry structs
 type RegistryMap map[string]*docker.Registry
 
+// UnmarshalYAML implements the yaml.Unmarshaler interface
 func (r *RegistryMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var registries map[string]*docker.Registry
 	if err := unmarshal(&registries); err != nil {

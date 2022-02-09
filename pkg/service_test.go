@@ -10,7 +10,7 @@ func TestService_Normalize(t *testing.T) {
 		},
 	}
 
-	service.Normalize("example")
+	service.ApplyDefaults("example")
 
 	if len(service.Hosts) != 3 {
 		t.Errorf("Expected 3 hosts, got %d", len(service.Hosts))
@@ -28,7 +28,7 @@ func TestService_Normalize(t *testing.T) {
 		ListeningOn: ":port",
 	}
 
-	service.Normalize("example")
+	service.ApplyDefaults("example")
 
 	if service.ListeningOn != "port" {
 		t.Errorf("Expected s.ListeningOn to trim leading colon, got %s", service.ListeningOn)
@@ -38,7 +38,7 @@ func TestService_Normalize(t *testing.T) {
 		ListeningOn: "443",
 	}
 
-	service.Normalize("example")
+	service.ApplyDefaults("example")
 
 	if service.ListeningOn != "443" {
 		t.Errorf("Expected s.ListeningOn to be unchanged, got %s", service.ListeningOn)

@@ -46,7 +46,12 @@ func (l Logger) Log(level Level, message string, fields ...*Field) {
 		panic(err)
 	}
 
-	defer f.Close()
+	defer func(f *os.File) {
+		err = f.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(f)
 
 	event := make(map[string]interface{}, len(fields)+3)
 	event["level"] = level
@@ -68,6 +73,10 @@ func (l Logger) Log(level Level, message string, fields ...*Field) {
 
 	_, err = f.Write(bytes)
 	if err != nil {
+		panic(err)
+	}
+
+	if err = f.Close(); err != nil {
 		panic(err)
 	}
 }

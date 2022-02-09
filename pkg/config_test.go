@@ -93,7 +93,7 @@ func TestService_ExpandFromConfig(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test.input.Normalize(test.serviceName)
+		test.input.ApplyDefaults(test.serviceName)
 
 		if test.serviceName != "-" && test.input.Name != test.serviceName {
 			t.Errorf("Expected service name to be %s, got %s", test.serviceName, test.input.Name)

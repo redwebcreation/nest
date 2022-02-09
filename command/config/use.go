@@ -59,6 +59,7 @@ func runUseCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// NewUseCommand sets the command to use for the config locator
 func NewUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use [commit]",

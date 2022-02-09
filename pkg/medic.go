@@ -5,7 +5,8 @@ import (
 	"regexp"
 )
 
-type Diagnosis struct {
+// Diagnostic contains all the information about a given configuration diagnostic.
+type Diagnostic struct {
 	Config   *Configuration `json:"-"`
 	Warnings []Warning      `json:"warnings"`
 	Errors   []Error        `json:"errors"`
@@ -19,7 +20,8 @@ type Error struct {
 	Error error  `json:"error,omitempty"`
 }
 
-func (d *Diagnosis) MustPass() error {
+// MustPass ensures that the given Diagnostic has no errors.
+func (d *Diagnostic) MustPass() error {
 	if len(d.Errors) == 0 {
 		return nil
 	}
@@ -27,10 +29,11 @@ func (d *Diagnosis) MustPass() error {
 	return fmt.Errorf("invalid configuration (run `nest medic` for details)")
 }
 
-func DiagnoseConfiguration() *Diagnosis {
+// DiagnoseConfiguration runs the diagnostics on the global Configuration.
+func DiagnoseConfiguration() *Diagnostic {
 	config, err := Locator.Resolve()
 	if err != nil {
-		return &Diagnosis{
+		return &Diagnostic{
 			Config: config,
 			Errors: []Error{
 				{
@@ -41,16 +44,17 @@ func DiagnoseConfiguration() *Diagnosis {
 		}
 	}
 
-	diagnosis := Diagnosis{
+	diagnostic := Diagnostic{
 		Config: config,
 	}
 
-	diagnosis.ValidateServicesConfiguration()
+	diagnostic.ValidateServicesConfiguration()
 
-	return &diagnosis
+	return &diagnostic
 }
 
-func (d *Diagnosis) ValidateServicesConfiguration() {
+// ValidateServicesConfiguration ensures services contains no errors.
+func (d *Diagnostic) ValidateServicesConfiguration() {
 	for _, service := range d.Config.Services {
 		if service.Image == "" {
 			d.Errors = append(d.Errors, Error{

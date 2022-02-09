@@ -34,6 +34,7 @@ func runRunCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// NewRunCommand starts the reverse proxy
 func NewRunCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run",

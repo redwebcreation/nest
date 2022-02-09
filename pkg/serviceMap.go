@@ -24,13 +24,13 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return err
 			}
 
-			parsedService.Normalize(name)
+			parsedService.ApplyDefaults(name)
 
 			services[name] = parsedService
 			continue
 		}
 
-		service.Normalize(name)
+		service.ApplyDefaults(name)
 		services[name] = service
 	}
 

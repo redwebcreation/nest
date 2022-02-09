@@ -9,7 +9,8 @@ import (
 // Docker is the global docker client
 var Docker *client.Client
 
-func LoadDocker() (*client.Client, error) {
+// NewDocker returns a docker client from the environment
+func NewDocker() (*client.Client, error) {
 	docker, err := client.NewClientWithOpts(client.FromEnv)
 
 	if err != nil {
@@ -20,7 +21,7 @@ func LoadDocker() (*client.Client, error) {
 }
 
 func init() {
-	docker, err := LoadDocker()
+	docker, err := NewDocker()
 	if err != nil {
 		panic(err)
 	}
