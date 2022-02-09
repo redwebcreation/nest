@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	ProxyLogger    *Logger
-	InternalLogger *Logger
+	ProxyLogger    *FileLogger
+	InternalLogger *FileLogger
 )
 
 type Level int
@@ -22,7 +22,7 @@ const (
 	LevelFatal
 )
 
-type Logger struct {
+type FileLogger struct {
 	Path   string
 	Stdout bool
 }
@@ -39,7 +39,7 @@ func NewField(key string, val interface{}) *Field {
 	}
 }
 
-func (l Logger) Log(level Level, message string, fields ...*Field) {
+func (l FileLogger) Log(level Level, message string, fields ...*Field) {
 	f, err := os.OpenFile(l.Path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		panic(err)
@@ -83,26 +83,26 @@ func (l Logger) Log(level Level, message string, fields ...*Field) {
 
 // Infof logs a formatted message at the info level.
 // You should not use it directly, this is for compatibility with logrus.
-func (l Logger) Infof(message string, a ...interface{}) {
+func (l FileLogger) Infof(message string, a ...interface{}) {
 	l.Log(LevelInfo, fmt.Sprintf(message, a...))
 }
 
 // Errorf logs a formatted message at the debug level.
 // You should not use it directly, this is for compatibility with logrus.
-func (l Logger) Errorf(message string, a ...interface{}) {
+func (l FileLogger) Errorf(message string, a ...interface{}) {
 	l.Log(LevelError, fmt.Sprintf(message, a...))
 }
 
-func (l Logger) Error(err error) {
+func (l FileLogger) Error(err error) {
 	l.Log(LevelError, err.Error())
 }
 
 func init() {
-	ProxyLogger = &Logger{
+	ProxyLogger = &FileLogger{
 		Path:   ProxyLogFile,
 		Stdout: true,
 	}
-	InternalLogger = &Logger{
+	InternalLogger = &FileLogger{
 		Path:   InternalLogFile,
 		Stdout: false,
 	}

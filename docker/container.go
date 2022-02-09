@@ -6,6 +6,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
+	"github.com/redwebcreation/nest/global"
 )
 
 func CreateContainer(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
@@ -14,11 +15,21 @@ func CreateContainer(ctx context.Context, config *container.Config, hostConfig *
 		return "", err
 	}
 
+	global.InternalLogger.Log(global.LevelDebug, "docker.container.create", global.NewField("name", containerName), global.NewField("id", res.ID))
+
 	return res.ID, nil
 }
 
 func StartContainer(id string) error {
-	return docker.ContainerStart(context.Background(), id, types.ContainerStartOptions{})
+	err := docker.ContainerStart(context.Background(), id, types.ContainerStartOptions{})
+
+	if err != nil {
+		return err
+	}
+
+	global.InternalLogger.Log(global.LevelDebug, "docker.container.start", global.NewField("id", id))
+
+	return nil
 }
 
 func GetContainerIP(id string) (string, error) {
@@ -38,6 +49,8 @@ func RunCommand(id string, command string) error {
 		return err
 	}
 
+	global.InternalLogger.Log(global.LevelDebug, "docker.container.exec", global.NewField("id", id), global.NewField("command", command))
+
 	return docker.ContainerExecStart(context.Background(), ref.ID, types.ExecStartCheck{})
 }
 
@@ -50,7 +63,15 @@ func ListContainers() ([]types.Container, error) {
 }
 
 func RemoveContainer(id string) error {
-	return docker.ContainerRemove(context.Background(), id, types.ContainerRemoveOptions{
+	err := docker.ContainerRemove(context.Background(), id, types.ContainerRemoveOptions{
 		Force: true,
 	})
+
+	if err != nil {
+		return err
+	}
+
+	global.InternalLogger.Log(global.LevelDebug, "docker.container.remove", global.NewField("id", id))
+
+	return nil
 }

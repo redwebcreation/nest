@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/redwebcreation/nest/global"
 )
 
 func CreateNetwork(name string, labels map[string]string) (string, error) {
@@ -14,11 +15,21 @@ func CreateNetwork(name string, labels map[string]string) (string, error) {
 		return "", err
 	}
 
+	global.InternalLogger.Log(global.LevelDebug, "docker.network.create", global.NewField("name", name), global.NewField("id", res.ID), global.NewField("labels", labels))
+
 	return res.ID, nil
 }
 
 func ConnectContainerToNetwork(containerID, networkID string) error {
-	return docker.NetworkConnect(context.Background(), networkID, containerID, nil)
+	err := docker.NetworkConnect(context.Background(), networkID, containerID, nil)
+
+	if err != nil {
+		return err
+	}
+
+	global.InternalLogger.Log(global.LevelDebug, "docker.network.connect", global.NewField("container", containerID), global.NewField("network", networkID))
+
+	return nil
 }
 
 func ListNetworks() ([]types.NetworkResource, error) {
@@ -30,5 +41,13 @@ func ListNetworks() ([]types.NetworkResource, error) {
 }
 
 func RemoveNetwork(networkID string) error {
-	return docker.NetworkRemove(context.Background(), networkID)
+	err := docker.NetworkRemove(context.Background(), networkID)
+
+	if err != nil {
+		return err
+	}
+
+	global.InternalLogger.Log(global.LevelDebug, "docker.network.remove", global.NewField("network", networkID))
+
+	return nil
 }
