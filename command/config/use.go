@@ -1,7 +1,6 @@
 package config
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/redwebcreation/nest/util"
@@ -31,19 +30,16 @@ func runUseCommand(cmd *cobra.Command, args []string) error {
 		}
 
 		if len(possibilities) != 1 {
-			var buffer bytes.Buffer
 
-			buffer.WriteString(fmt.Sprintf(util.Red.Fg()+"\n  Could not find a unique match for %s.\n"+util.Reset()+util.Gray.Fg(), args[0]))
-			buffer.WriteString("\n")
-			buffer.WriteString("  Candidates:\n")
+			util.PrintErr(util.Red.Fg()+"\n  Could not find a unique match for %s.\n"+util.Reset()+util.Gray.Fg(), args[0])
+			util.PrintErr()
+			util.PrintErr("  Candidates")
 
 			for _, possibility := range possibilities {
-				buffer.WriteString(fmt.Sprintf("  * %s %s\n", possibility.Hash[:7], possibility.Message))
+				util.PrintErr("  * %s %s\n", possibility.Hash[:7], possibility.Message)
 			}
 
-			buffer.WriteString(util.Reset())
-
-			util.Fatal(buffer.String())
+			util.PrintErrE(util.Reset())
 		} else {
 			fmt.Printf(util.Gray.Fg()+"  Found %s.\n\n"+util.Reset(), possibilities[0])
 			commit = possibilities[0].Hash

@@ -43,7 +43,7 @@ func main() {
 	err := nest.Execute()
 	if err != nil {
 		global.InternalLogger.Error(err)
-		util.Fatal("error: " + err.Error())
+		util.PrintErrE("error: " + err.Error())
 		os.Exit(1)
 	}
 }
