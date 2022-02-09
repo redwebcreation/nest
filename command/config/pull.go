@@ -8,19 +8,11 @@ import (
 )
 
 func runPullCommand(cmd *cobra.Command, args []string) error {
-	git, err := pkg.Config.LocalClone()
-	if err != nil {
-		return err
-	}
-
-	out, err := git.Pull(pkg.Config.Branch)
-	if err != nil {
-		return err
-	}
+	out, err := pkg.Locator.VCS.Pull(pkg.Locator.ConfigPath(), pkg.Locator.Branch)
 
 	fmt.Println(string(out))
 
-	return nil
+	return err
 }
 
 func NewPullCommand() *cobra.Command {

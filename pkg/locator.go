@@ -5,153 +5,98 @@ import (
 	"errors"
 	"fmt"
 	"github.com/redwebcreation/nest/global"
-	"os"
-	"regexp"
-	"strings"
-
-	"gopkg.in/yaml.v2"
-
 	"github.com/redwebcreation/nest/util"
+	"gopkg.in/yaml.v2"
+	"os"
+	"strings"
 )
 
-var (
-	ErrRepositoryNotFound    = fmt.Errorf("repository not found")
-	ErrInvalidStrategy       = fmt.Errorf("strategy must be either local or remote")
-	ErrInvalidProvider       = fmt.Errorf("provider must be either github, gitlab or bitbucket")
-	ErrInvalidRepositoryName = fmt.Errorf("invalid repository name")
-	ErrEmptyBranch           = fmt.Errorf("branch name cannot be empty")
-)
+var Locator = &locator{}
 
-var Config = &Locator{}
-
-type Locator struct {
-	Strategy   string
+type locator struct {
 	Provider   string
 	Repository string
 	Branch     string
-	Dir        string
 	Commit     string
+	VCS        *util.VCS `yaml:"-"`
 }
 
-func (l *Locator) Resolve() (*Configuration, error) {
-	contents, err := l.Read("nest.yaml")
-	if err != nil {
-		return nil, err
-	}
-
-	var config Configuration
-
-	err = yaml.Unmarshal(contents, &config)
-	if err != nil {
-		return nil, err
-	}
-
-	return &config, nil
+func (l locator) ConfigPath() string {
+	return global.ConfigStoreDir + "/" + strings.Replace(l.Repository, "/", "-", -1)
+}
+func (l locator) RemoteURL() string {
+	return fmt.Sprintf("git@%s.com:%s.git", l.Provider, l.Repository)
 }
 
-func (l Locator) Read(path string) ([]byte, error) {
-	if l.Dir != "" {
-		path = strings.TrimSuffix(l.Dir, "/") + "/" + path
-	}
+func (l locator) Read(file string) ([]byte, error) {
+	configPath := l.ConfigPath()
 
-	repo, err := l.LocalClone()
-	if err != nil {
-		return nil, err
-	}
+	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
+		err = l.VCS.Clone(l.RemoteURL(), l.ConfigPath())
 
-	return repo.Read(path)
-}
-
-func (l Locator) LocalClone() (util.Repository, error) {
-	var repo util.Repository
-	localClone := global.ConfigStoreDir + "/" + strings.Replace(l.Repository, "/", "-", -1)
-
-	if _, err := os.Stat(localClone); errors.Is(err, os.ErrNotExist) {
-		repo, err = util.NewRepository(l.GetRemoteURL(), localClone)
 		if err != nil {
 			return nil, err
 		}
 	} else if err != nil {
 		return nil, err
-	} else {
-		repo, err = util.OpenRepository(localClone)
-		if err != nil {
-			return nil, err
-		}
 	}
 
-	if l.Branch != "" {
-		err := repo.Checkout(l.Branch)
-		if err != nil {
-			return nil, err
-		}
-	}
+	return l.VCS.ReadFile(configPath, l.Commit, file)
+}
 
-	err := repo.Checkout(l.Commit)
+func (l locator) Resolve() (*Configuration, error) {
+	err := l.Load()
 	if err != nil {
 		return nil, err
 	}
 
-	return repo, nil
+	contents, err := l.Read("nest.yml")
+	if err != nil {
+		return nil, err
+	}
+
+	config := &Configuration{}
+	err = yaml.Unmarshal(contents, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
 }
 
-func (l *Locator) UnmarshalJSON(data []byte) error {
-	type plain Locator
-	var p plain
+func (l locator) Validate() error {
+	return nil
+}
 
-	err := json.Unmarshal(data, &p)
+func (l *locator) Load() error {
+	contents, err := os.ReadFile(global.LocatorConfigFile)
 	if err != nil {
 		return err
 	}
 
-	l.Strategy = p.Strategy
+	var p locator
+	err = json.Unmarshal(contents, &p)
+	if err != nil {
+		return err
+	}
+
 	l.Provider = p.Provider
 	l.Repository = p.Repository
-	l.Dir = p.Dir
 	l.Branch = p.Branch
 	l.Commit = p.Commit
 
 	if l.Commit == "" {
-		repo, err := l.LocalClone()
-		if err != nil {
-			return err
-		}
-
-		l.Commit, err = repo.LatestCommit()
-		if err != nil {
-			return err
-		}
-	}
-
-	err = l.Validate()
-	if err != nil {
-		return err
+		return fmt.Errorf("commit is empty, run `nest setup` to set it")
 	}
 
 	return nil
 }
 
-func (l Locator) Validate() error {
-	if l.Strategy != "local" && l.Strategy != "remote" {
-		return ErrInvalidStrategy
-	}
-
-	if l.Provider != "github" && l.Provider != "gitlab" && l.Provider != "bitbucket" {
-		return ErrInvalidProvider
-	}
-
-	if l.Branch == "" {
-		return ErrEmptyBranch
-	}
-
-	re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+(.repo)?")
-	if !re.MatchString(l.Repository) {
-		return ErrInvalidRepositoryName
-	}
-
-	return nil
+func (l *locator) LoadCommit(commit string) error {
+	l.Commit = commit
+	return l.Load()
 }
 
-func (l *Locator) GetRemoteURL() string {
-	return fmt.Sprintf("git@%s.com:%s", l.Provider, l.Repository)
+func init() {
+	Locator.VCS = util.VcsGit
 }

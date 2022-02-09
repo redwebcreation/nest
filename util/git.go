@@ -3,99 +3,112 @@ package util
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 )
 
-type Repository interface {
-	Exec(...string) ([]byte, error)
-	LatestCommit() (string, error)
-	Checkout(string) error
-	Commits() ([]string, error)
-	Pull(branch string) ([]byte, error)
-	Read(string) ([]byte, error)
-	Tree() ([]string, error)
+type VCS struct {
+	Cmd string // name of the binary to invoke
+
+	CloneCmd       string
+	PullCmd        string
+	ListCommitsCmd string
+	ReadFileCmd    string
 }
 
-type GitRepository string
+var VcsGit = &VCS{
+	Cmd: "git",
 
-func NewRepository(remote string, path string) (*GitRepository, error) {
-	if out, err := exec.Command("git", "clone", remote, path).CombinedOutput(); err != nil {
-		// split out by newline
-		for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
-			fmt.Fprintf(os.Stderr, "\n  "+Gray.Fg()+"|  "+line+Reset())
-		}
-
-		fmt.Fprintln(os.Stderr)
-
-		return nil, fmt.Errorf("could not clone the configuration")
-	}
-
-	repo := GitRepository(path)
-	return &repo, nil
+	CloneCmd:       "clone {remote} {local}",
+	PullCmd:        "pull origin {branch}", // todo: remote name is hardcoded
+	ListCommitsCmd: "log --pretty='%H@%s' --no-merges {branch}",
+	ReadFileCmd:    "show {commit}:{file}",
 }
 
-func OpenRepository(path string) (*GitRepository, error) {
-	if _, err := os.Stat(path); err != nil {
-		return nil, err
-	}
-
-	repo := GitRepository(path)
-
-	return &repo, nil
-}
-
-func (r GitRepository) Exec(args ...string) ([]byte, error) {
-	cmd := exec.Command("git", args...)
-	cmd.Dir = string(r)
-	out, err := cmd.CombinedOutput()
-
-	return bytes.TrimSpace(out), err
-}
-
-func (r GitRepository) LatestCommit() (string, error) {
-	out, err := r.Exec("rev-parse", "HEAD")
-	if err != nil {
-		return "", err
-	}
-
-	return string(bytes.TrimSpace(out)), nil
-}
-
-func (r GitRepository) Checkout(commit string) error {
-	_, err := r.Exec("checkout", commit)
+func (v VCS) Clone(remote string, local string) error {
+	_, err := v.run("", v.CloneCmd, "remote", remote, "local", local)
 	return err
 }
 
-func (r GitRepository) Commits() ([]string, error) {
-	out, err := r.Exec("log", "--pretty=%H")
+func (v VCS) Pull(dir string, branch string) ([]byte, error) {
+	return v.run(dir, v.PullCmd, "branch", branch)
+}
+
+type Commit struct {
+	Hash    string
+	Message string
+}
+
+func (v VCS) ListCommits(dir string, branch string) ([]Commit, error) {
+	out, err := v.run(dir, v.ListCommitsCmd, "branch", branch)
 	if err != nil {
 		return nil, err
 	}
 
-	return strings.Split(string(out), "\n"), nil
+	var commits []Commit
+
+	for _, line := range strings.Split(string(out), "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+
+		parts := strings.Split(strings.Trim(line, "'"), "@")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid commit line: %s", line)
+		}
+
+		commits = append(commits, Commit{
+			Hash:    parts[0],
+			Message: parts[1],
+		})
+	}
+
+	return commits, nil
 }
 
-func (r GitRepository) Pull(branch string) ([]byte, error) {
-	_, err := r.Exec("checkout", branch)
+func (v VCS) ReadFile(dir string, commit string, file string) ([]byte, error) {
+	return v.run(dir, v.ReadFileCmd, "commit", commit, "file", file)
+}
+
+func (v *VCS) run(dir string, cmdline string, keyval ...string) ([]byte, error) {
+	m := make(map[string]string)
+	for i := 0; i < len(keyval); i += 2 {
+		m[keyval[i]] = keyval[i+1]
+	}
+
+	args := strings.Fields(cmdline)
+
+	for i, arg := range args {
+		args[i] = expand(arg, m)
+	}
+
+	_, err := exec.LookPath(v.Cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := r.Exec("pull")
-	return out, err
-}
+	cmd := exec.Command(v.Cmd, args...)
+	cmd.Dir = dir
 
-func (r GitRepository) Read(path string) ([]byte, error) {
-	return r.Exec("show", "HEAD:"+path)
-}
+	var buf bytes.Buffer
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
 
-func (r GitRepository) Tree() ([]string, error) {
-	out, err := r.Exec("ls-tree", "-r", "--name-only", "HEAD")
+	// todo: log to the internal logger
+	err = cmd.Run()
+	out := buf.Bytes()
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%v: %s", err, out)
 	}
 
-	return strings.Split(string(out), "\n"), nil
+	return out, nil
+}
+
+func expand(s string, bindings map[string]string) string {
+	for k, v := range bindings {
+		s = strings.Replace(s, "{"+k+"}", v, -1)
+	}
+
+	return s
 }

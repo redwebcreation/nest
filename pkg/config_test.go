@@ -44,7 +44,7 @@ registries:
 }
 
 func TestService_ExpandFromConfig(t *testing.T) {
-	dataset := []struct {
+	tests := []struct {
 		serviceName string
 		input       Service
 		output      Service
@@ -92,22 +92,22 @@ func TestService_ExpandFromConfig(t *testing.T) {
 		},
 	}
 
-	for _, d := range dataset {
-		d.input.Normalize(d.serviceName)
+	for _, test := range tests {
+		test.input.Normalize(test.serviceName)
 
-		if d.serviceName != "-" && d.input.Name != d.serviceName {
-			t.Errorf("Expected service name to be %s, got %s", d.serviceName, d.input.Name)
+		if test.serviceName != "-" && test.input.Name != test.serviceName {
+			t.Errorf("Expected service name to be %s, got %s", test.serviceName, test.input.Name)
 		}
 
-		if d.output.ListeningOn != "" && d.input.ListeningOn != d.output.ListeningOn {
-			t.Errorf("Expected listening on to be '%s', got '%s'", d.output.ListeningOn, d.input.ListeningOn)
+		if test.output.ListeningOn != "" && test.input.ListeningOn != test.output.ListeningOn {
+			t.Errorf("Expected listening on to be '%s', got '%s'", test.output.ListeningOn, test.input.ListeningOn)
 		}
 
-		sort.Strings(d.input.Hosts)
-		sort.Strings(d.output.Hosts)
+		sort.Strings(test.input.Hosts)
+		sort.Strings(test.output.Hosts)
 
-		if reflect.DeepEqual(d.input.Hosts, d.output.Hosts) == false {
-			t.Errorf("Expected hosts to be %s, got %s", d.output.Hosts, d.input.Hosts)
+		if reflect.DeepEqual(test.input.Hosts, test.output.Hosts) == false {
+			t.Errorf("Expected hosts to be %s, got %s", test.output.Hosts, test.input.Hosts)
 		}
 
 	}

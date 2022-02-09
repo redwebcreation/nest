@@ -28,13 +28,14 @@ func (d *Diagnosis) MustPass() error {
 }
 
 func DiagnoseConfiguration() *Diagnosis {
-	config, err := Config.Resolve()
+	config, err := Locator.Resolve()
 	if err != nil {
 		return &Diagnosis{
 			Config: config,
 			Errors: []Error{
 				{
 					Title: "Unable to load the configuration",
+					Error: err,
 				},
 			},
 		}

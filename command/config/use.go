@@ -11,12 +11,8 @@ import (
 
 func runUseCommand(cmd *cobra.Command, args []string) error {
 	fmt.Println()
-	repo, err := pkg.Config.LocalClone()
-	if err != nil {
-		return err
-	}
 
-	commits, err := repo.Commits()
+	commits, err := pkg.Locator.VCS.ListCommits(pkg.Locator.ConfigPath(), pkg.Locator.Branch)
 	if err != nil {
 		return err
 	}
@@ -26,10 +22,10 @@ func runUseCommand(cmd *cobra.Command, args []string) error {
 	var commit string
 
 	if len(args) > 0 {
-		var possibilities []string
+		var possibilities []util.Commit
 
 		for _, c := range commits {
-			if strings.HasPrefix(c, args[0]) {
+			if strings.HasPrefix(c.Hash, args[0]) {
 				possibilities = append(possibilities, c)
 			}
 		}
@@ -40,7 +36,7 @@ func runUseCommand(cmd *cobra.Command, args []string) error {
 			fmt.Fprintln(os.Stderr, "  Possible matches:")
 
 			for _, possibility := range possibilities {
-				fmt.Fprintf(os.Stderr, "  * %s\n", possibility)
+				fmt.Fprintf(os.Stderr, "  * %s %s\n", possibility.Hash[:7], possibility.Message)
 			}
 
 			fmt.Fprintln(os.Stderr, util.Reset())
@@ -48,17 +44,17 @@ func runUseCommand(cmd *cobra.Command, args []string) error {
 			os.Exit(1)
 		} else {
 			fmt.Printf(util.Gray.Fg()+"  Found %s.\n\n"+util.Reset(), possibilities[0])
-			commit = possibilities[0]
+			commit = possibilities[0].Hash
 		}
 	}
 
-	err = pkg.LoadConfigFromCommit(commit)
+	err = pkg.Locator.LoadCommit(commit)
 	if err != nil {
 		return err
 	}
 
-	// Using pkg.Config.Commit rather than commit to get the real commit used if no arguments were passed
-	fmt.Printf(util.Green.Fg()+"  Updated the locator config. Now using %s.\n"+util.Reset(), pkg.Config.Commit[:7])
+	// Using pkg.Locator.Commit rather than commit to get the real commit used if no arguments were passed
+	fmt.Printf(util.Green.Fg()+"  Updated the locator config. Now using %s.\n"+util.Reset(), pkg.Locator.Commit[:7])
 
 	return nil
 }

@@ -12,7 +12,7 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	for name, service := range services {
 		if service.Include != "" {
-			bytes, err := Config.Read(service.Include)
+			bytes, err := Locator.Read(service.Include)
 			if err != nil {
 				return err
 			}

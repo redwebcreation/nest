@@ -20,7 +20,7 @@ type Set struct {
 	Error      error
 }
 
-var dataset = []Set{
+var tests = []Set{
 	{"remote", "github", "felixdorn/config-test", "main", "", nil},
 	{"remote", "gitlab", "felixdorn/config-test", "main", "", nil},
 	{"remote", "bitbucket", "felixdorn/config-test", "main", "", nil},
@@ -32,21 +32,21 @@ var dataset = []Set{
 func TestNewSetupCommand(t *testing.T) {
 	cmd := NewSetupCommand()
 
-	for _, data := range dataset {
-		_ = cmd.Flags().Set("strategy", data.Strategy)
-		_ = cmd.Flags().Set("provider", data.Provider)
-		_ = cmd.Flags().Set("repository", data.Repository)
-		_ = cmd.Flags().Set("branch", data.Branch)
+	for _, test := range tests {
+		_ = cmd.Flags().Set("strategy", test.Strategy)
+		_ = cmd.Flags().Set("provider", test.Provider)
+		_ = cmd.Flags().Set("repository", test.Repository)
+		_ = cmd.Flags().Set("branch", test.Branch)
 
 		global.LocatorConfigFile = TmpConfig(t).Name()
 		defer os.Remove(global.LocatorConfigFile)
 
 		err := cmd.Execute()
-		if err != data.Error {
-			if data.Error == nil {
+		if err != test.Error {
+			if test.Error == nil {
 				t.Errorf("Expected no error, got %s", err)
 			} else {
-				t.Errorf("Expected %s, got %s", data.Error, err)
+				t.Errorf("Expected %s, got %s", test.Error, err)
 			}
 		}
 
@@ -61,22 +61,22 @@ func TestNewSetupCommand2(t *testing.T) {
 	originalStdin := util.Stdin
 	originalStdout := util.Stdout
 
-	for _, data := range dataset {
-		if data.Error != nil {
+	for _, test := range tests {
+		if test.Error != nil {
 			continue
 		}
 
-		util.Stdin = bytes.NewBufferString(data.Strategy + "\n" + data.Provider + "\n" + data.Repository + "\n" + data.Branch + "\n")
+		util.Stdin = bytes.NewBufferString(test.Strategy + "\n" + test.Provider + "\n" + test.Repository + "\n" + test.Branch + "\n")
 		util.Stdout = new(bytes.Buffer)
 
 		global.LocatorConfigFile = TmpConfig(t).Name()
 		defer os.Remove(global.LocatorConfigFile)
 		err := cmd.Execute()
-		if err != data.Error {
-			if data.Error == nil {
+		if err != test.Error {
+			if test.Error == nil {
 				t.Errorf("Expected no error, got %s, output: %s", err, util.Stdout.(*bytes.Buffer).String())
 			} else {
-				t.Errorf("Expected %s, got %s, output: %s", data.Error, err, util.Stdout.(*bytes.Buffer).String())
+				t.Errorf("Expected %s, got %s, output: %s", test.Error, err, util.Stdout.(*bytes.Buffer).String())
 			}
 		}
 

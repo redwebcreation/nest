@@ -13,7 +13,7 @@ var httpPort string
 var httpsPort string
 
 func runRunCommand(cmd *cobra.Command, args []string) error {
-	config, err := pkg.Config.Resolve()
+	config, err := pkg.Locator.Resolve()
 	if err != nil {
 		return err
 	}

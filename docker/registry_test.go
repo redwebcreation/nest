@@ -35,7 +35,7 @@ func TestToBase64(t *testing.T) {
 }
 
 func TestRegistry_UrlFor(t *testing.T) {
-	var dataset = []struct {
+	var tests = []struct {
 		imageName string
 		input     Registry
 		output    string
@@ -57,17 +57,17 @@ func TestRegistry_UrlFor(t *testing.T) {
 		},
 	}
 
-	for _, set := range dataset {
-		output := set.input.UrlFor(set.imageName)
+	for _, test := range tests {
+		output := test.input.UrlFor(test.imageName)
 
-		if output != set.output {
-			t.Errorf("Expected %s, got %s", set.output, output)
+		if output != test.output {
+			t.Errorf("Expected %s, got %s", test.output, output)
 		}
 	}
 }
 
 func TestRegistry_IsZero(t *testing.T) {
-	var dataset = []struct {
+	var tests = []struct {
 		input  Registry
 		output bool
 	}{
@@ -107,11 +107,11 @@ func TestRegistry_IsZero(t *testing.T) {
 		},
 	}
 
-	for _, set := range dataset {
-		output := set.input.IsZero()
+	for _, test := range tests {
+		output := test.input.IsZero()
 
-		if output != set.output {
-			t.Errorf("Expected %t, got %t", set.output, output)
+		if output != test.output {
+			t.Errorf("Expected %t, got %t", test.output, output)
 		}
 	}
 }

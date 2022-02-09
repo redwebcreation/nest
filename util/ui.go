@@ -27,6 +27,8 @@ func Prompt(prompt, defaultValue string, validator func(input string) bool) stri
 		if validator == nil || validator(input) {
 			break
 		}
+
+		input = defaultValue
 	}
 
 	return input

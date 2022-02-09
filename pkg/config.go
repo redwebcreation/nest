@@ -1,12 +1,8 @@
 package pkg
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
-
 	"github.com/redwebcreation/nest/docker"
-	"github.com/redwebcreation/nest/global"
 )
 
 // Configuration represents nest's configuration
@@ -52,28 +48,6 @@ func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 		service.Registry = registry
 	}
-
-	return nil
-}
-
-// LoadConfigFromCommit loads the configuration globally from the given commit
-func LoadConfigFromCommit(commit string) error {
-	reader := Locator{
-		Commit: commit,
-	}
-
-	contents, err := os.ReadFile(global.LocatorConfigFile)
-	if err != nil {
-		return err
-	}
-
-	if err = json.Unmarshal(contents, &reader); err != nil && err.Error() == "unknown error: remote: " {
-		return ErrRepositoryNotFound
-	} else if err != nil {
-		return err
-	}
-
-	Config = &reader
 
 	return nil
 }
