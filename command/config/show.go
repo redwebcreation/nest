@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/redwebcreation/nest/pkg"
-	"github.com/redwebcreation/nest/util"
 	"github.com/spf13/cobra"
 )
 
@@ -27,8 +27,14 @@ func runShowCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println()
-	util.PrintTree(configFiles)
+	sort.Slice(configFiles, func(i, j int) bool {
+		return configFiles[i] < configFiles[j]
+	})
+
+	fmt.Println("\nfiles:")
+	for _, file := range configFiles {
+		fmt.Printf("- %s\n", file)
+	}
 
 	return nil
 }
