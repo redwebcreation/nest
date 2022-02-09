@@ -46,7 +46,14 @@ func (i Image) Pull(handler func(event *PullEvent), registry Registry) error {
 		image = registry.UrlFor(image)
 	}
 
-	events, err := global.Docker.ImagePull(context.Background(), image, options)
+	events, err := docker.ImagePull(context.Background(), image, options)
+	global.InternalLogger.Log(
+		global.LevelDebug,
+		"docker.image.pull",
+		global.NewField("image", image),
+		global.NewField("registry", !registry.IsZero()),
+	)
+
 	if err != nil {
 		if strings.Contains(err.Error(), "manifest for "+image+" not found") {
 			return ErrImageNotFound

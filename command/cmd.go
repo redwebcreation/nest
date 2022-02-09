@@ -18,6 +18,13 @@ func Configure(cmd *cobra.Command) {
 	_, disableMedic := cmd.Annotations["medic"]
 
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		global.InternalLogger.Log(
+			global.LevelDebug,
+			"command.invoke",
+			global.NewField("name", cmd.Name()),
+			global.NewField("args", args),
+		)
+
 		if !disableConfigLocator {
 			if _, err := os.Stat(global.LocatorConfigFile); err != nil {
 				return fmt.Errorf("run `nest setup` to setup nest")
@@ -35,4 +42,5 @@ func Configure(cmd *cobra.Command) {
 
 		return pkg.DiagnoseConfiguration().MustPass()
 	}
+
 }

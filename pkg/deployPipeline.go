@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/redwebcreation/nest/docker"
-	"github.com/redwebcreation/nest/global"
 	"io"
 	"os"
 	"strings"
@@ -111,26 +109,24 @@ func (d *DeployPipeline) PullImage() error {
 func (d *DeployPipeline) CreateServiceNetwork() (string, error) {
 	name := fmt.Sprintf("%s_%s", d.Service.Name, d.Deployment.Id)
 
-	net, err := global.Docker.NetworkCreate(context.Background(), name, types.NetworkCreate{
-		Labels: map[string]string{
-			"cloud.usenest.service":       d.Service.Name,
-			"cloud.usenest.deployment_id": d.Deployment.Id,
-		},
+	net, err := docker.CreateNetwork(name, map[string]string{
+		"cloud.usenest.service":       d.Service.Name,
+		"cloud.usenest.deployment_id": d.Deployment.Id,
 	})
 
 	if err != nil {
 		return "", err
 	}
 
-	d.Deployment.Manifest.Networks[d.Service.Name] = net.ID
+	d.Deployment.Manifest.Networks[d.Service.Name] = net
 
-	return net.ID, nil
+	return net, nil
 }
 
 func (d *DeployPipeline) ConnectRequiredServices(networkId string) error {
 	for _, require := range d.Service.Requires {
 		for _, requiredContainer := range d.Deployment.Manifest.Containers[require] {
-			err := global.Docker.NetworkConnect(context.Background(), networkId, requiredContainer.ID, nil)
+			err := docker.ConnectContainerToNetwork(networkId, requiredContainer.ID)
 
 			if err != nil {
 				return err
@@ -156,7 +152,7 @@ func (d *DeployPipeline) CreateContainer() (string, error) {
 		}
 	}
 
-	c, err := global.Docker.ContainerCreate(context.Background(), &container.Config{
+	c, err := docker.CreateContainer(context.Background(), &container.Config{
 		Image: d.Service.Image,
 		Labels: map[string]string{
 			"cloud.usenest.service":       d.Service.Name,
@@ -167,25 +163,18 @@ func (d *DeployPipeline) CreateContainer() (string, error) {
 		RestartPolicy: container.RestartPolicy{
 			Name: "always",
 		},
-	}, networking, nil, containerName)
+	}, networking, containerName)
 
 	if err != nil {
 		return "", err
 	}
 
-	return c.ID, nil
+	return c, nil
 }
 
 func (d *DeployPipeline) RunHooks(id string, commands []string) error {
 	for _, command := range commands {
-		ref, err := global.Docker.ContainerExecCreate(context.Background(), id, types.ExecConfig{
-			Cmd: []string{"sh", "-c", command},
-		})
-		if err != nil {
-			return err
-		}
-
-		err = global.Docker.ContainerExecStart(context.Background(), ref.ID, types.ExecStartCheck{})
+		err := docker.RunCommand(id, command)
 		if err != nil {
 			return err
 		}
@@ -200,25 +189,19 @@ func (d *DeployPipeline) RunHooks(id string, commands []string) error {
 }
 
 func (d *DeployPipeline) StartContainer(containerID string) error {
-	err := global.Docker.ContainerStart(context.Background(), containerID, types.ContainerStartOptions{})
+	err := docker.StartContainer(containerID)
 	if err != nil {
 		return err
 	}
 
-	inspection, err := global.Docker.ContainerInspect(context.Background(), containerID)
+	ip, err := docker.GetContainerIP(containerID)
 	if err != nil {
 		return err
-	}
-
-	net := "bridge"
-
-	if d.HasDependencies {
-		net = d.Service.Name
 	}
 
 	d.Deployment.Manifest.Containers[d.Service.Name] = append(d.Deployment.Manifest.Containers[d.Service.Name], &Container{
-		ID: inspection.ID,
-		IP: inspection.NetworkSettings.Networks[net].IPAddress,
+		ID: containerID,
+		IP: ip,
 	})
 
 	return nil

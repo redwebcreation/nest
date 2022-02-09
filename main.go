@@ -42,6 +42,11 @@ func main() {
 
 	err := nest.Execute()
 	if err != nil {
+		global.InternalLogger.Log(
+			global.LevelError,
+			"main",
+			global.NewField("error", err.Error()),
+		)
 		_, _ = fmt.Fprintln(os.Stderr, "error: "+err.Error())
 		os.Exit(1)
 	}

@@ -18,7 +18,7 @@ import (
 type Proxy struct {
 	Http               string
 	Https              string
-	Logger             *Logger
+	Logger             *global.Logger
 	Services           ServiceMap
 	CertificateManager *autocert.Manager
 	HostToIp           map[string]string
@@ -28,7 +28,7 @@ func NewProxy(http string, https string, services ServiceMap, manifest *Manifest
 	proxy := &Proxy{
 		Http:     http,
 		Https:    https,
-		Logger:   ProxyLogger,
+		Logger:   global.ProxyLogger,
 		HostToIp: make(map[string]string),
 	}
 
@@ -100,7 +100,7 @@ func (p *Proxy) handler(w http.ResponseWriter, r *http.Request) {
 	ip := p.HostToIp[r.Host]
 
 	if ip == "" {
-		p.Log(r, LevelInfo, "host not found")
+		p.Log(r, global.LevelInfo, "host not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -110,10 +110,10 @@ func (p *Proxy) handler(w http.ResponseWriter, r *http.Request) {
 		Host:   ip,
 	}).ServeHTTP(w, r)
 
-	p.Log(r, LevelInfo, "request proxied")
+	p.Log(r, global.LevelInfo, "request proxied")
 }
 
-func (p *Proxy) Log(r *http.Request, level Level, message string) {
+func (p *Proxy) Log(r *http.Request, level global.Level, message string) {
 	var ip string
 
 	if ip = r.Header.Get("X-Forwarded-For"); ip == "" {
@@ -123,10 +123,10 @@ func (p *Proxy) Log(r *http.Request, level Level, message string) {
 	p.Logger.Log(
 		level,
 		message,
-		NewField("host", r.Host),
-		NewField("method", r.Method),
-		NewField("path", r.URL.Path),
-		NewField("ip", ip),
+		global.NewField("host", r.Host),
+		global.NewField("method", r.Method),
+		global.NewField("path", r.URL.Path),
+		global.NewField("ip", ip),
 	)
 }
 
@@ -144,7 +144,7 @@ func (p *Proxy) certificateCreationHandler() *http.Server {
 				http.Redirect(w, r, target, http.StatusFound)
 			})).ServeHTTP(w, r)
 
-			p.Log(r, LevelInfo, "redirecting to https")
+			p.Log(r, global.LevelInfo, "redirecting to https")
 		}),
 	}
 }

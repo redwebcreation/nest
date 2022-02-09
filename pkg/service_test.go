@@ -2,7 +2,7 @@ package pkg
 
 import "testing"
 
-func TestService_Normalize(t *testing.T) {
+func TestService_ApplyDefaults(t *testing.T) {
 	service := &Service{
 		Hosts: []string{
 			"~example.com",

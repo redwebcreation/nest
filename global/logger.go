@@ -1,9 +1,8 @@
-package pkg
+package global
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/redwebcreation/nest/global"
 	"os"
 	"time"
 )
@@ -76,7 +75,8 @@ func (l Logger) Log(level Level, message string, fields ...*Field) {
 		panic(err)
 	}
 
-	if err = f.Close(); err != nil {
+	_, err = f.Write([]byte("\n"))
+	if err != nil {
 		panic(err)
 	}
 }
@@ -99,11 +99,11 @@ func (l Logger) Error(err error) {
 
 func init() {
 	ProxyLogger = &Logger{
-		Path:   global.ProxyLogFile,
+		Path:   ProxyLogFile,
 		Stdout: true,
 	}
 	InternalLogger = &Logger{
-		Path:   global.InternalLogFile,
+		Path:   InternalLogFile,
 		Stdout: false,
 	}
 }

@@ -1,10 +1,9 @@
 package command
 
 import (
-	"context"
 	"fmt"
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/filters"
+	"github.com/redwebcreation/nest/docker"
 	"github.com/redwebcreation/nest/global"
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
@@ -93,20 +92,12 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 }
 
 func cleanup(deployment *pkg.Deployment) (int, error) {
-	containers, err := global.Docker.ContainerList(context.Background(), types.ContainerListOptions{
-		Filters: filters.NewArgs(
-			filters.Arg("label", "cloud.usenest.deployment_id"),
-		),
-	})
+	containers, err := docker.ListContainers()
 	if err != nil {
 		return 0, err
 	}
 
-	networks, err := global.Docker.NetworkList(context.Background(), types.NetworkListOptions{
-		Filters: filters.NewArgs(
-			filters.Arg("label", "cloud.usenest.deployment_id"),
-		),
-	})
+	networks, err := docker.ListNetworks()
 
 	if err != nil {
 		return 0, err
@@ -120,9 +111,8 @@ func cleanup(deployment *pkg.Deployment) (int, error) {
 			containersWg.Add(1)
 			go func(container types.Container) {
 				defer containersWg.Done()
-				err = global.Docker.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{
-					Force: true,
-				})
+				err = docker.RemoveContainer(container.ID)
+
 				if err != nil {
 					fmt.Println(err)
 				} else {
@@ -141,7 +131,7 @@ func cleanup(deployment *pkg.Deployment) (int, error) {
 			networksWg.Add(1)
 			go func(network types.NetworkResource) {
 				defer networksWg.Done()
-				err = global.Docker.NetworkRemove(context.Background(), network.ID)
+				err = docker.RemoveNetwork(network.ID)
 				if err != nil {
 					fmt.Println(err)
 				} else {

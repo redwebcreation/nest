@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"fmt"
+	"github.com/redwebcreation/nest/global"
 	"os/exec"
 	"strings"
 )
@@ -97,6 +98,13 @@ func (v *VCS) run(dir string, cmdline string, keyval ...string) ([]byte, error) 
 	// todo: log to the internal logger
 	err = cmd.Run()
 	out := buf.Bytes()
+
+	global.InternalLogger.Log(
+		global.LevelDebug,
+		"vcs.run",
+		global.NewField("cmd", v.Cmd),
+		global.NewField("args", args),
+	)
 
 	if err != nil {
 		return nil, fmt.Errorf("%v: %s", err, out)
