@@ -4,10 +4,11 @@ go 1.18
 
 require (
 	github.com/docker/docker v20.10.12+incompatible
+	github.com/google/go-github/v42 v42.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pseidemann/finish v1.0.0
 	github.com/spf13/cobra v1.0.0
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -20,6 +21,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
