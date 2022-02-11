@@ -9,6 +9,10 @@ import (
 type Configuration struct {
 	Services   ServiceMap  `yaml:"services"`
 	Registries RegistryMap `yaml:"registries"`
+	Vault      struct {
+		Enabled bool   `yaml:"enabled"`
+		Path    string `yaml:"token"`
+	} `yaml:"vault"`
 }
 
 var (

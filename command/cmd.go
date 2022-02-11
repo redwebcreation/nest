@@ -20,9 +20,12 @@ func Configure(cmd *cobra.Command) {
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		global.InternalLogger.Log(
 			global.LevelDebug,
-			"command.invoke",
-			global.NewField("name", cmd.Name()),
-			global.NewField("args", args),
+			"command invoked",
+			global.Fields{
+				"tag":     "command.invoke",
+				"command": cmd.Name(),
+				"args":    args,
+			},
 		)
 
 		if !disableConfigLocator {

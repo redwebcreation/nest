@@ -18,7 +18,7 @@ import (
 type Proxy struct {
 	Http               string
 	Https              string
-	Logger             *global.Logger
+	Logger             global.Logger
 	Services           ServiceMap
 	CertificateManager *autocert.Manager
 	HostToIp           map[string]string
@@ -69,7 +69,9 @@ func (p *Proxy) Run() {
 func (p *Proxy) start(proxy *http.Server) {
 	finisher := &finish.Finisher{
 		Timeout: 10 * time.Second,
-		Log:     p.Logger,
+		Log: &global.LogrusCompat{
+			Logger: p.Logger,
+		},
 	}
 
 	certsHandler := p.certificateCreationHandler()
@@ -123,10 +125,13 @@ func (p *Proxy) Log(r *http.Request, level global.Level, message string) {
 	p.Logger.Log(
 		level,
 		message,
-		global.NewField("host", r.Host),
-		global.NewField("method", r.Method),
-		global.NewField("path", r.URL.Path),
-		global.NewField("ip", ip),
+		global.Fields{
+			"tag":    "proxy",
+			"method": r.Method,
+			"host":   r.Host,
+			"path":   r.URL.Path,
+			"ip":     ip,
+		},
 	)
 }
 

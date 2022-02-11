@@ -1,16 +1,15 @@
 package global
 
 import (
-	"encoding/json"
-	"fmt"
+	"github.com/go-logfmt/logfmt"
+	"io"
+	"net/http"
+	"net/url"
 	"os"
-	"time"
 )
 
-var (
-	ProxyLogger    *FileLogger
-	InternalLogger *FileLogger
-)
+var ProxyLogger Logger
+var InternalLogger Logger
 
 type Level int
 
@@ -22,88 +21,127 @@ const (
 	LevelFatal
 )
 
+var levelMap = map[Level]string{
+	LevelDebug: "DEBUG",
+	LevelInfo:  "INFO",
+	LevelWarn:  "WARN",
+	LevelError: "ERROR",
+	LevelFatal: "FATAL",
+}
+
+type Fields map[string]interface{}
+
+type Logger interface {
+	Log(level Level, message string, fields Fields)
+	// Error logs an error using Log()
+	Error(error)
+}
+
 type FileLogger struct {
-	Path   string
-	Stdout bool
+	Path string
+	file *os.File
 }
 
-type Field struct {
-	Key string
-	Val interface{}
-}
-
-func NewField(key string, val interface{}) *Field {
-	return &Field{
-		Key: key,
-		Val: val,
-	}
-}
-
-func (l FileLogger) Log(level Level, message string, fields ...*Field) {
-	f, err := os.OpenFile(l.Path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	defer func(f *os.File) {
-		err = f.Close()
+func (f FileLogger) Log(level Level, message string, fields Fields) {
+	if f.file == nil {
+		file, err := os.OpenFile(f.Path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
 		if err != nil {
 			panic(err)
 		}
-	}(f)
 
-	event := make(map[string]interface{}, len(fields)+3)
-	event["level"] = level
-	event["time"] = time.Now().Format("2006-01-02 15:04:05")
-	event["message"] = message
-
-	for _, field := range fields {
-		event[field.Key] = field.Val
+		f.file = file
 	}
 
-	bytes, err := json.Marshal(event)
+	format(f.file, level, message, fields)
+}
+
+func format(w io.Writer, level Level, message string, fields Fields) {
+	check := func(err error) {
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	e := logfmt.NewEncoder(w)
+	check(e.EncodeKeyval("level", levelMap[level]))
+	check(e.EncodeKeyval("message", message))
+
+	for k, v := range fields {
+		check(e.EncodeKeyval(k, v))
+	}
+
+	check(e.EndRecord())
+}
+
+type HTTPLogger struct {
+	URL    *url.URL
+	Method string
+	Client *http.Client
+	Body   io.Reader
+	Modify func(r *http.Request, level Level, message string, fields Fields)
+}
+
+func (h *HTTPLogger) Log(level Level, message string, fields Fields) {
+	request, err := http.NewRequest(h.Method, h.URL.String(), h.Body)
 	if err != nil {
 		panic(err)
 	}
 
-	if l.Stdout {
-		fmt.Printf("%s\n", bytes)
+	if h.Modify != nil {
+		h.Modify(request, level, message, fields)
 	}
 
-	_, err = f.Write(bytes)
-	if err != nil {
-		panic(err)
+	if h.Client == nil {
+		h.Client = http.DefaultClient
 	}
 
-	_, err = f.Write([]byte("\n"))
+	// send request
+	_, err = h.Client.Do(request)
 	if err != nil {
 		panic(err)
 	}
 }
 
-// Infof logs a formatted message at the info level.
-// You should not use it directly, this is for compatibility with logrus.
-func (l FileLogger) Infof(message string, a ...interface{}) {
-	l.Log(LevelInfo, fmt.Sprintf(message, a...))
+type CompositeLogger struct {
+	Loggers []Logger
 }
 
-// Errorf logs a formatted message at the debug level.
-// You should not use it directly, this is for compatibility with logrus.
-func (l FileLogger) Errorf(message string, a ...interface{}) {
-	l.Log(LevelError, fmt.Sprintf(message, a...))
-}
-
-func (l FileLogger) Error(err error) {
-	l.Log(LevelError, err.Error())
+func (c CompositeLogger) Log(level Level, message string, fields Fields) {
+	for _, logger := range c.Loggers {
+		logger.Log(level, message, fields)
+	}
 }
 
 func init() {
-	ProxyLogger = &FileLogger{
-		Path:   ProxyLogFile,
-		Stdout: true,
+	ProxyLogger = FileLogger{
+		Path: ProxyLogFile,
 	}
-	InternalLogger = &FileLogger{
-		Path:   InternalLogFile,
-		Stdout: false,
+
+	InternalLogger = FileLogger{
+		Path: InternalLogFile,
 	}
+}
+
+type LogrusCompat struct {
+	Logger Logger
+}
+
+func (l LogrusCompat) Infof(message string, args ...interface{}) {
+	l.Logger.Log(LevelInfo, message, Fields{})
+}
+
+func (l LogrusCompat) Errorf(message string, args ...interface{}) {
+	l.Logger.Log(LevelError, message, Fields{})
+}
+
+func (f FileLogger) Error(err error) {
+	f.Log(LevelError, err.Error(), Fields{})
+}
+
+func (c CompositeLogger) Error(err error) {
+	c.Log(LevelError, err.Error(), Fields{})
+}
+
+func (h HTTPLogger) Error(err error) {
+	h.Log(LevelError, err.Error(), Fields{})
 }

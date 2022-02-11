@@ -18,6 +18,7 @@ type locator struct {
 	Repository string
 	Branch     string
 	Commit     string
+	Secrets    map[string][]byte
 	VCS        *util.VCS `yaml:"-"`
 }
 

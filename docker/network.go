@@ -15,7 +15,11 @@ func CreateNetwork(name string, labels map[string]string) (string, error) {
 		return "", err
 	}
 
-	global.InternalLogger.Log(global.LevelDebug, "docker.network.create", global.NewField("name", name), global.NewField("id", res.ID), global.NewField("labels", labels))
+	global.InternalLogger.Log(global.LevelDebug, "creating a new network", global.Fields{
+		"tag":  "docker.network.create",
+		"name": name,
+		"id":   res.ID,
+	})
 
 	return res.ID, nil
 }
@@ -27,7 +31,11 @@ func ConnectContainerToNetwork(containerID, networkID string) error {
 		return err
 	}
 
-	global.InternalLogger.Log(global.LevelDebug, "docker.network.connect", global.NewField("container", containerID), global.NewField("network", networkID))
+	global.InternalLogger.Log(global.LevelDebug, "connecting a container to a network", global.Fields{
+		"tag":          "docker.network.connect",
+		"container_id": containerID,
+		"network_id":   networkID,
+	})
 
 	return nil
 }
@@ -47,7 +55,10 @@ func RemoveNetwork(networkID string) error {
 		return err
 	}
 
-	global.InternalLogger.Log(global.LevelDebug, "docker.network.remove", global.NewField("network", networkID))
+	global.InternalLogger.Log(global.LevelDebug, "removing a network", global.Fields{
+		"tag": "docker.network.remove",
+		"id":  networkID,
+	})
 
 	return nil
 }

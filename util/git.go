@@ -95,15 +95,17 @@ func (v *VCS) run(dir string, cmdline string, keyval ...string) ([]byte, error) 
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 
-	// todo: log to the internal logger
 	err = cmd.Run()
 	out := buf.Bytes()
 
 	global.InternalLogger.Log(
 		global.LevelDebug,
-		"vcs.run",
-		global.NewField("cmd", v.Cmd),
-		global.NewField("args", args),
+		"running git command",
+		global.Fields{
+			"cmd":  v.Cmd,
+			"args": args,
+			"tag":  "vcs.run",
+		},
 	)
 
 	if err != nil {
