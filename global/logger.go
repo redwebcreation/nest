@@ -1,6 +1,7 @@
 package global
 
 import (
+	"errors"
 	"github.com/go-logfmt/logfmt"
 	"io"
 	"net/http"
@@ -45,6 +46,10 @@ type FileLogger struct {
 func (f FileLogger) Log(level Level, message string, fields Fields) {
 	if f.file == nil {
 		file, err := os.OpenFile(f.Path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
+		if errors.Is(err, os.ErrNotExist) {
+			return
+		}
+
 		if err != nil {
 			panic(err)
 		}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/redwebcreation/nest/command"
+	"github.com/redwebcreation/nest/command/cloud"
 	"github.com/redwebcreation/nest/command/config"
 	"github.com/redwebcreation/nest/command/proxy"
 	"github.com/redwebcreation/nest/global"
@@ -18,10 +19,11 @@ var nest = &cobra.Command{
 }
 
 var commands = []*cobra.Command{
+	cloud.NewRootConfigCommand(),
+	proxy.NewRootProxyCommand(),
+	config.NewRootConfigCommand(),
 	command.NewDeployCommand(),
 	command.NewMedicCommand(),
-	config.NewRootConfigCommand(),
-	proxy.NewRootProxyCommand(),
 	command.NewSetupCommand(),
 	command.NewVersionCommand(),
 	command.NewSelfUpdateCommand(),
@@ -43,7 +45,7 @@ func main() {
 	err := nest.Execute()
 	if err != nil {
 		global.InternalLogger.Error(err)
-		util.PrintErrE("error: " + err.Error())
+		util.FatalE("error: " + err.Error())
 		os.Exit(1)
 	}
 }

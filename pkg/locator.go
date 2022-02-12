@@ -18,13 +18,13 @@ type locator struct {
 	Repository string
 	Branch     string
 	Commit     string
-	Secrets    map[string][]byte
-	VCS        *util.VCS `yaml:"-"`
+	VCS        *util.VCS `json:"-"`
 }
 
 func (l locator) ConfigPath() string {
 	return global.ConfigStoreDir + "/" + strings.Replace(l.Repository, "/", "-", -1)
 }
+
 func (l locator) RemoteURL() string {
 	return fmt.Sprintf("git@%s.com:%s.git", l.Provider, l.Repository)
 }
@@ -33,8 +33,7 @@ func (l locator) Read(file string) ([]byte, error) {
 	configPath := l.ConfigPath()
 
 	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
-		err = l.VCS.Clone(l.RemoteURL(), l.ConfigPath())
-
+		_, err = l.CloneConfig()
 		if err != nil {
 			return nil, err
 		}
@@ -81,10 +80,8 @@ func (l *locator) Load() error {
 		return err
 	}
 
-	l.Provider = p.Provider
-	l.Repository = p.Repository
-	l.Branch = p.Branch
-	l.Commit = p.Commit
+	*l = p
+	l.VCS = util.VcsGit
 
 	if l.Commit == "" {
 		return fmt.Errorf("commit is empty, run `nest setup` to set it")
@@ -95,7 +92,36 @@ func (l *locator) Load() error {
 
 func (l *locator) LoadCommit(commit string) error {
 	l.Commit = commit
+	err := l.Save()
+	if err != nil {
+		return err
+	}
+
 	return l.Load()
+}
+
+func (l *locator) Save() error {
+	contents, err := json.Marshal(l)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(global.LocatorConfigFile, contents, 0600)
+	if err != nil {
+		return err
+	}
+
+	global.InternalLogger.Log(global.LevelInfo, "updating locator config", global.Fields{
+		"tag":        "locator.update",
+		"commit":     l.Commit,
+		"repository": l.Repository,
+		"location":   l.RemoteURL(),
+	})
+
+	return nil
+}
+
+func (l locator) CloneConfig() ([]byte, error) {
+	return l.VCS.CloneV(l.RemoteURL(), l.ConfigPath())
 }
 
 func init() {

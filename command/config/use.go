@@ -31,15 +31,15 @@ func runUseCommand(cmd *cobra.Command, args []string) error {
 
 		if len(possibilities) != 1 {
 
-			util.PrintErr(util.Red.Fg()+"\n  Could not find a unique match for %s.\n"+util.Reset()+util.Gray.Fg(), args[0])
-			util.PrintErr()
-			util.PrintErr("  Candidates")
+			util.PrintE(util.Red.Fg()+"\n  Could not find a unique match for %s.\n"+util.Reset()+util.Gray.Fg(), args[0])
+			util.PrintE()
+			util.PrintE("  Candidates")
 
 			for _, possibility := range possibilities {
-				util.PrintErr("  * %s %s\n", possibility.Hash[:7], possibility.Message)
+				util.PrintE("  * %s %s\n", possibility.Hash[:7], possibility.Message)
 			}
 
-			util.PrintErrE(util.Reset())
+			util.FatalE(util.Reset())
 		} else {
 			fmt.Printf(util.Gray.Fg()+"  Found %s.\n\n"+util.Reset(), possibilities[0])
 			commit = possibilities[0].Hash

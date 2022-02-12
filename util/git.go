@@ -27,8 +27,12 @@ var VcsGit = &VCS{
 }
 
 func (v VCS) Clone(remote string, local string) error {
-	_, err := v.run("", v.CloneCmd, "remote", remote, "local", local)
+	_, err := v.CloneV(remote, local)
 	return err
+}
+
+func (v VCS) CloneV(remote string, local string) ([]byte, error) {
+	return v.run("", v.CloneCmd, "remote", remote, "local", local)
 }
 
 func (v VCS) Pull(dir string, branch string) ([]byte, error) {
@@ -102,9 +106,8 @@ func (v *VCS) run(dir string, cmdline string, keyval ...string) ([]byte, error) 
 		global.LevelDebug,
 		"running git command",
 		global.Fields{
-			"cmd":  v.Cmd,
-			"args": args,
-			"tag":  "vcs.run",
+			"cmd": v.Cmd + " " + strings.Join(args, " "),
+			"tag": "vcs.run",
 		},
 	)
 

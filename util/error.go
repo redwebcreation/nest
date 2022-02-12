@@ -5,8 +5,8 @@ import (
 	"os"
 )
 
-// PrintErr prints the error message but does not exit, use PrintErrE for exit
-func PrintErr(a ...interface{}) {
+// PrintE prints the error message but does not exit, use FatalE for exit
+func PrintE(a ...interface{}) {
 	if len(a) == 0 {
 		_, _ = fmt.Fprintln(os.Stderr)
 		return
@@ -14,9 +14,9 @@ func PrintErr(a ...interface{}) {
 	_, _ = fmt.Fprintln(os.Stderr, fmt.Sprintf(a[0].(string), a[1:]...))
 }
 
-// PrintErrE prints the error message to stderr and exits the program.
-func PrintErrE(a ...interface{}) {
-	PrintErr(a...)
+// FatalE prints the error message to stderr and exits the program.
+func FatalE(a ...interface{}) {
+	PrintE(a...)
 
 	os.Exit(1)
 }

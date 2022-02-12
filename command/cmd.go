@@ -24,7 +24,6 @@ func Configure(cmd *cobra.Command) {
 			global.Fields{
 				"tag":     "command.invoke",
 				"command": cmd.Name(),
-				"args":    args,
 			},
 		)
 

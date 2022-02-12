@@ -13,7 +13,7 @@ import (
 )
 
 func runSetupCommand(cmd *cobra.Command, args []string) error {
-	pkg.Locator.Provider = util.Prompt("Choose a provider", "github", func(input string) bool {
+	pkg.Locator.Provider = util.Prompt("Choose a provider", pkg.Locator.Provider, func(input string) bool {
 		return input == "github" || input == "gitlab" || input == "bitbucket"
 	})
 
@@ -26,6 +26,14 @@ func runSetupCommand(cmd *cobra.Command, args []string) error {
 	pkg.Locator.Branch = util.Prompt("Enter a branch", pkg.Locator.Branch, func(input string) bool {
 		return input != ""
 	})
+
+	out, err := pkg.Locator.CloneConfig()
+	if err != nil {
+		util.PrintE("error cloning the config:", err)
+		util.PrintE(out)
+
+		return cmd.Execute()
+	}
 
 	commits, err := pkg.Locator.VCS.ListCommits(pkg.Locator.ConfigPath(), pkg.Locator.Branch)
 	if err != nil {
