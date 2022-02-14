@@ -27,12 +27,8 @@ var VcsGit = &VCS{
 }
 
 func (v VCS) Clone(remote string, local string) error {
-	_, err := v.CloneV(remote, local)
+	_, err := v.run("", v.CloneCmd, "remote", remote, "local", local)
 	return err
-}
-
-func (v VCS) CloneV(remote string, local string) ([]byte, error) {
-	return v.run("", v.CloneCmd, "remote", remote, "local", local)
 }
 
 func (v VCS) Pull(dir string, branch string) ([]byte, error) {
@@ -116,6 +112,11 @@ func (v *VCS) run(dir string, cmdline string, keyval ...string) ([]byte, error) 
 	}
 
 	return out, nil
+}
+
+func (v VCS) Exists(dir, path, commit string) bool {
+	_, err := v.ReadFile(dir, commit, path)
+	return err == nil
 }
 
 func expand(s string, bindings map[string]string) string {

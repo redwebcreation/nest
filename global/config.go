@@ -73,7 +73,7 @@ func init() {
 	directories := []string{ConfigStoreDir, CertsDir, LogDir}
 
 	for _, directory := range directories {
-		err = os.MkdirAll(ConfigHome+"/"+directory, 0700)
+		err = os.MkdirAll(directory, 0700)
 		if err != nil {
 			panic(err)
 		}

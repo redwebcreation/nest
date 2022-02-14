@@ -6,7 +6,7 @@ import "github.com/redwebcreation/nest/docker"
 type RegistryMap map[string]*docker.Registry
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface
-func (r *RegistryMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (r *RegistryMap) UnmarshalYAML(unmarshal func(any) error) error {
 	var registries map[string]*docker.Registry
 	if err := unmarshal(&registries); err != nil {
 		return err

@@ -27,10 +27,9 @@ func runSetupCommand(cmd *cobra.Command, args []string) error {
 		return input != ""
 	})
 
-	out, err := pkg.Locator.CloneConfig()
+	err := pkg.Locator.CloneConfig()
 	if err != nil {
-		util.PrintE("error cloning the config:", err)
-		util.PrintE(out)
+		util.PrintE(err)
 
 		return cmd.Execute()
 	}

@@ -16,7 +16,7 @@ type MessageBus chan Message
 
 type Message struct {
 	Service *Service
-	Value   interface{}
+	Value   any
 }
 
 type Container struct {

@@ -21,7 +21,7 @@ var (
 )
 
 // UnmarshalYAML implements yaml.Unmarshaler
-func (c *Configuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (c *Configuration) UnmarshalYAML(unmarshal func(any) error) error {
 	type plain Configuration
 	var p plain
 	if err := unmarshal(&p); err != nil {

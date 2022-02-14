@@ -45,7 +45,7 @@ type Service struct {
 
 	// Registry to pull the image from.
 	// It may be a string referencing Retrieve.Registries[%s] or a Registry.
-	Registry interface{} `yaml:"registry"`
+	Registry any `yaml:"registry"`
 }
 
 // ApplyDefaults sets default values and transforms certain defined patterns of a unmarshalled service.

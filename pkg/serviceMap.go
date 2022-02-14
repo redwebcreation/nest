@@ -4,7 +4,7 @@ import "gopkg.in/yaml.v2"
 
 type ServiceMap map[string]*Service
 
-func (s *ServiceMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (s *ServiceMap) UnmarshalYAML(unmarshal func(any) error) error {
 	var services map[string]*Service
 	if err := unmarshal(&services); err != nil {
 		return err

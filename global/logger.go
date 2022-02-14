@@ -30,7 +30,7 @@ var levelMap = map[Level]string{
 	LevelFatal: "FATAL",
 }
 
-type Fields map[string]interface{}
+type Fields map[string]any
 
 type Logger interface {
 	Log(level Level, message string, fields Fields)
@@ -131,11 +131,11 @@ type LogrusCompat struct {
 	Logger Logger
 }
 
-func (l LogrusCompat) Infof(message string, args ...interface{}) {
+func (l LogrusCompat) Infof(message string, args ...any) {
 	l.Logger.Log(LevelInfo, message, Fields{})
 }
 
-func (l LogrusCompat) Errorf(message string, args ...interface{}) {
+func (l LogrusCompat) Errorf(message string, args ...any) {
 	l.Logger.Log(LevelError, message, Fields{})
 }
 

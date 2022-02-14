@@ -10,12 +10,19 @@ import (
 func runLoginCommand(cmd *cobra.Command, args []string) error {
 	token := args[0]
 
-	err := cloud.AddToken(token)
+	err := cloud.SetToken(token)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(util.Green.Fg() + "Successfully logged in." + util.Reset())
+	err = cloud.NewClient(token).Ping()
+	if err == cloud.ErrResourceNotFound {
+		fmt.Println(util.Red.Fg() + "Invalid token." + util.Reset())
+	} else if err != nil {
+		return err
+	} else {
+		fmt.Println(util.Green.Fg() + "Successfully logged in." + util.Reset())
+	}
 
 	return nil
 }

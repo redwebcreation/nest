@@ -11,7 +11,9 @@ import (
 	"strings"
 )
 
-var Locator = &locator{}
+var Locator = &locator{
+	VCS: util.VcsGit,
+}
 
 type locator struct {
 	Provider   string
@@ -33,7 +35,7 @@ func (l locator) Read(file string) ([]byte, error) {
 	configPath := l.ConfigPath()
 
 	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
-		_, err = l.CloneConfig()
+		err = l.CloneConfig()
 		if err != nil {
 			return nil, err
 		}
@@ -50,7 +52,12 @@ func (l locator) Resolve() (*Configuration, error) {
 		return nil, err
 	}
 
-	contents, err := l.Read("nest.yml")
+	configFile := "nest.yaml"
+	if l.VCS.Exists(l.ConfigPath(), "nest.yml", l.Commit) {
+		configFile = "nest.yml"
+	}
+
+	contents, err := l.Read(configFile)
 	if err != nil {
 		return nil, err
 	}
@@ -62,10 +69,6 @@ func (l locator) Resolve() (*Configuration, error) {
 	}
 
 	return config, nil
-}
-
-func (l locator) Validate() error {
-	return nil
 }
 
 func (l *locator) Load() error {
@@ -120,10 +123,8 @@ func (l *locator) Save() error {
 	return nil
 }
 
-func (l locator) CloneConfig() ([]byte, error) {
-	return l.VCS.CloneV(l.RemoteURL(), l.ConfigPath())
-}
+func (l locator) CloneConfig() error {
+	_ = os.RemoveAll(l.ConfigPath())
 
-func init() {
-	Locator.VCS = util.VcsGit
+	return l.VCS.Clone(l.RemoteURL(), l.ConfigPath())
 }
