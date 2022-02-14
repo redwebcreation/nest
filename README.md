@@ -1,3 +1,4 @@
+
 # Nest
 
 [![Tests](https://github.com/redwebcreation/nest/actions/workflows/tests.yml/badge.svg?branch=next)](https://github.com/redwebcreation/nest/actions/workflows/tests.yml)
@@ -90,8 +91,9 @@ func runVersionCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// An helpful description for the command, if you don't know what to write, leave it blank
+// A helpful description for the command, if you don't know what to write, leave it blank
 // so that it can be spotted by linters
+
 // VersionCommand prints out the current version
 func /* New[command]Command */ NewVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -115,21 +117,6 @@ concerning [object labels](https://docs.docker.com/config/labels-custom-metadata
 labels must be prefixed with `cloud.usenest.`, the domain name where the managed nest engine is running.
 
 A comprehensible name for the label, however long, is recommended rather than a short name.
-
-Do not use acronyms or abbreviations that isn't commonly used or explicitly mentioned in the below documentation.
-
-#### Definitions
-
-this should remain empty
-
-### Message Bus
-
-Deploying a container is a complicated process that needs to be done through multiple channels, (cli, api, ...).
-
-In order to allow effective communication between the deployment workflow and the above channels, nest uses a message
-bus.
-
-Currently, the message bus takes a Value to send that is an `interface{}`.
 
 ### Command annotations
 

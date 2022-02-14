@@ -28,7 +28,7 @@ func Configure(cmd *cobra.Command) {
 		)
 
 		if !disableConfigLocator {
-			if _, err := os.Stat(global.LocatorConfigFile); err != nil {
+			if _, err := os.Stat(global.GetLocatorConfigFile()); err != nil {
 				return fmt.Errorf("run `nest setup` to setup nest")
 			}
 

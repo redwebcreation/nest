@@ -47,7 +47,7 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(any) error) error {
 	return nil
 }
 
-func (s ServiceMap) GroupServicesInLayers() ([][]*Service, error) {
+func (s ServiceMap) GroupInLayers() ([][]*Service, error) {
 	graph, err := s.NewGraph()
 	if err != nil {
 		return nil, err

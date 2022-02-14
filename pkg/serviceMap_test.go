@@ -79,7 +79,7 @@ func TestServiceMap_BuildDependencyPlan(t *testing.T) {
 			serviceMap[name] = service
 		}
 
-		sorted, err := serviceMap.GroupServicesInLayers()
+		sorted, err := serviceMap.GroupInLayers()
 
 		if test.Cyclic {
 			if err == nil {

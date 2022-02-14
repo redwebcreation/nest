@@ -2,13 +2,12 @@ package config
 
 import (
 	"fmt"
-
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 )
 
 func runPullCommand(cmd *cobra.Command, args []string) error {
-	out, err := pkg.Locator.VCS.Pull(pkg.Locator.ConfigPath(), pkg.Locator.Branch)
+	out, err := pkg.Git.Pull(pkg.Locator.ConfigPath(), pkg.Locator.Branch)
 
 	fmt.Println(string(out))
 

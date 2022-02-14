@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/redwebcreation/nest/docker"
+	"github.com/redwebcreation/nest/global"
 	"io"
 	"os"
 	"strings"
+	"sync"
 )
 
-type MessageBus chan Message
-
-type Message struct {
+type Event struct {
 	Service *Service
 	Value   any
 }
@@ -25,7 +26,7 @@ type Container struct {
 }
 
 type Manifest struct {
-	Containers map[string][]*Container
+	Containers map[string]*Container
 	Networks   map[string]string
 }
 
@@ -40,14 +41,65 @@ func (m Manifest) Save(path string) error {
 
 type Deployment struct {
 	Id       string
-	Bus      MessageBus
+	Config   *Configuration
+	Events   chan Event
 	Manifest *Manifest
+}
+
+func (d *Deployment) Run() error {
+	graph, err := d.Config.Services.GroupInLayers()
+	if err != nil {
+		return err
+	}
+
+	for layer, services := range graph {
+		d.Events <- Event{nil, fmt.Sprintf("Deploying layer %d/%d\n", layer+1, len(graph))}
+
+		var wg sync.WaitGroup
+		for _, service := range services {
+			wg.Add(1)
+			go func(service *Service) {
+				defer wg.Done()
+
+				pipeline := DeployPipeline{
+					Deployment:      d,
+					Service:         service,
+					HasDependencies: layer > 0 && len(service.Requires) > 0,
+				}
+
+				if err = pipeline.Run(); err != nil {
+					// todo: should stop the deployment
+					d.Events <- Event{service, err}
+				}
+			}(service)
+		}
+		wg.Wait()
+	}
+
+	err = d.Manifest.Save(global.GetContainerManifestFile())
+	if err != nil {
+		d.Events <- Event{nil, err}
+
+		return err
+	}
+
+	if err = d.cleanup(); err != nil {
+		d.Events <- Event{nil, err}
+
+		return err
+	}
+
+	return nil
 }
 
 type DeployPipeline struct {
 	Deployment      *Deployment
 	Service         *Service
 	HasDependencies bool
+}
+
+func (d *DeployPipeline) Log(v any) {
+	d.Deployment.Events <- Event{d.Service, v}
 }
 
 func (d DeployPipeline) Run() error {
@@ -87,10 +139,7 @@ func (d DeployPipeline) Run() error {
 		return err
 	}
 
-	d.Deployment.Bus <- Message{
-		Service: d.Service,
-		Value:   io.EOF,
-	}
+	d.Log(io.EOF)
 
 	return nil
 }
@@ -99,11 +148,8 @@ func (d *DeployPipeline) PullImage() error {
 	image := docker.Image(d.Service.Image)
 
 	return image.Pull(func(event *docker.PullEvent) {
-		d.Deployment.Bus <- Message{
-			Service: d.Service,
-			Value:   event.Status,
-		}
-	}, d.Service.Registry.(docker.Registry))
+		d.Log(event.Status)
+	}, d.Deployment.Config.Registries[d.Service.Registry])
 }
 
 func (d *DeployPipeline) CreateServiceNetwork() (string, error) {
@@ -125,12 +171,10 @@ func (d *DeployPipeline) CreateServiceNetwork() (string, error) {
 
 func (d *DeployPipeline) ConnectRequiredServices(networkId string) error {
 	for _, require := range d.Service.Requires {
-		for _, requiredContainer := range d.Deployment.Manifest.Containers[require] {
-			err := docker.ConnectContainerToNetwork(networkId, requiredContainer.ID)
+		err := docker.ConnectContainerToNetwork(networkId, d.Deployment.Manifest.Containers[require].ID)
 
-			if err != nil {
-				return err
-			}
+		if err != nil {
+			return err
 		}
 	}
 
@@ -179,10 +223,7 @@ func (d *DeployPipeline) RunHooks(id string, commands []string) error {
 			return err
 		}
 
-		d.Deployment.Bus <- Message{
-			Service: d.Service,
-			Value:   "ran command: " + command,
-		}
+		d.Log("ran command: " + command)
 	}
 
 	return nil
@@ -199,10 +240,64 @@ func (d *DeployPipeline) StartContainer(containerID string) error {
 		return err
 	}
 
-	d.Deployment.Manifest.Containers[d.Service.Name] = append(d.Deployment.Manifest.Containers[d.Service.Name], &Container{
+	d.Deployment.Manifest.Containers[d.Service.Name] = &Container{
 		ID: containerID,
 		IP: ip,
-	})
+	}
+
+	fmt.Println(d.Deployment.Manifest.Containers)
+
+	return nil
+}
+
+// todo: refactor
+func (d *Deployment) cleanup() error {
+	containers, err := docker.Client.ContainerList(context.Background(), types.ContainerListOptions{})
+	if err != nil {
+		return err
+	}
+
+	networks, err := docker.Client.NetworkList(context.Background(), types.NetworkListOptions{})
+	if err != nil {
+		return err
+	}
+
+	var wg sync.WaitGroup
+
+	for _, resource := range containers {
+		if resource.Labels["cloud.usenest.deployment_id"] == d.Id {
+			continue
+		}
+
+		wg.Add(1)
+		go func(container types.Container) {
+			defer wg.Done()
+			err = docker.RemoveContainer(container.ID)
+
+			if err != nil {
+				d.Events <- Event{nil, err}
+			}
+		}(resource)
+	}
+
+	// Containers must be removed before networks as some containers may be attached to said networks
+	wg.Wait()
+	wg = sync.WaitGroup{}
+
+	for _, resource := range networks {
+		if resource.Labels["cloud.usenest.deployment_id"] == d.Id {
+			continue
+		}
+
+		go func(network types.NetworkResource) {
+			err = docker.RemoveNetwork(network.ID)
+			if err != nil {
+				d.Events <- Event{nil, err}
+			}
+		}(resource)
+	}
+
+	wg.Wait()
 
 	return nil
 }

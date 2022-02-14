@@ -8,20 +8,15 @@ import (
 // Registry represents a docker registry
 type Registry struct {
 	// Name of the registry.
-	Name string `yaml:"name"`
+	Name string `yaml:"name" json:"name"`
 	// Host of the registry.
-	Host string `yaml:"host"`
+	Host string `yaml:"host" json:"host"`
 	// Port of the registry.
-	Port string `yaml:"port"`
+	Port string `yaml:"port" json:"port"`
 	// Username to use when authenticating with the registry.
-	Username string `yaml:"username"`
+	Username string `yaml:"username" json:"username"`
 	// Password to use when authenticating with the registry.
-	Password string `yaml:"password"`
-}
-
-// IsZero returns true if the registry is empty
-func (r Registry) IsZero() bool {
-	return r.Name == "" && r.Host == "" && r.Port == "" && r.Username == "" && r.Password == ""
+	Password string `yaml:"password" json:"password"`
 }
 
 // UrlFor returns the url for the registry

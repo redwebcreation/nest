@@ -4,9 +4,8 @@ import (
 	"errors"
 	"github.com/go-logfmt/logfmt"
 	"io"
-	"net/http"
-	"net/url"
 	"os"
+	"time"
 )
 
 var ProxyLogger Logger
@@ -40,11 +39,11 @@ type Logger interface {
 
 type FileLogger struct {
 	Path string
-	file *os.File
+	File *os.File
 }
 
 func (f FileLogger) Log(level Level, message string, fields Fields) {
-	if f.file == nil {
+	if f.File == nil {
 		file, err := os.OpenFile(f.Path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
 		if errors.Is(err, os.ErrNotExist) {
 			return
@@ -54,13 +53,13 @@ func (f FileLogger) Log(level Level, message string, fields Fields) {
 			panic(err)
 		}
 
-		f.file = file
+		f.File = file
 	}
 
-	format(f.file, level, message, fields)
+	write(f.File, level, message, fields)
 }
 
-func format(w io.Writer, level Level, message string, fields Fields) {
+func write(w io.Writer, level Level, message string, fields Fields) {
 	check := func(err error) {
 		if err != nil {
 			panic(err)
@@ -70,41 +69,13 @@ func format(w io.Writer, level Level, message string, fields Fields) {
 	e := logfmt.NewEncoder(w)
 	check(e.EncodeKeyval("level", levelMap[level]))
 	check(e.EncodeKeyval("message", message))
+	check(e.EncodeKeyval("time", time.Now().Format("2006-01-02 15:04:05")))
 
 	for k, v := range fields {
 		check(e.EncodeKeyval(k, v))
 	}
 
 	check(e.EndRecord())
-}
-
-type HTTPLogger struct {
-	URL    *url.URL
-	Method string
-	Client *http.Client
-	Body   io.Reader
-	Modify func(r *http.Request, level Level, message string, fields Fields)
-}
-
-func (h *HTTPLogger) Log(level Level, message string, fields Fields) {
-	request, err := http.NewRequest(h.Method, h.URL.String(), h.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	if h.Modify != nil {
-		h.Modify(request, level, message, fields)
-	}
-
-	if h.Client == nil {
-		h.Client = http.DefaultClient
-	}
-
-	// send request
-	_, err = h.Client.Do(request)
-	if err != nil {
-		panic(err)
-	}
 }
 
 type CompositeLogger struct {
@@ -117,13 +88,26 @@ func (c CompositeLogger) Log(level Level, message string, fields Fields) {
 	}
 }
 
+func (c CompositeLogger) Error(err error) {
+	for _, logger := range c.Loggers {
+		logger.Error(err)
+	}
+}
+
 func init() {
-	ProxyLogger = FileLogger{
-		Path: ProxyLogFile,
+	ProxyLogger = CompositeLogger{
+		Loggers: []Logger{
+			FileLogger{
+				Path: GetProxyLogFile(),
+			},
+			FileLogger{
+				File: os.Stdout,
+			},
+		},
 	}
 
 	InternalLogger = FileLogger{
-		Path: InternalLogFile,
+		Path: GetInternalLogFile(),
 	}
 }
 
@@ -141,12 +125,4 @@ func (l LogrusCompat) Errorf(message string, args ...any) {
 
 func (f FileLogger) Error(err error) {
 	f.Log(LevelError, err.Error(), Fields{})
-}
-
-func (c CompositeLogger) Error(err error) {
-	c.Log(LevelError, err.Error(), Fields{})
-}
-
-func (h HTTPLogger) Error(err error) {
-	h.Log(LevelError, err.Error(), Fields{})
 }

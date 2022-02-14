@@ -3,12 +3,11 @@ package docker
 import (
 	"context"
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/filters"
 	"github.com/redwebcreation/nest/global"
 )
 
 func CreateNetwork(name string, labels map[string]string) (string, error) {
-	res, err := docker.NetworkCreate(context.Background(), name, types.NetworkCreate{
+	res, err := Client.NetworkCreate(context.Background(), name, types.NetworkCreate{
 		Labels: labels,
 	})
 	if err != nil {
@@ -25,7 +24,7 @@ func CreateNetwork(name string, labels map[string]string) (string, error) {
 }
 
 func ConnectContainerToNetwork(containerID, networkID string) error {
-	err := docker.NetworkConnect(context.Background(), networkID, containerID, nil)
+	err := Client.NetworkConnect(context.Background(), networkID, containerID, nil)
 
 	if err != nil {
 		return err
@@ -40,16 +39,8 @@ func ConnectContainerToNetwork(containerID, networkID string) error {
 	return nil
 }
 
-func ListNetworks() ([]types.NetworkResource, error) {
-	return docker.NetworkList(context.Background(), types.NetworkListOptions{
-		Filters: filters.NewArgs(
-			filters.Arg("label", "cloud.usenest.deployment_id"),
-		),
-	})
-}
-
 func RemoveNetwork(networkID string) error {
-	err := docker.NetworkRemove(context.Background(), networkID)
+	err := Client.NetworkRemove(context.Background(), networkID)
 
 	if err != nil {
 		return err

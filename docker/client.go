@@ -6,7 +6,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
-var docker *client.Client
+var Client *client.Client
 
 func newDocker() (*client.Client, error) {
 	d, err := client.NewClientWithOpts(client.FromEnv)
@@ -24,5 +24,5 @@ func init() {
 		panic(err)
 	}
 
-	docker = d
+	Client = d
 }

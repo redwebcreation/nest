@@ -32,10 +32,11 @@ type PullEvent struct {
 }
 
 // Pull pulls an image from a registry
-func (i Image) Pull(handler func(event *PullEvent), registry Registry) error {
+func (i Image) Pull(handler func(event *PullEvent), registry *Registry) error {
 	image := i.String()
 	options := types.ImagePullOptions{}
-	if !registry.IsZero() {
+
+	if registry != nil {
 		auth, err := registry.ToBase64()
 		if err != nil {
 			return err
@@ -46,13 +47,13 @@ func (i Image) Pull(handler func(event *PullEvent), registry Registry) error {
 		image = registry.UrlFor(image)
 	}
 
-	events, err := docker.ImagePull(context.Background(), image, options)
+	events, err := Client.ImagePull(context.Background(), image, options)
 	global.InternalLogger.Log(
 		global.LevelDebug,
 		"pulling a docker image",
 		global.Fields{
 			"image":    image,
-			"registry": !registry.IsZero(),
+			"registry": registry != nil,
 			"tag":      "docker.image.pull",
 		},
 	)

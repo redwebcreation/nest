@@ -12,40 +12,40 @@ var (
 // Service contains the information about a service.
 type Service struct {
 	// Name of the service.
-	Name string `yaml:"-"`
+	Name string `yaml:"-" json:"-"`
 	// Include is the path to a file containing the service configuration.
-	Include string `yaml:"include"`
+	Include string `yaml:"include" json:"include"`
 
 	// Image name without a tag or registry server.
-	Image string `yaml:"image"`
+	Image string `yaml:"image" json:"image"`
 
 	// Hosts the service responds to.
-	Hosts []string `yaml:"hosts"`
+	Hosts []string `yaml:"hosts" json:"hosts"`
 
 	// Env variables for the service.
-	Env EnvMap `yaml:"env"`
+	Env EnvMap `yaml:"env" json:"env"`
 
 	// ListeningOn is the port the service listens on.
-	ListeningOn string `yaml:"listening_on"`
+	ListeningOn string `yaml:"listening_on" json:"listeningOn"`
 
 	// Hooks are commands to run during the lifecycle of the service.
 	Hooks struct {
 		// Prestart is a list of commands to run before the service starts.
-		Prestart []string `yaml:"prestart"`
+		Prestart []string `yaml:"prestart" json:"prestart"`
 		// Poststart is a list of commands to run after the service starts.
-		Poststart []string `yaml:"poststart"`
+		Poststart []string `yaml:"poststart" json:"poststart"`
 		// Preclean is a list of commands to run before the service is removed by the container collector.
-		Preclean []string `yaml:"preclean"`
+		Preclean []string `yaml:"preclean" json:"preclean"`
 		// Postclean is a list of commands to run after the service is removed by the container collector.
-		Postclean []string `yaml:"postclean"`
-	} `yaml:"hooks"`
+		Postclean []string `yaml:"postclean" json:"postclean"`
+	} `yaml:"hooks" json:"hooks"`
 
 	// Requires is a list of services that must be running before this service.
-	Requires []string `yaml:"requires"`
+	Requires []string `yaml:"requires" json:"requires"`
 
 	// Registry to pull the image from.
 	// It may be a string referencing Retrieve.Registries[%s] or a Registry.
-	Registry any `yaml:"registry"`
+	Registry string `yaml:"registry" json:"registry"`
 }
 
 // ApplyDefaults sets default values and transforms certain defined patterns of a unmarshalled service.
@@ -71,14 +71,4 @@ func (s *Service) ApplyDefaults(serviceName string) {
 	} else {
 		s.ListeningOn = strings.TrimPrefix(s.ListeningOn, ":")
 	}
-}
-
-// Deploy starts a deployment pipeline for the service.
-// todo: refactor out unclear layer parameter (the depth of the service in the graph)
-func (s *Service) Deploy(deployment *Deployment, layer int) error {
-	return DeployPipeline{
-		Deployment:      deployment,
-		Service:         s,
-		HasDependencies: layer > 0 && len(s.Requires) > 0,
-	}.Run()
 }

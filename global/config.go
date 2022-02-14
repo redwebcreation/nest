@@ -7,75 +7,61 @@ import (
 
 // ConfigHome is the path to the global configuration for nest.
 //
-// It contains everything related to nest: downloaded configurations, logs, certificates, etc.
+// It can be set using the NEST_HOME environment variable.
 var ConfigHome string
 
-// ConfigStoreDir is the path where the configuration repos are stored.
-//
-// For a given repo, the configuration is stored in the following location:
-// ConfigStoreDir/<owner>-<repo>
-var ConfigStoreDir string
+func GetConfigStoreDir() string {
+	return ConfigHome + "/configStore"
+}
 
-// LogDir is the path to the log directory.
-//
-// It contains the following files:
-// - proxy.log
-// - internal.log
-//
-// todo: implement log rotation
-var LogDir string
+func GetCertsDir() string {
+	return ensureExists(ConfigHome + "/certs")
+}
 
-// CertsDir is the path to the directory containing the certificates.
-// This directory should NEVER be directly accessed by the user.
-// If you temper with the contents of this directory, and autocert has to generate
-// a new certificate, you may get rate limited by Let's Encrypt.
-var CertsDir string
+func GetLogsDir() string {
+	return ensureExists(ConfigHome + "/logs")
+}
 
-// LocatorConfigFile is the path to the locator config.
-var LocatorConfigFile string
+func GetLocatorConfigFile() string {
+	return ConfigHome + "/locator.json"
+}
 
-// ContainerManifestFile todo: godoc
-var ContainerManifestFile string
+func GetContainerManifestFile() string {
+	return ConfigHome + "/manifest.json"
+}
 
-// ProxyLogFile is the path to the log file for the proxy.
-//
-// The path is LogDir/proxy.log
-var ProxyLogFile string
+func GetProxyLogFile() string {
+	return GetLogsDir() + "/proxy.log"
+}
 
-// InternalLogFile is the path to the log file for the internal events.
-// This is used for debugging nest itself.
-// Events logged here are things such as :
-// - cloned the configuration
-// - containers created/removed
-// - command called
-// - errors, all of them.
-//
-// The path is LogDir/internal.log
-var InternalLogFile string
+func GetInternalLogFile() string {
+	return GetLogsDir() + "/internal.log"
+}
 
 func init() {
+	if os.Getenv("NEST_HOME") != "" {
+		ConfigHome = os.Getenv("NEST_HOME")
+		return
+	}
+
+	// otherwise, use the default
 	home, err := homedir.Dir()
 	if err != nil {
 		panic(err)
 	}
 
-	ConfigHome = home + "/.nest"
+	ConfigHome = ensureExists(home + "/.nest")
+}
 
-	ConfigStoreDir = ConfigHome + "/config_store"
-	CertsDir = ConfigHome + "/certs"
-	LogDir = ConfigHome + "/logs"
-
-	LocatorConfigFile = ConfigHome + "/locator.json"
-	ContainerManifestFile = ConfigHome + "/manifest.json"
-	ProxyLogFile = LogDir + "/proxy.log"
-	InternalLogFile = LogDir + "/internal.log"
-
-	directories := []string{ConfigStoreDir, CertsDir, LogDir}
-
-	for _, directory := range directories {
-		err = os.MkdirAll(directory, 0700)
+func ensureExists(path string) string {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err = os.MkdirAll(path, 0755)
 		if err != nil {
 			panic(err)
 		}
+	} else if err != nil {
+		panic(err)
 	}
+
+	return path
 }

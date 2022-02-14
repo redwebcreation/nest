@@ -2,8 +2,6 @@ package command
 
 import (
 	"fmt"
-	"github.com/redwebcreation/nest/util"
-
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 )
@@ -16,31 +14,33 @@ func runMedicCommand(cmd *cobra.Command, args []string) error {
 
 	if !onlyWarnings {
 		fmt.Println()
-		fmt.Printf("  %sErrors:%s\n", util.Red, util.Reset())
+		pkg.Red.Render("  Errors:")
 
 		if len(diagnostic.Errors) == 0 {
-			fmt.Printf("  %s- no errors%s\n", util.Gray, util.Reset())
+			pkg.Gray.Render("  - no errors")
 		} else {
 			for _, err := range diagnostic.Errors {
-				fmt.Printf("  %s- %s%s\n", util.White, err.Title, util.Reset())
+				pkg.White.Render("  -  " + err.Title)
 				if err.Error != nil {
-					fmt.Printf("    %s%s%s\n", util.Gray, err.Error, util.Reset())
+					pkg.Gray.Render("    " + err.Error.Error())
 				}
 			}
 		}
 	}
 
-	if !onlyErrors {
-		fmt.Printf("\n  %sWarnings:%s\n", util.Yellow, util.Reset())
+	if onlyErrors {
+		return nil
+	}
 
-		if len(diagnostic.Warnings) == 0 {
-			fmt.Printf("  %s- no warnings%s\n", util.Gray, util.Reset())
-		} else {
-			for _, warn := range diagnostic.Warnings {
-				fmt.Printf("  %s- %s%s\n", util.White, warn.Title, util.Reset())
-				if warn.Advice != "" {
-					fmt.Printf("    %s%s%s\n", util.Gray, warn.Advice, util.Reset())
-				}
+	pkg.Yellow.Render("	Warnings:")
+
+	if len(diagnostic.Warnings) == 0 {
+		pkg.Gray.Render("  - no warnings")
+	} else {
+		for _, warn := range diagnostic.Warnings {
+			pkg.White.Render("  -  " + warn.Title)
+			if warn.Advice != "" {
+				pkg.Gray.Render("    " + warn.Advice)
 			}
 		}
 	}
