@@ -6,63 +6,12 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/redwebcreation/nest/docker"
-	"io"
 	"strings"
-	"sync"
 )
 
 type Event struct {
 	Service *Service
 	Value   any
-}
-
-type Deployment struct {
-	Id       string
-	Config   *Configuration
-	Events   chan Event
-	Manifest *Manifest
-}
-
-func (d *Deployment) Run() error {
-	graph, err := d.Config.Services.GroupInLayers()
-	if err != nil {
-		return err
-	}
-
-	for layer, services := range graph {
-		d.Events <- Event{nil, fmt.Sprintf("Deploying layer %d/%d", layer+1, len(graph))}
-
-		var wg sync.WaitGroup
-		for _, service := range services {
-			wg.Add(1)
-			go func(service *Service) {
-				defer wg.Done()
-
-				pipeline := DeployPipeline{
-					Deployment:      d,
-					Service:         service,
-					HasDependencies: layer > 0 && len(service.Requires) > 0,
-				}
-
-				if err = pipeline.Run(); err != nil {
-					// todo: should stop the deployment and rollback
-					d.Events <- Event{service, err}
-				}
-			}(service)
-		}
-		wg.Wait()
-	}
-
-	err = d.Manifest.Save()
-	if err != nil {
-		d.Events <- Event{nil, err}
-
-		return err
-	}
-
-	d.Events <- Event{nil, io.EOF}
-
-	return nil
 }
 
 type DeployPipeline struct {

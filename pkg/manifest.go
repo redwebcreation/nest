@@ -12,10 +12,10 @@ var (
 )
 
 type Manifest struct {
-	Id         string
-	Locator    *locator
-	Containers map[string]string
-	Networks   map[string]string
+	Id         string            `json:"id"`
+	Locator    *locator          `json:"locator"`
+	Containers map[string]string `json:"containers"`
+	Networks   map[string]string `json:"networks"`
 }
 
 func (m Manifest) Save() error {

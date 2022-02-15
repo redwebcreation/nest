@@ -13,10 +13,10 @@ import (
 var Locator = &locator{}
 
 type locator struct {
-	Provider   string
-	Repository string
-	Branch     string
-	Commit     string
+	Provider   string `json:"provider"`
+	Repository string `json:"repository"`
+	Branch     string `json:"branch"`
+	Commit     string `json:"commit"`
 }
 
 func (l locator) ConfigPath() string {

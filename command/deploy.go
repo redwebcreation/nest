@@ -5,8 +5,6 @@ import (
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 	"io"
-	"strconv"
-	"time"
 )
 
 func runDeployCommand(cmd *cobra.Command, args []string) error {
@@ -15,23 +13,24 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
-	deployment := &pkg.Deployment{
-		Id:       id,
-		Config:   config,
-		Events:   make(chan pkg.Event),
-		Manifest: pkg.NewManifest(id),
-	}
+	deployment := pkg.NewDeployment(config)
 
 	go func() {
-		err = deployment.Run()
+		err = deployment.Start()
+		if err != nil {
+			deployment.Events <- pkg.Event{
+				Service: nil,
+				Value:   pkg.ErrDeploymentFailed,
+			}
+		}
 	}()
 
-	if err != nil {
-		return err
-	}
-
 	for event := range deployment.Events {
+		if event.Value == pkg.ErrDeploymentFailed {
+			fmt.Println("Deployment failed")
+			break
+		}
+
 		if event.Value == io.EOF {
 			break
 		}
@@ -41,10 +40,9 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 		} else {
 			fmt.Printf("global: %v\n", event.Value)
 		}
-
 	}
 
-	return nil
+	return deployment.Manifest.Save()
 }
 
 // NewDeployCommand creates and configures the services defined in the configuration
