@@ -26,7 +26,7 @@ func TestImage_Pull(t *testing.T) {
 		t.Error("Expected image to not exist")
 	}
 
-	err = image.Pull(func(_ *PullEvent) {}, Registry{})
+	err = image.Pull(func(_ *PullEvent) {}, nil)
 	if err != nil {
 		t.Error(err)
 	}

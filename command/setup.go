@@ -84,7 +84,6 @@ func runSetupCommand(cmd *cobra.Command, args []string) error {
 	promptCommit := &survey.Select{
 		Message: "Select your commit:",
 		Options: commits.Hashes(),
-		Default: pkg.Locator.Commit,
 	}
 	err = survey.AskOne(promptCommit, &pkg.Locator.Commit)
 	if err != nil {

@@ -2,17 +2,23 @@ package pkg
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
+	"errors"
 	"fmt"
 	"github.com/pseidemann/finish"
 	"github.com/redwebcreation/nest/global"
 	"golang.org/x/crypto/acme/autocert"
+	"math/big"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"os/exec"
 	"time"
 )
 
@@ -68,22 +74,30 @@ func (p *Proxy) Run() {
 				return p.CertificateManager.GetCertificate(info)
 			}
 
-			// todo: generate self-signed certificate using golang
-			certFile := global.GetCertsDir() + "/dev_cert.pem"
-			keyFile := global.GetCertsDir() + "/dev_key.pem"
+			certFile := global.GetSelfSignedCertFile()
+			keyFile := global.GetSelfSignedCertKeyFile()
 
-			if _, err := os.Stat(keyFile); os.IsNotExist(err) {
-				cmd := exec.Command("openssl", "req", "-x509", "-newkey", "rsa:2048", "-keyout", keyFile, "-out", certFile, "-days", "365", "-nodes", "-subj", "/CN=localhost")
-				err = cmd.Run()
+			cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+			if errors.Is(err, os.ErrNotExist) {
+				err = createSelfSignedCertificates(certFile, keyFile)
 				if err != nil {
+					global.LogP(global.LevelError, "failed to create self signed certificates", global.Fields{
+						"error": err.Error(),
+					})
+					return nil, err
+				}
+
+				cert, err = tls.LoadX509KeyPair(certFile, keyFile)
+				if err != nil {
+					global.LogP(global.LevelError, "failed to load self signed certificates", global.Fields{
+						"error": err.Error(),
+					})
 					return nil, err
 				}
 			} else if err != nil {
-				return nil, err
-			}
-
-			cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-			if err != nil {
+				global.LogP(global.LevelError, "certificates exist but failed to load", global.Fields{
+					"error": err.Error(),
+				})
 				return nil, err
 			}
 
@@ -196,4 +210,64 @@ func replacePort(url string, newPort string) string {
 		return url
 	}
 	return net.JoinHostPort(host, newPort)
+}
+
+func createSelfSignedCertificates(certFile string, keyFile string) error {
+	// create self-signed certificate using x509 package
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return err
+	}
+
+	// create a new template for certificate
+	template := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject: pkix.Name{
+			Organization: []string{"Acme Co"},
+		},
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().AddDate(1000, 0, 0),
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+
+	// generate certificate
+	certBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
+	if err != nil {
+		return err
+	}
+
+	// write key to file
+	keyFileHandle, err := os.Create(keyFile)
+	if err != nil {
+		return err
+	}
+	defer keyFileHandle.Close()
+
+	err = pem.Encode(keyFileHandle, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	})
+	if err != nil {
+		return err
+	}
+
+	// write certificate to file
+	certFileHandle, err := os.Create(certFile)
+	if err != nil {
+		return err
+	}
+	defer certFileHandle.Close()
+
+	err = pem.Encode(certFileHandle, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: certBytes,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

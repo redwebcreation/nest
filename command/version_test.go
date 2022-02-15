@@ -1,39 +1,30 @@
 package command
 
 import (
-	"bytes"
-	"io"
-	"os"
-	"strconv"
-	"testing"
-	"time"
-
+	"github.com/Netflix/go-expect"
 	"github.com/redwebcreation/nest/global"
-	"github.com/redwebcreation/nest/util"
+	"os"
+	"testing"
 )
 
 func TestNewVersionCommand(t *testing.T) {
+	c, err := expect.NewConsole(expect.WithStdout(os.Stdout))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+
 	cmd := NewVersionCommand()
-	oldVersion := global.Version
-	expected := strconv.FormatInt(time.Now().UnixMilli(), 10)
-	global.Version = expected
-	util.Stdout = new(bytes.Buffer)
+	os.Stderr = c.Tty()
+	os.Stdin = c.Tty()
+	os.Stdout = c.Tty()
 
-	err := cmd.Execute()
+	if err = cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = c.ExpectString("nest@" + global.Version)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-
-	output, err := io.ReadAll(util.Stdout)
-	if err != nil {
-		t.Error(err)
-	}
-
-	if string(output) != "nest@"+expected+"\n" {
-		t.Errorf("Expected %s, got %s", expected, string(output))
-	}
-
-	// cleanup
-	global.Version = oldVersion
-	util.Stdout = os.Stdout
 }

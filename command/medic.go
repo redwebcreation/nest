@@ -14,15 +14,15 @@ func runMedicCommand(cmd *cobra.Command, args []string) error {
 
 	if !onlyWarnings {
 		fmt.Println()
-		pkg.Red.Render("  Errors:")
+		pkg.Printf(pkg.Red, "  Errors:\n")
 
 		if len(diagnostic.Errors) == 0 {
-			pkg.Gray.Render("  - no errors")
+			pkg.Printf(pkg.Gray, "  - no errors\n")
 		} else {
 			for _, err := range diagnostic.Errors {
-				pkg.White.Render("  -  " + err.Title)
+				pkg.Printf(pkg.White, "  -  %s\n", err.Title)
 				if err.Error != nil {
-					pkg.Gray.Render("    " + err.Error.Error())
+					pkg.Printf(pkg.Gray, "    %s\n", err)
 				}
 			}
 		}
@@ -32,15 +32,16 @@ func runMedicCommand(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	pkg.Yellow.Render("	Warnings:")
+	pkg.Printf(pkg.Yellow, "\n  Warnings:")
+	fmt.Println()
 
 	if len(diagnostic.Warnings) == 0 {
-		pkg.Gray.Render("  - no warnings")
+		pkg.Printf(pkg.Gray, "  - no warnings\n")
 	} else {
 		for _, warn := range diagnostic.Warnings {
-			pkg.White.Render("  -  " + warn.Title)
+			pkg.Printf(pkg.White, "  -  %s\n", warn.Title)
 			if warn.Advice != "" {
-				pkg.Gray.Render("    " + warn.Advice)
+				pkg.Printf(pkg.Gray, "    %s\n", warn.Advice)
 			}
 		}
 	}

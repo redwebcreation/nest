@@ -42,6 +42,18 @@ func GetInternalLogFile() string {
 	return GetLogsDir() + "/internal.log"
 }
 
+func GetCloudTokenFile() string {
+	return ConfigHome + "/cloudToken.json"
+}
+
+func GetSelfSignedCertKeyFile() string {
+	return ConfigHome + "/certs/dev_key.pem"
+}
+
+func GetSelfSignedCertFile() string {
+	return ConfigHome + "/certs/dev_cert.pem"
+}
+
 func init() {
 	if os.Getenv("NEST_HOME") != "" {
 		ConfigHome = os.Getenv("NEST_HOME")
