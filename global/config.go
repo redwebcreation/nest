@@ -22,12 +22,16 @@ func GetLogsDir() string {
 	return ensureExists(ConfigHome + "/logs")
 }
 
+func GetManifestsDir() string {
+	return ensureExists(ConfigHome + "/manifests")
+}
+
 func GetLocatorConfigFile() string {
 	return ConfigHome + "/locator.json"
 }
 
-func GetContainerManifestFile() string {
-	return ConfigHome + "/manifest.json"
+func GetContainerManifestFile(manifest string) string {
+	return GetManifestsDir() + "/" + manifest + ".json"
 }
 
 func GetProxyLogFile() string {
@@ -55,7 +59,7 @@ func init() {
 
 func ensureExists(path string) string {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		err = os.MkdirAll(path, 0755)
+		err = os.MkdirAll(path, 0700)
 		if err != nil {
 			panic(err)
 		}

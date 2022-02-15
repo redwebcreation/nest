@@ -38,8 +38,8 @@ func main() {
 
 	err := nest.Execute()
 	if err != nil {
-		global.InternalLogger.Error(err)
-		pkg.Stderr.Fatal(err)
+		global.LogI(global.LevelError, err.Error(), nil)
+		pkg.Stderr.Fatal("%s\n", err)
 	}
 }
 

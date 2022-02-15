@@ -34,11 +34,14 @@ type output struct {
 	file *os.File
 }
 
-func (o output) Print(format any, a ...any) {
-	if _, ok := format.(string); ok {
-		fmt.Fprintf(o.file, format.(string), a...)
+func (o output) Print(a ...any) {
+	if len(a) == 0 {
+		return
+	}
+
+	if _, format := a[0].(string); format {
+		fmt.Fprintf(o.file, a[0].(string), a[1:]...)
 	} else {
-		fmt.Fprint(o.file, format)
 		fmt.Fprint(o.file, a...)
 	}
 }
@@ -48,7 +51,9 @@ func (o output) Println(a ...any) {
 }
 
 func (o output) Fatal(format any, a ...any) {
-	o.Print(format, a...)
+	args := append([]any{format}, a...)
+
+	o.Print(args...)
 
 	os.Exit(1)
 }

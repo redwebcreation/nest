@@ -1,30 +1,38 @@
 package proxy
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"github.com/redwebcreation/nest/global"
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var config *pkg.Configuration
 
+var http string
+var https string
+var selfSigned bool
+
 func runRunCommand(cmd *cobra.Command, args []string) error {
-	var manifest pkg.Manifest
-	contents, err := os.ReadFile(global.GetContainerManifestFile())
-	if err == nil {
-		err = json.Unmarshal(contents, &manifest)
+	// update configuration according to flags
+	config.Proxy.Http = http
+	config.Proxy.Https = https
+	config.Proxy.SelfSigned = selfSigned
+
+	var manifest *pkg.Manifest
+	var err error
+
+	if len(args) > 0 {
+		manifest, err = pkg.LoadManifest(args[0])
 		if err != nil {
-			return fmt.Errorf("error parsing manifest: %s", err)
+			return err
 		}
-	} else if !errors.Is(err, os.ErrNotExist) {
-		return err
+	} else {
+		manifest, err = pkg.GetLatestManifest()
+		if err != nil {
+			return err
+		}
 	}
 
-	pkg.NewProxy(config, &manifest).Run()
+	pkg.NewProxy(config, manifest).Run()
 
 	return nil
 }
@@ -34,8 +42,9 @@ func NewRunCommand() *cobra.Command {
 	resolvedConfig, err := pkg.Locator.Resolve()
 
 	cmd := &cobra.Command{
-		Use:   "run",
+		Use:   "run [deployment]",
 		Short: "Starts the proxy",
+		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
@@ -45,9 +54,15 @@ func NewRunCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&resolvedConfig.Proxy.Http, "http", resolvedConfig.Proxy.Http, "HTTP port")
-	cmd.Flags().StringVar(&resolvedConfig.Proxy.Https, "https", resolvedConfig.Proxy.Https, "HTTPS port")
-	cmd.Flags().BoolVarP(&resolvedConfig.Proxy.SelfSigned, "self-signed", "s", resolvedConfig.Proxy.SelfSigned, "Use a self-signed certificate")
+	if err == nil {
+		http = resolvedConfig.Proxy.Http
+		https = resolvedConfig.Proxy.Https
+		selfSigned = resolvedConfig.Proxy.SelfSigned
+	}
+
+	cmd.Flags().StringVar(&http, "http", http, "HTTP port")
+	cmd.Flags().StringVar(&https, "https", https, "HTTPS port")
+	cmd.Flags().BoolVarP(&selfSigned, "self-signed", "s", selfSigned, "Use a self-signed certificate")
 
 	config = resolvedConfig
 

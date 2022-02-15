@@ -37,7 +37,7 @@ func (c CommitList) Hashes() []string {
 }
 
 func (g git) ListCommits(dir string, branch string) (CommitList, error) {
-	out, err := g.run(dir, "log", "--pretty='%H %s'", "--no-merges", branch)
+	out, err := g.run(dir, "log", "--pretty=%H=%s", "--no-merges", branch)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (g git) ListCommits(dir string, branch string) (CommitList, error) {
 			continue
 		}
 
-		parts := strings.Split(strings.Trim(line, "'"), " ")
+		parts := strings.SplitN(line, "=", 2)
 		if len(parts) != 2 {
 			return nil, fmt.Errorf("invalid commit line: %s", line)
 		}
@@ -68,11 +68,6 @@ func (g git) ReadFile(dir string, commit string, file string) ([]byte, error) {
 }
 
 func (g *git) run(dir string, args ...string) ([]byte, error) {
-	_, err := exec.LookPath("git")
-	if err != nil {
-		return nil, err
-	}
-
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
 
@@ -80,10 +75,10 @@ func (g *git) run(dir string, args ...string) ([]byte, error) {
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 
-	err = cmd.Run()
+	err := cmd.Run()
 	out := buf.Bytes()
 
-	global.InternalLogger.Log(
+	global.LogI(
 		global.LevelDebug,
 		"running git command",
 		global.Fields{
@@ -93,7 +88,7 @@ func (g *git) run(dir string, args ...string) ([]byte, error) {
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("%g: %s", err, out)
+		return nil, fmt.Errorf("%w: %s", err, out)
 	}
 
 	return out, nil

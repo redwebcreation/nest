@@ -3,7 +3,10 @@ module github.com/redwebcreation/nest
 go 1.18
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.3.2
+	github.com/charmbracelet/lipgloss v0.4.0
 	github.com/docker/docker v20.10.12+incompatible
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-logfmt/logfmt v0.4.0
 	github.com/google/go-github/v42 v42.0.0
 	github.com/mitchellh/go-homedir v1.1.0
@@ -14,15 +17,12 @@ require (
 )
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.2 // indirect
 	github.com/Microsoft/go-winio v0.4.17 // indirect
-	github.com/charmbracelet/lipgloss v0.4.0 // indirect
 	github.com/containerd/containerd v1.5.8 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.7.7 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.10.0 // indirect

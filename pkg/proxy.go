@@ -28,11 +28,12 @@ func NewProxy(config *Configuration, manifest *Manifest) *Proxy {
 		hostToIp: make(map[string]string),
 	}
 
-	for _, service := range config.Services {
-		for _, host := range service.Hosts {
-			proxy.hostToIp[host] = manifest.Containers[service.Name].IP
-		}
-	}
+	// todo: get container ip
+	//for _, service := range config.Services {
+	//	for _, host := range service.Hosts {
+	//		//proxy.hostToIp[host] = manifest.Containers[service.Name].IP
+	//	}
+	//}
 
 	proxy.CertificateManager = &autocert.Manager{
 		Prompt: autocert.AcceptTOS,
@@ -50,48 +51,44 @@ func NewProxy(config *Configuration, manifest *Manifest) *Proxy {
 }
 
 func (p *Proxy) Run() {
-	server := &http.Server{
-		Addr: ":" + p.Config.Proxy.Https,
-		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS13,
-			GetCertificate: func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
-				if !p.Config.Proxy.SelfSigned {
-					return p.CertificateManager.GetCertificate(info)
-				}
+	server := p.newServer(p.Config.Proxy.Https, func(w http.ResponseWriter, r *http.Request) {
+		if r.Host != "" && r.Host == p.Config.ControlPlane.Host {
+			p.Log(r, global.LevelInfo, "proxied request to plane")
 
-				// todo: generate self-signed certificate using golang
-				keyFile := global.GetCertsDir() + "/dev_key.pem"
-				certFile := global.GetCertsDir() + "/dev_cert.pem"
+			NewRouter(p.Config).ServeHTTP(w, r)
+			return
+		}
 
-				if _, err := os.Stat(keyFile); os.IsNotExist(err) {
-					cmd := exec.Command("openssl", "req", "-x509", "-newkey", "rsa:2048", "-keyout", keyFile, "-file", certFile, "-days", "365", "-nodes", "-subj", "/CN=localhost")
-					err = cmd.Run()
-					if err != nil {
-						return nil, err
-					}
-				}
+		p.handler(w, r)
+	})
+	server.TLSConfig = &tls.Config{
+		MinVersion: tls.VersionTLS13,
+		GetCertificate: func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
+			if !p.Config.Proxy.SelfSigned {
+				return p.CertificateManager.GetCertificate(info)
+			}
 
-				cert, err := tls.LoadX509KeyPair(global.GetCertsDir()+"/dev_cert.pem", global.GetCertsDir()+"/dev_key.pem")
+			// todo: generate self-signed certificate using golang
+			certFile := global.GetCertsDir() + "/dev_cert.pem"
+			keyFile := global.GetCertsDir() + "/dev_key.pem"
+
+			if _, err := os.Stat(keyFile); os.IsNotExist(err) {
+				cmd := exec.Command("openssl", "req", "-x509", "-newkey", "rsa:2048", "-keyout", keyFile, "-out", certFile, "-days", "365", "-nodes", "-subj", "/CN=localhost")
+				err = cmd.Run()
 				if err != nil {
 					return nil, err
 				}
-
-				return &cert, nil
-			},
-		},
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Host != "" && r.Host == p.Config.ControlPlane.Host {
-				p.Log(r, global.LevelInfo, "proxied request to plane")
-
-				NewRouter(p.Config).ServeHTTP(w, r)
-				return
+			} else if err != nil {
+				return nil, err
 			}
 
-			p.handler(w, r)
-		}),
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+			cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+			if err != nil {
+				return nil, err
+			}
+
+			return &cert, nil
+		},
 	}
 
 	p.start(server)
@@ -100,20 +97,20 @@ func (p *Proxy) Run() {
 func (p *Proxy) start(proxy *http.Server) {
 	finisher := &finish.Finisher{
 		Timeout: 10 * time.Second,
-		Log: &global.LogrusCompat{
+		Log: &global.FinisherLogger{
 			Logger: global.ProxyLogger,
 		},
 	}
 
 	certsHandler := p.certsCreationHandler()
 
-	finisher.Add(certsHandler)
-	finisher.Add(proxy)
+	finisher.Add(certsHandler, finish.WithName("http"))
+	finisher.Add(proxy, finish.WithName("https"))
 
 	go func() {
 		err := certsHandler.ListenAndServe()
 		if err != nil {
-			global.ProxyLogger.Error(err)
+			global.LogP(global.LevelFatal, err.Error(), nil)
 			os.Exit(1)
 		}
 	}()
@@ -121,7 +118,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	go func() {
 		err := proxy.ListenAndServeTLS("", "")
 		if err != nil {
-			global.ProxyLogger.Error(err)
+			global.LogP(global.LevelFatal, err.Error(), nil)
 			os.Exit(1)
 		}
 	}()
@@ -153,7 +150,7 @@ func (p *Proxy) Log(r *http.Request, level global.Level, message string) {
 		ip = r.RemoteAddr
 	}
 
-	global.ProxyLogger.Log(
+	global.LogP(
 		level,
 		message,
 		global.Fields{
@@ -167,24 +164,29 @@ func (p *Proxy) Log(r *http.Request, level global.Level, message string) {
 }
 
 func (p *Proxy) certsCreationHandler() *http.Server {
+	return p.newServer(p.Config.Proxy.Http, func(w http.ResponseWriter, r *http.Request) {
+		p.CertificateManager.HTTPHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != "GET" && r.Method != "HEAD" {
+				http.Error(w, "Use HTTPS", http.StatusBadRequest)
+				return
+			}
+
+			target := "https://" + replacePort(r.Host, p.Config.Proxy.Https) + r.URL.RequestURI()
+			http.Redirect(w, r, target, http.StatusFound)
+		})).ServeHTTP(w, r)
+
+		p.Log(r, global.LevelInfo, "redirecting to https")
+	})
+}
+
+func (p *Proxy) newServer(port string, handler http.HandlerFunc) *http.Server {
 	return &http.Server{
-		Addr:           ":" + p.Config.Proxy.Http,
+		Addr:           ":" + port,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			p.CertificateManager.HTTPHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Method != "GET" && r.Method != "HEAD" {
-					http.Error(w, "Use HTTPS", http.StatusBadRequest)
-					return
-				}
-
-				target := "https://" + replacePort(r.Host, p.Config.Proxy.Https) + r.URL.RequestURI()
-				http.Redirect(w, r, target, http.StatusFound)
-			})).ServeHTTP(w, r)
-
-			p.Log(r, global.LevelInfo, "redirecting to https")
-		}),
+		Handler:        handler,
+		ErrorLog:       global.ProxyLogger,
 	}
 }
 

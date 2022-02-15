@@ -18,7 +18,7 @@ func Configure(cmd *cobra.Command) {
 	_, disableMedic := cmd.Annotations["medic"]
 
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		global.InternalLogger.Log(
+		global.LogI(
 			global.LevelDebug,
 			"command invoked",
 			global.Fields{

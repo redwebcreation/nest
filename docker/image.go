@@ -48,7 +48,7 @@ func (i Image) Pull(handler func(event *PullEvent), registry *Registry) error {
 	}
 
 	events, err := Client.ImagePull(context.Background(), image, options)
-	global.InternalLogger.Log(
+	global.LogI(
 		global.LevelDebug,
 		"pulling a docker image",
 		global.Fields{

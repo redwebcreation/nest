@@ -141,5 +141,5 @@ func (l locator) log(level global.Level, message string, fields global.Fields) {
 	fields["branch"] = l.Branch
 	fields["location"] = l.RemoteURL()
 
-	global.InternalLogger.Log(level, message, fields)
+	global.LogI(level, message, fields)
 }

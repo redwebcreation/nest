@@ -21,13 +21,19 @@ var RepositoryNameValidator = func(ans any) error {
 }
 
 func runSetupCommand(cmd *cobra.Command, args []string) error {
+	var defaultProvider any
+
+	if pkg.Locator.Provider != "" {
+		defaultProvider = pkg.Locator.Provider
+	}
+
 	var setup = []*survey.Question{
 		{
 			Name: "provider",
 			Prompt: &survey.Select{
 				Message: "Select your provider:",
 				Options: []string{"github", "gitlab", "bitbucket"},
-				Default: pkg.Locator.Provider,
+				Default: defaultProvider,
 			},
 			Validate: survey.Required,
 		},
@@ -39,15 +45,33 @@ func runSetupCommand(cmd *cobra.Command, args []string) error {
 			},
 			Validate: RepositoryNameValidator,
 		},
+		{
+			Name: "branch",
+			Prompt: &survey.Input{
+				Message: "Enter your branch:",
+				Default: pkg.Locator.Branch,
+			},
+			Validate: survey.Required,
+		},
 	}
-	err := survey.Ask(setup, &pkg.Locator)
+
+	var answers = struct {
+		Provider   string
+		Repository string
+		Branch     string
+	}{}
+	err := survey.Ask(setup, &answers)
 	if err != nil {
 		return err
 	}
 
+	pkg.Locator.Provider = answers.Provider
+	pkg.Locator.Repository = answers.Repository
+	pkg.Locator.Branch = answers.Branch
+
 	err = pkg.Locator.CloneConfig()
 	if err != nil {
-		pkg.Stderr.Print(err)
+		fmt.Println(err)
 
 		return cmd.Execute()
 	}

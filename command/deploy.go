@@ -15,14 +15,12 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	deployment := &pkg.Deployment{
-		Id:     strconv.FormatInt(time.Now().UnixMilli(), 10),
-		Config: config,
-		Events: make(chan pkg.Event),
-		Manifest: &pkg.Manifest{
-			Containers: make(map[string]*pkg.Container),
-			Networks:   make(map[string]string),
-		},
+		Id:       id,
+		Config:   config,
+		Events:   make(chan pkg.Event),
+		Manifest: pkg.NewManifest(id),
 	}
 
 	go func() {
@@ -33,16 +31,17 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// select over deployment events
-	for {
-		select {
-		case event := <-deployment.Events:
-			if event.Value == io.EOF {
-				break
-			}
-
-			fmt.Println(event)
+	for event := range deployment.Events {
+		if event.Value == io.EOF {
+			break
 		}
+
+		if event.Service != nil {
+			fmt.Printf("%s: %v\n", event.Service.Name, event.Value)
+		} else {
+			fmt.Printf("global: %v\n", event.Value)
+		}
+
 	}
 
 	return nil

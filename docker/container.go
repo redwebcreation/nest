@@ -14,7 +14,7 @@ func CreateContainer(ctx context.Context, config *container.Config, hostConfig *
 		return "", err
 	}
 
-	global.InternalLogger.Log(global.LevelDebug, "creating a new docker container", global.Fields{
+	global.LogI(global.LevelDebug, "creating a new docker container", global.Fields{
 		"name": containerName,
 		"id":   res.ID,
 		"tag":  "docker.container.create",
@@ -30,7 +30,7 @@ func StartContainer(id string) error {
 		return err
 	}
 
-	global.InternalLogger.Log(global.LevelDebug, "starting a new docker container", global.Fields{
+	global.LogI(global.LevelDebug, "starting a new docker container", global.Fields{
 		"id":  id,
 		"tag": "docker.container.start",
 	})
@@ -55,28 +55,11 @@ func RunCommand(id string, command string) error {
 		return err
 	}
 
-	global.InternalLogger.Log(global.LevelDebug, "executing a command in a container", global.Fields{
+	global.LogI(global.LevelDebug, "executing a command in a container", global.Fields{
 		"id":      id,
 		"command": command,
 		"tag":     "docker.container.exec",
 	})
 
 	return Client.ContainerExecStart(context.Background(), ref.ID, types.ExecStartCheck{})
-}
-
-func RemoveContainer(id string) error {
-	err := Client.ContainerRemove(context.Background(), id, types.ContainerRemoveOptions{
-		Force: true,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	global.InternalLogger.Log(global.LevelDebug, "removing a docker container", global.Fields{
-		"id":  id,
-		"tag": "docker.container.remove",
-	})
-
-	return nil
 }

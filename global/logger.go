@@ -1,17 +1,72 @@
 package global
 
 import (
-	"errors"
+	"bytes"
+	"fmt"
 	"github.com/go-logfmt/logfmt"
 	"io"
+	"log"
 	"os"
+	"sort"
 	"time"
 )
 
-var ProxyLogger Logger
-var InternalLogger Logger
+var ProxyLogger *log.Logger
+
+type CompositeLogger struct {
+	Loggers []io.Writer
+}
+
+func (c CompositeLogger) Write(p []byte) (int, error) {
+	nn := 0
+	for _, l := range c.Loggers {
+		n, err := l.Write(p)
+		nn += n
+		if err != nil {
+			return nn, err
+		}
+	}
+
+	return nn, nil
+}
+
+type FileLogger struct {
+	Path string
+	File *os.File
+	Perm os.FileMode
+}
+
+func (f FileLogger) Write(p []byte) (int, error) {
+	if f.File == nil && f.Path == "" {
+		return 0, fmt.Errorf("no file specified")
+	}
+
+	if f.File == nil {
+		if f.Perm == 0 {
+			f.Perm = 0600
+		}
+
+		var err error
+		f.File, err = os.OpenFile(f.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return f.File.Write(p)
+}
+
+type Fields map[string]interface{}
 
 type Level int
+
+var levelToString = map[Level]string{
+	LevelDebug: "DEBUG",
+	LevelInfo:  "INFO",
+	LevelWarn:  "WARN",
+	LevelError: "ERROR",
+	LevelFatal: "FATAL",
+}
 
 const (
 	LevelDebug Level = iota
@@ -21,108 +76,85 @@ const (
 	LevelFatal
 )
 
-var levelMap = map[Level]string{
-	LevelDebug: "DEBUG",
-	LevelInfo:  "INFO",
-	LevelWarn:  "WARN",
-	LevelError: "ERROR",
-	LevelFatal: "FATAL",
+// LogP writes logs for the reverse proxy.
+func LogP(level Level, message string, fields Fields) {
+	ProxyLogger.Print(newFields(level, message, fields))
 }
 
-type Fields map[string]any
-
-type Logger interface {
-	Log(level Level, message string, fields Fields)
-	// Error logs an error using Log()
-	Error(error)
+// LogI logs internal events.
+func LogI(level Level, message string, fields Fields) {
+	log.Print(newFields(level, message, fields))
 }
 
-type FileLogger struct {
-	Path string
-	File *os.File
-}
-
-func (f FileLogger) Log(level Level, message string, fields Fields) {
-	if f.File == nil {
-		file, err := os.OpenFile(f.Path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
-		if errors.Is(err, os.ErrNotExist) {
-			return
-		}
-
-		if err != nil {
-			panic(err)
-		}
-
-		f.File = file
+func newFields(level Level, message string, fields Fields) Fields {
+	if fields == nil {
+		fields = make(Fields)
 	}
 
-	write(f.File, level, message, fields)
+	fields["level"] = levelToString[level]
+	fields["message"] = message
+	fields["time"] = time.Now().Format("2006-01-02 15:04:05")
+
+	return fields
 }
 
-func write(w io.Writer, level Level, message string, fields Fields) {
-	check := func(err error) {
+func (f Fields) String() string {
+	var buf bytes.Buffer
+	enc := logfmt.NewEncoder(&buf)
+
+	var keys []string
+	for k := range f {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		err := enc.EncodeKeyval(k, f[k])
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	e := logfmt.NewEncoder(w)
-	check(e.EncodeKeyval("level", levelMap[level]))
-	check(e.EncodeKeyval("message", message))
-	check(e.EncodeKeyval("time", time.Now().Format("2006-01-02 15:04:05")))
-
-	for k, v := range fields {
-		check(e.EncodeKeyval(k, v))
+	err := enc.EndRecord()
+	if err != nil {
+		panic(err)
 	}
 
-	check(e.EndRecord())
-}
-
-type CompositeLogger struct {
-	Loggers []Logger
-}
-
-func (c CompositeLogger) Log(level Level, message string, fields Fields) {
-	for _, logger := range c.Loggers {
-		logger.Log(level, message, fields)
-	}
-}
-
-func (c CompositeLogger) Error(err error) {
-	for _, logger := range c.Loggers {
-		logger.Error(err)
-	}
+	return buf.String()
 }
 
 func init() {
-	ProxyLogger = CompositeLogger{
-		Loggers: []Logger{
-			FileLogger{
+	log.SetPrefix("")
+	log.SetFlags(0)
+	log.SetOutput(&FileLogger{
+		Path: GetInternalLogFile(),
+	})
+
+	ProxyLogger = log.New(CompositeLogger{
+		Loggers: []io.Writer{
+			&FileLogger{
 				Path: GetProxyLogFile(),
 			},
-			FileLogger{
+			&FileLogger{
 				File: os.Stdout,
 			},
 		},
-	}
-
-	InternalLogger = FileLogger{
-		Path: GetInternalLogFile(),
-	}
+	}, "", 0)
 }
 
-type LogrusCompat struct {
-	Logger Logger
+type FinisherLogger struct {
+	Logger *log.Logger
 }
 
-func (l LogrusCompat) Infof(message string, args ...any) {
-	l.Logger.Log(LevelInfo, message, Fields{})
+func (l FinisherLogger) Infof(message string, args ...any) {
+	l.Logger.Print(newFields(LevelInfo, fmt.Sprintf(message, args...), Fields{
+		"tag": "proxy.finisher",
+	}))
 }
 
-func (l LogrusCompat) Errorf(message string, args ...any) {
-	l.Logger.Log(LevelError, message, Fields{})
-}
-
-func (f FileLogger) Error(err error) {
-	f.Log(LevelError, err.Error(), Fields{})
+func (l FinisherLogger) Errorf(message string, args ...any) {
+	l.Logger.Print(newFields(LevelError, fmt.Sprintf(message, args...), Fields{
+		"tag": "proxy.finisher",
+	}))
 }
