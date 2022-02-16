@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/redwebcreation/nest/command"
 	"github.com/spf13/cobra"
 )
 
@@ -11,17 +10,16 @@ var commands = []*cobra.Command{
 	NewPullCommand(),
 }
 
-func NewRootConfigCommand() *cobra.Command {
-	cmd := &cobra.Command{
+// NewRootCommand creates a new `config` command.
+func NewRootCommand() *cobra.Command {
+	root := &cobra.Command{
 		Use:   "config",
 		Short: "manage the configuration",
 	}
 
-	for _, c := range commands {
-		command.Configure(c)
-
-		cmd.AddCommand(c)
+	for _, command := range commands {
+		root.AddCommand(command)
 	}
 
-	return cmd
+	return root
 }

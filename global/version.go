@@ -1,4 +1,8 @@
 package global
 
-// Version is the current version of nest (updated at build time)
-var Version = "dev"
+// Default build-time variable.
+// These values are overridden by ldflags.
+var (
+	Version = "dev"
+	Commit  = "unknown"
+)

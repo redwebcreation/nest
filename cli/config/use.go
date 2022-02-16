@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/redwebcreation/nest/pkg"
+	"github.com/redwebcreation/nest/util"
 	"github.com/spf13/cobra"
 	"os"
 	"strconv"
@@ -17,7 +18,7 @@ func runUseCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pkg.Gray.Render("Inspecting " + strconv.Itoa(len(commits)) + " commits...")
+	util.Gray.Render("Inspecting " + strconv.Itoa(len(commits)) + " commits...")
 
 	var commit string
 
@@ -54,12 +55,12 @@ func runUseCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	// Using pkg.Locator.Commit rather than commit to get the real commit used if no arguments were passed
-	pkg.Green.Render("  Updated the locator config. Now using " + pkg.Locator.Commit[:7] + ".")
+	util.Green.Render("  Updated the locator config. Now using " + pkg.Locator.Commit[:7] + ".")
 
 	return nil
 }
 
-// NewUseCommand sets the command to use for the config locator
+// NewUseCommand creates a new `use` command
 func NewUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use [commit]",

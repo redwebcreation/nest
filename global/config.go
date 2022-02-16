@@ -1,13 +1,17 @@
 package global
 
 import (
+	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"os"
 )
 
 // ConfigHome is the path to the global configuration for nest.
 //
-// It can be set using the NEST_HOME environment variable.
+// It resolves to the following (in order):
+// - the --config/-c flag
+// - $NEST_HOME
+// - ~/.nest
 var ConfigHome string
 
 func GetConfigStoreDir() string {
@@ -55,6 +59,20 @@ func GetSelfSignedCertFile() string {
 }
 
 func init() {
+	for k, arg := range os.Args {
+		if arg != "--config" && arg != "-c" {
+			continue
+		}
+
+		if len(os.Args) <= k+1 {
+			fmt.Fprintln(os.Stderr, "--config requires an argument")
+			os.Exit(1)
+		}
+
+		ConfigHome = os.Args[k+1]
+		return
+	}
+
 	if os.Getenv("NEST_HOME") != "" {
 		ConfigHome = os.Getenv("NEST_HOME")
 		return

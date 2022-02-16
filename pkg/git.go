@@ -82,7 +82,7 @@ func (g *git) run(dir string, args ...string) ([]byte, error) {
 		global.LevelDebug,
 		"running git command",
 		global.Fields{
-			"cmd": "git " + strings.Join(args, " "),
+			"cli": "git " + strings.Join(args, " "),
 			"tag": "vcs.run",
 		},
 	)

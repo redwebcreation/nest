@@ -1,6 +1,7 @@
-package command
+package cli
 
 import (
+	"fmt"
 	"github.com/Netflix/go-expect"
 	"github.com/redwebcreation/nest/global"
 	"os"
@@ -10,7 +11,7 @@ import (
 func TestNewVersionCommand(t *testing.T) {
 	c, err := expect.NewConsole(expect.WithStdout(os.Stdout))
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	defer c.Close()
 
@@ -19,12 +20,12 @@ func TestNewVersionCommand(t *testing.T) {
 	os.Stdin = c.Tty()
 	os.Stdout = c.Tty()
 
-	if err = cmd.Execute(); err != nil {
-		t.Fatal(err)
-	}
+	go func() {
+		_, _ = c.ExpectString(fmt.Sprintf("Nest version %s, build %s\n", global.Version, global.Commit))
+	}()
 
-	_, err = c.ExpectString("nest@" + global.Version)
+	err = cmd.Execute()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 }

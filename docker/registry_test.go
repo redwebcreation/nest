@@ -3,35 +3,25 @@ package docker
 import (
 	"encoding/base64"
 	"encoding/json"
+	"gotest.tools/v3/assert"
 	"testing"
 )
 
 func TestToBase64(t *testing.T) {
-	registry := Registry{
-		Username: "username",
-		Password: "password",
-	}
+	registry := Registry{Username: "username", Password: "password"}
 
 	b, err := registry.ToBase64()
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NilError(t, err)
 
 	// decode base64 into text
 	payload, err := base64.StdEncoding.DecodeString(b)
-
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NilError(t, err)
 
 	bytes, _ := json.Marshal(map[string]string{
 		"username": "username",
 		"password": "password",
 	})
-
-	if string(payload) != string(bytes) {
-		t.Errorf("Expected %s, got %s", string(bytes), string(payload))
-	}
+	assert.Equal(t, string(payload), string(bytes))
 }
 
 func TestRegistry_UrlFor(t *testing.T) {
@@ -58,10 +48,7 @@ func TestRegistry_UrlFor(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		output := test.input.UrlFor(test.imageName)
-
-		if output != test.output {
-			t.Errorf("Expected %s, got %s", test.output, output)
-		}
+		output := test.input.URLFor(test.imageName)
+		assert.Equal(t, output, test.output)
 	}
 }

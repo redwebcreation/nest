@@ -1,38 +1,31 @@
 package docker
 
 import (
+	"gotest.tools/v3/assert"
 	"os/exec"
+	"strings"
 	"testing"
 )
 
 func TestImage_String(t *testing.T) {
-	image := Image("nginx:1")
-
-	if image.String() != "nginx:1" {
-		t.Errorf("Expected nginx:1, got %s", image.String())
-	}
+	assert.Equal(t, Image("nginx:1").String(), "nginx:1")
 }
 
-func TestImage_Pull(t *testing.T) {
+func TestClient_ImagePull(t *testing.T) {
 	image := Image("alpine:latest")
 
-	out, err := exec.Command("docker", "rmi", image.String()).CombinedOutput()
-	if err != nil && string(out) != "No such image: alpine:latest" {
-		t.Errorf("%s: %s", err, out)
-	}
+	_ = exec.Command("docker", "rmi", image.String()).Run()
+
+	out, err := exec.Command("docker", "inspect", image.String()).CombinedOutput()
+	assert.Assert(t, err != nil)
+	assert.Assert(t, strings.Contains(string(out), "No such object: alpine:latest"))
+
+	client, err := newDefaultClient()
+	assert.NilError(t, err)
+
+	err = client.ImagePull(image, func(_ *PullEvent) {}, nil)
+	assert.NilError(t, err)
 
 	_, err = exec.Command("docker", "inspect", image.String()).CombinedOutput()
-	if err == nil {
-		t.Error("Expected image to not exist")
-	}
-
-	err = image.Pull(func(_ *PullEvent) {}, nil)
-	if err != nil {
-		t.Error(err)
-	}
-
-	_, err = exec.Command("docker", "inspect", image.String()).CombinedOutput()
-	if err != nil {
-		t.Error("Expected image to exist")
-	}
+	assert.NilError(t, err, "expected image to exist once pulled")
 }

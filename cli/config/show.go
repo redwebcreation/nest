@@ -16,7 +16,7 @@ func runShowCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// NewShowCommand prints the current configuration for the config locator
+// NewShowCommand creates a new `show` command.
 func NewShowCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show",

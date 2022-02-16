@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"context"
 	"fmt"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -15,6 +14,7 @@ type Event struct {
 }
 
 type DeployPipeline struct {
+	Docker          *docker.Client
 	Deployment      *Deployment
 	Service         *Service
 	HasDependencies bool
@@ -69,17 +69,17 @@ func (d DeployPipeline) Run() error {
 func (d *DeployPipeline) PullImage() error {
 	image := docker.Image(d.Service.Image)
 
-	return image.Pull(func(event *docker.PullEvent) {
+	return d.Docker.ImagePull(image, func(event *docker.PullEvent) {
 		d.Log(event.Status)
 	}, d.Deployment.Config.Registries[d.Service.Registry])
 }
 
 func (d *DeployPipeline) CreateServiceNetwork() (string, error) {
-	name := fmt.Sprintf("%s_%s", d.Service.Name, d.Deployment.Id)
+	name := fmt.Sprintf("%s_%s", d.Service.Name, d.Deployment.ID)
 
-	net, err := docker.CreateNetwork(name, map[string]string{
+	net, err := d.Docker.NetworkCreate(name, map[string]string{
 		"cloud.usenest.service":       d.Service.Name,
-		"cloud.usenest.deployment_id": d.Deployment.Id,
+		"cloud.usenest.deployment_id": d.Deployment.ID,
 	})
 
 	if err != nil {
@@ -91,9 +91,9 @@ func (d *DeployPipeline) CreateServiceNetwork() (string, error) {
 	return net, nil
 }
 
-func (d *DeployPipeline) ConnectRequiredServices(networkId string) error {
+func (d *DeployPipeline) ConnectRequiredServices(networkID string) error {
 	for _, require := range d.Service.Requires {
-		err := docker.ConnectContainerToNetwork(networkId, d.Deployment.Manifest.Containers[require])
+		err := d.Docker.NetworkConnect(networkID, d.Deployment.Manifest.Containers[require], []string{require})
 
 		if err != nil {
 			return err
@@ -104,7 +104,7 @@ func (d *DeployPipeline) ConnectRequiredServices(networkId string) error {
 }
 
 func (d *DeployPipeline) CreateContainer() (string, error) {
-	containerName := "nest_" + d.Service.Name + "_" + strings.Replace(d.Service.Image, ":", "_", 1) + "_" + d.Deployment.Id
+	containerName := "nest_" + d.Service.Name + "_" + strings.Replace(d.Service.Image, ":", "_", 1) + "_" + d.Deployment.ID
 
 	var networking *network.NetworkingConfig
 
@@ -118,11 +118,11 @@ func (d *DeployPipeline) CreateContainer() (string, error) {
 		}
 	}
 
-	c, err := docker.CreateContainer(context.Background(), &container.Config{
+	c, err := d.Docker.ContainerCreate(&container.Config{
 		Image: d.Service.Image,
 		Labels: map[string]string{
 			"cloud.usenest.service":       d.Service.Name,
-			"cloud.usenest.deployment_id": d.Deployment.Id,
+			"cloud.usenest.deployment_id": d.Deployment.ID,
 		},
 		Env: d.Service.Env.ForDocker(),
 	}, &container.HostConfig{
@@ -140,7 +140,7 @@ func (d *DeployPipeline) CreateContainer() (string, error) {
 
 func (d *DeployPipeline) RunHooks(id string, commands []string) error {
 	for _, command := range commands {
-		err := docker.RunCommand(id, command)
+		err := d.Docker.ContainerExec(id, command)
 		if err != nil {
 			return err
 		}
@@ -152,7 +152,7 @@ func (d *DeployPipeline) RunHooks(id string, commands []string) error {
 }
 
 func (d *DeployPipeline) StartContainer(containerID string) error {
-	err := docker.StartContainer(containerID)
+	err := d.Docker.ContainerStart(containerID)
 	if err != nil {
 		return err
 	}

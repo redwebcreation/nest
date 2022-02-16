@@ -72,6 +72,7 @@ func (s *Service) ApplyDefaults(serviceName string) {
 	} else {
 		s.ListeningOn = strings.TrimPrefix(s.ListeningOn, ":")
 	}
+
 }
 
 type ServiceMap map[string]*Service

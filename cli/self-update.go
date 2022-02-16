@@ -1,4 +1,4 @@
-package command
+package cli
 
 import (
 	"context"
@@ -59,7 +59,7 @@ func runSelfUpdate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// NewSelfUpdateCommand updates nest to its latest version
+// NewSelfUpdateCommand creates a new `self-update` command.
 func NewSelfUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "self-update [version]",

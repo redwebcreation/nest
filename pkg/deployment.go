@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"github.com/redwebcreation/nest/docker"
 	"io"
 	"strconv"
 	"sync"
@@ -9,7 +10,7 @@ import (
 )
 
 type Deployment struct {
-	Id       string
+	ID       string
 	Config   *Configuration
 	Events   chan Event
 	Manifest *Manifest
@@ -23,7 +24,7 @@ func NewDeployment(config *Configuration) *Deployment {
 	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	return &Deployment{
-		Id:       id,
+		ID:       id,
 		Config:   config,
 		Events:   make(chan Event),
 		Manifest: NewManifest(id),
@@ -32,6 +33,12 @@ func NewDeployment(config *Configuration) *Deployment {
 
 func (d *Deployment) Start() error {
 	graph, err := d.Config.Services.GroupInLayers()
+	if err != nil {
+		return err
+	}
+
+	//dockerClient, err := docker.NewClient(d.Config.Network.Ipv6, d.Config.Network.Pools)
+	dockerClient, err := docker.NewClient()
 	if err != nil {
 		return err
 	}
@@ -49,6 +56,7 @@ func (d *Deployment) Start() error {
 
 				pipeline := DeployPipeline{
 					Deployment:      d,
+					Docker:          dockerClient,
 					Service:         service,
 					HasDependencies: layer > 0 && len(service.Requires) > 0,
 				}

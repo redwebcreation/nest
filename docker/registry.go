@@ -19,8 +19,8 @@ type Registry struct {
 	Password string `yaml:"password" json:"password"`
 }
 
-// UrlFor returns the url for the registry
-func (r Registry) UrlFor(image string) string {
+// URLFor returns the url for the registry
+func (r Registry) URLFor(image string) string {
 	if r.Port != "" {
 		return r.Host + ":" + r.Port + "/" + image
 	}

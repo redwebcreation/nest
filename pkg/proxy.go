@@ -25,26 +25,26 @@ import (
 type Proxy struct {
 	Config             *Configuration
 	CertificateManager *autocert.Manager
-	hostToIp           map[string]string
+	hostToIP           map[string]string
 }
 
 func NewProxy(config *Configuration, manifest *Manifest) *Proxy {
 	proxy := &Proxy{
 		Config:   config,
-		hostToIp: make(map[string]string),
+		hostToIP: make(map[string]string),
 	}
 
 	// todo: get container ip
 	//for _, service := range config.Services {
 	//	for _, host := range service.Hosts {
-	//		//proxy.hostToIp[host] = manifest.Containers[service.Name].IP
+	//		proxy.hostToIP[host] = manifest.Containers[service.Name].IP
 	//	}
 	//}
 
 	proxy.CertificateManager = &autocert.Manager{
 		Prompt: autocert.AcceptTOS,
 		HostPolicy: func(ctx context.Context, host string) error {
-			if _, ok := proxy.hostToIp[host]; ok {
+			if _, ok := proxy.hostToIP[host]; ok {
 				return nil
 			}
 
@@ -57,7 +57,7 @@ func NewProxy(config *Configuration, manifest *Manifest) *Proxy {
 }
 
 func (p *Proxy) Run() {
-	server := p.newServer(p.Config.Proxy.Https, func(w http.ResponseWriter, r *http.Request) {
+	server := p.newServer(p.Config.Proxy.HTTPS, func(w http.ResponseWriter, r *http.Request) {
 		if r.Host != "" && r.Host == p.Config.ControlPlane.Host {
 			p.Log(r, global.LevelInfo, "proxied request to plane")
 
@@ -141,7 +141,7 @@ func (p *Proxy) start(proxy *http.Server) {
 }
 
 func (p *Proxy) handler(w http.ResponseWriter, r *http.Request) {
-	ip := p.hostToIp[r.Host]
+	ip := p.hostToIP[r.Host]
 
 	if ip == "" {
 		p.Log(r, global.LevelInfo, "host not found")
@@ -178,14 +178,14 @@ func (p *Proxy) Log(r *http.Request, level global.Level, message string) {
 }
 
 func (p *Proxy) certsCreationHandler() *http.Server {
-	return p.newServer(p.Config.Proxy.Http, func(w http.ResponseWriter, r *http.Request) {
+	return p.newServer(p.Config.Proxy.HTTP, func(w http.ResponseWriter, r *http.Request) {
 		p.CertificateManager.HTTPHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != "GET" && r.Method != "HEAD" {
 				http.Error(w, "Use HTTPS", http.StatusBadRequest)
 				return
 			}
 
-			target := "https://" + replacePort(r.Host, p.Config.Proxy.Https) + r.URL.RequestURI()
+			target := "https://" + replacePort(r.Host, p.Config.Proxy.HTTPS) + r.URL.RequestURI()
 			http.Redirect(w, r, target, http.StatusFound)
 		})).ServeHTTP(w, r)
 

@@ -13,8 +13,8 @@ var selfSigned bool
 
 func runRunCommand(cmd *cobra.Command, args []string) error {
 	// update configuration according to flags
-	config.Proxy.Http = http
-	config.Proxy.Https = https
+	config.Proxy.HTTP = http
+	config.Proxy.HTTPS = https
 	config.Proxy.SelfSigned = selfSigned
 
 	var manifest *pkg.Manifest
@@ -37,7 +37,7 @@ func runRunCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// NewRunCommand starts the reverse proxy
+// NewRunCommand creates a new `run` command
 func NewRunCommand() *cobra.Command {
 	resolvedConfig, err := pkg.Locator.Resolve()
 
@@ -55,8 +55,8 @@ func NewRunCommand() *cobra.Command {
 	}
 
 	if err == nil {
-		http = resolvedConfig.Proxy.Http
-		https = resolvedConfig.Proxy.Https
+		http = resolvedConfig.Proxy.HTTP
+		https = resolvedConfig.Proxy.HTTPS
 		selfSigned = resolvedConfig.Proxy.SelfSigned
 	}
 

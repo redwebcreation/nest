@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"github.com/stretchr/testify/assert"
 	"sort"
 	"testing"
 )
@@ -14,18 +15,12 @@ func TestService_ApplyDefaults(t *testing.T) {
 	}
 
 	service.ApplyDefaults("example")
+	assert.Len(t, service.Hosts, 3)
+	assert.Equal(t, "example.com", service.Hosts[0])
+	assert.Equal(t, "www.example.com", service.Hosts[1])
+	assert.Equal(t, "git.example.com", service.Hosts[2])
 
-	if len(service.Hosts) != 3 {
-		t.Errorf("Expected 3 hosts, got %d", len(service.Hosts))
-
-		if service.Hosts[0] != "example.com" && service.Hosts[1] != "www.example.com" && service.Hosts[2] != "git.example.com" {
-			t.Errorf("Expected example.com, www.example.com, git.example.com, got %s, %s, %s", service.Hosts[0], service.Hosts[1], service.Hosts[2])
-		}
-	}
-
-	if service.ListeningOn != "80" {
-		t.Errorf("Expected s.ListeningOn to default to 80, got %s", service.ListeningOn)
-	}
+	assert.Equal(t, service.ListeningOn, "80")
 
 	service = &Service{
 		ListeningOn: ":port",
@@ -33,9 +28,7 @@ func TestService_ApplyDefaults(t *testing.T) {
 
 	service.ApplyDefaults("example")
 
-	if service.ListeningOn != "port" {
-		t.Errorf("Expected s.ListeningOn to trim leading colon, got %s", service.ListeningOn)
-	}
+	assert.Equal(t, service.ListeningOn, "port")
 
 	service = &Service{
 		ListeningOn: "443",
@@ -43,9 +36,7 @@ func TestService_ApplyDefaults(t *testing.T) {
 
 	service.ApplyDefaults("example")
 
-	if service.ListeningOn != "443" {
-		t.Errorf("Expected s.ListeningOn to be unchanged, got %s", service.ListeningOn)
-	}
+	assert.Equal(t, service.ListeningOn, "443")
 }
 
 func TestServiceMap_BuildDependencyPlan(t *testing.T) {

@@ -2,7 +2,7 @@ package cloud
 
 import (
 	"github.com/redwebcreation/nest/cloud"
-	"github.com/redwebcreation/nest/pkg"
+	"github.com/redwebcreation/nest/util"
 	"github.com/spf13/cobra"
 )
 
@@ -16,16 +16,17 @@ func runLoginCommand(cmd *cobra.Command, args []string) error {
 
 	err = cloud.NewClient(token).Ping()
 	if err == cloud.ErrResourceNotFound {
-		pkg.Red.Render("Invalid token.")
+		util.Red.Render("Invalid token.")
 	} else if err != nil {
 		return err
 	} else {
-		pkg.Green.Render("Successfully logged in.")
+		util.Green.Render("Successfully logged in.")
 	}
 
 	return nil
 }
 
+// NewLoginCommand creates a new `login` command.
 func NewLoginCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",

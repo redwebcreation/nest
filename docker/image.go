@@ -4,12 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/redwebcreation/nest/global"
 	"io"
 	"strings"
 
 	"github.com/docker/docker/api/types"
-
-	"github.com/redwebcreation/nest/global"
 )
 
 var (
@@ -31,8 +30,8 @@ type PullEvent struct {
 	Status string `json:"status"`
 }
 
-// Pull pulls an image from a registry
-func (i Image) Pull(handler func(event *PullEvent), registry *Registry) error {
+// ImagePull pulls an image from a registry
+func (c Client) ImagePull(i Image, handler func(event *PullEvent), registry *Registry) error {
 	image := i.String()
 	options := types.ImagePullOptions{}
 
@@ -44,13 +43,21 @@ func (i Image) Pull(handler func(event *PullEvent), registry *Registry) error {
 
 		options.RegistryAuth = auth
 
-		image = registry.UrlFor(image)
+		image = registry.URLFor(image)
 	}
 
-	events, err := Client.ImagePull(context.Background(), image, options)
-	global.LogI(
+	events, err := c.client.ImagePull(context.Background(), image, options)
+	if err != nil {
+		if strings.Contains(err.Error(), "manifest for "+image+" not found") || strings.Contains(err.Error(), "repository does not exist") {
+			return ErrImageNotFound
+		}
+
+		return err
+	}
+
+	c.Log(
 		global.LevelDebug,
-		"pulling a docker image",
+		"pulled docker image",
 		global.Fields{
 			"image":    image,
 			"registry": registry != nil,
@@ -58,13 +65,6 @@ func (i Image) Pull(handler func(event *PullEvent), registry *Registry) error {
 		},
 	)
 
-	if err != nil {
-		if strings.Contains(err.Error(), "manifest for "+image+" not found") {
-			return ErrImageNotFound
-		}
-
-		return err
-	}
 	decoder := json.NewDecoder(events)
 
 	var event *PullEvent

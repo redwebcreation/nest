@@ -8,13 +8,13 @@ import (
 	"github.com/redwebcreation/nest/global"
 )
 
-func CreateContainer(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
-	res, err := Client.ContainerCreate(ctx, config, hostConfig, networkingConfig, nil, containerName)
+func (c Client) ContainerCreate(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
+	res, err := c.client.ContainerCreate(context.Background(), config, hostConfig, networkingConfig, nil, containerName)
 	if err != nil {
 		return "", err
 	}
 
-	global.LogI(global.LevelDebug, "creating a new docker container", global.Fields{
+	c.Log(global.LevelDebug, "creating a new docker container", global.Fields{
 		"name": containerName,
 		"id":   res.ID,
 		"tag":  "docker.container.create",
@@ -23,14 +23,14 @@ func CreateContainer(ctx context.Context, config *container.Config, hostConfig *
 	return res.ID, nil
 }
 
-func StartContainer(id string) error {
-	err := Client.ContainerStart(context.Background(), id, types.ContainerStartOptions{})
+func (c Client) ContainerStart(id string) error {
+	err := c.client.ContainerStart(context.Background(), id, types.ContainerStartOptions{})
 
 	if err != nil {
 		return err
 	}
 
-	global.LogI(global.LevelDebug, "starting a new docker container", global.Fields{
+	c.Log(global.LevelDebug, "starting a new docker container", global.Fields{
 		"id":  id,
 		"tag": "docker.container.start",
 	})
@@ -38,8 +38,8 @@ func StartContainer(id string) error {
 	return nil
 }
 
-func GetContainerIP(id string) (string, error) {
-	inspection, err := Client.ContainerInspect(context.Background(), id)
+func (c Client) GetContainerIP(id string) (string, error) {
+	inspection, err := c.client.ContainerInspect(context.Background(), id)
 	if err != nil {
 		return "", err
 	}
@@ -47,19 +47,19 @@ func GetContainerIP(id string) (string, error) {
 	return inspection.NetworkSettings.IPAddress, nil
 }
 
-func RunCommand(id string, command string) error {
-	ref, err := Client.ContainerExecCreate(context.Background(), id, types.ExecConfig{
+func (c Client) ContainerExec(id string, command string) error {
+	ref, err := c.client.ContainerExecCreate(context.Background(), id, types.ExecConfig{
 		Cmd: []string{"sh", "-c", command},
 	})
 	if err != nil {
 		return err
 	}
 
-	global.LogI(global.LevelDebug, "executing a command in a container", global.Fields{
+	c.Log(global.LevelDebug, "executing a command in a container", global.Fields{
 		"id":      id,
 		"command": command,
 		"tag":     "docker.container.exec",
 	})
 
-	return Client.ContainerExecStart(context.Background(), ref.ID, types.ExecStartCheck{})
+	return c.client.ContainerExecStart(context.Background(), ref.ID, types.ExecStartCheck{})
 }

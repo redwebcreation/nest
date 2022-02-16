@@ -12,7 +12,7 @@ var (
 )
 
 type Manifest struct {
-	Id         string            `json:"id"`
+	ID         string            `json:"id"`
 	Locator    *locator          `json:"locator"`
 	Containers map[string]string `json:"containers"`
 	Networks   map[string]string `json:"networks"`
@@ -24,12 +24,12 @@ func (m Manifest) Save() error {
 		return err
 	}
 
-	return os.WriteFile(global.GetContainerManifestFile(m.Id), bytes, 0600)
+	return os.WriteFile(global.GetContainerManifestFile(m.ID), bytes, 0600)
 }
 
 func NewManifest(id string) *Manifest {
 	return &Manifest{
-		Id:         id,
+		ID:         id,
 		Locator:    Locator,
 		Containers: make(map[string]string),
 		Networks:   make(map[string]string),

@@ -1,3 +1,15 @@
+## networking
+Address range to be used by private networks are:
+
+* 10.0.0.0 to 10.255.255.255
+* 172.16.0.0 to 172.31.255.255
+* 192.168.0.0 to 192.168.255.255
+
+docker network create --driver=bridge --subnet=10.0.0.0/24 testnet will use 10.0.0.[1-254]
+
+I think we can get away with using /27 by default (that's 30 usable addresses) and make the medic throw an error if more than 30 containers are required by the service.
+
+It can be changed in the config anyway (TODO: maybe configurable subnet per service?) and not just globally.
 
 # Nest
 
@@ -83,7 +95,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Arguments must always be cmd and args even if you don't need them
+// Arguments must always be cli and args even if you don't need them
 // Do not underscore them.
 func runVersionCommand(cmd *cobra.Command, args []string) error {
 	fmt.Printf("nest@%s\n", globals.Version)

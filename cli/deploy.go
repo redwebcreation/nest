@@ -1,4 +1,4 @@
-package command
+package cli
 
 import (
 	"fmt"
@@ -45,7 +45,7 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 	return deployment.Manifest.Save()
 }
 
-// NewDeployCommand creates and configures the services defined in the configuration
+// NewDeployCommand creates a new `deploy` command.
 func NewDeployCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy",

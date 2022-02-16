@@ -1,22 +1,16 @@
 package docker
 
-import (
-	"os"
-	"testing"
-)
-
-func TestLoadDocker(t *testing.T) {
-	old := os.Getenv("DOCKER_HOST")
-	os.Setenv("DOCKER_HOST", "gibberish")
-
-	_, err := newDocker()
-	if err == nil {
-		t.Error("expected error, got nil")
-	}
-
-	os.Setenv("DOCKER_HOST", old)
-	_, err = newDocker()
-	if err != nil {
-		t.Errorf("expected no error, got %s", err)
-	}
-}
+//todo: add tests for docker client
+//func TestNewClient(t *testing.T) {
+//	env.Patch(t, "DOCKER_HOST", "invalid_docker_host")
+//
+//	_, err := NewClient(false, DefaultIpv4Pools)
+//	assert.ErrorContains(t, err, "error loading docker client")
+//}
+//
+//func TestNewClient2(t *testing.T) {
+//	env.Patch(t, "DOCKER_HOST", client.DefaultDockerHost)
+//
+//	_, err = NewClient(false, DefaultIpv4Pools)
+//	assert.NilError(t, err)
+//}

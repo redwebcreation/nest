@@ -1,4 +1,4 @@
-package command
+package cli
 
 import (
 	"fmt"
@@ -7,11 +7,11 @@ import (
 )
 
 func runVersionCommand(cmd *cobra.Command, args []string) error {
-	fmt.Printf("nest@%s\n", global.Version)
+	fmt.Printf("Nest version %s, build %s\n", global.Version, global.Commit)
 	return nil
 }
 
-// NewVersionCommand prints nest's version
+// NewVersionCommand creates a new `version` command.
 func NewVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",

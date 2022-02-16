@@ -4,7 +4,7 @@
     "title": "Release :version"
   },
   "before_release": [
-    "go build -ldflags='-w -s -X github.com/redwebcreation/nest/globals.Version=:version' -gcflags=all='-l'"
+    "go build -ldflags='-w -s -X github.com/redwebcreation/nest/globals.Version=:version -X github.com/redwebcreation/nest/globals.Version=:fullCommit' -gcflags=all='-l'"
   ],
   "after_release": [
     "rm nest"

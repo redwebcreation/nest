@@ -14,7 +14,7 @@ func runPullCommand(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-// NewPullCommand pulls the latest changes in the configuration from the remote
+// NewPullCommand creates a new `pull` command
 func NewPullCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pull",

@@ -1,4 +1,4 @@
-package command
+package cli
 
 import (
 	"encoding/json"
@@ -11,14 +11,6 @@ import (
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 )
-
-var RepositoryNameValidator = func(ans any) error {
-	re := regexp.MustCompile(`[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+`)
-	if !re.MatchString(ans.(string)) {
-		return fmt.Errorf("repository name must be alphanumeric and can contain hyphens and underscores")
-	}
-	return nil
-}
 
 func runSetupCommand(cmd *cobra.Command, args []string) error {
 	var defaultProvider any
@@ -43,7 +35,13 @@ func runSetupCommand(cmd *cobra.Command, args []string) error {
 				Message: "Enter your repository:",
 				Default: pkg.Locator.Repository,
 			},
-			Validate: RepositoryNameValidator,
+			Validate: func(ans any) error {
+				re := regexp.MustCompile(`[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+`)
+				if !re.MatchString(ans.(string)) {
+					return fmt.Errorf("repository name must be alphanumeric and can contain hyphens and underscores")
+				}
+				return nil
+			},
 		},
 		{
 			Name: "branch",
@@ -104,7 +102,7 @@ func runSetupCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// NewSetupCommand configures the config locator
+// NewSetupCommand creates a new `setup` command.
 func NewSetupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "setup",

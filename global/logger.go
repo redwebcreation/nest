@@ -36,7 +36,7 @@ type FileLogger struct {
 	Perm os.FileMode
 }
 
-func (f FileLogger) Write(p []byte) (int, error) {
+func (f *FileLogger) Write(p []byte) (int, error) {
 	if f.File == nil && f.Path == "" {
 		return 0, fmt.Errorf("no file specified")
 	}
