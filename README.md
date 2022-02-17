@@ -1,19 +1,3 @@
-## upgraded
-
-* [ ] cloud
-* [ ] cloud login
-* [ ] config
-* [ ] config show
-* [ ] config pull
-* [ ] proxy
-* [ ] proxy run
-* [ ] deploy
-* [ ] medic
-* [ ] self-update
-* [ ] setup
-* [ ] use
-* [ ] version
-
 ## networking
 Address range to be used by private networks are:
 
