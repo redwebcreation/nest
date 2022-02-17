@@ -12,8 +12,13 @@ var Git = &git{}
 
 type git struct{}
 
-func (g git) Clone(remote string, local string) error {
-	_, err := g.run("", "clone", remote, local)
+func (g git) Clone(remote string, local string, branch string) error {
+	if branch == "" {
+		return fmt.Errorf("branch is empty")
+	}
+
+	_, err := g.run("", "clone", "-b", branch, remote, local)
+
 	return err
 }
 
@@ -51,7 +56,7 @@ func (g git) ListCommits(dir string, branch string) (CommitList, error) {
 
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid commit line: %s", line)
+			return nil, fmt.Errorf("invalid Commit line: %s", line)
 		}
 
 		commits = append(commits, Commit{

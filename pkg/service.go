@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"strings"
 )
 
@@ -17,7 +16,7 @@ type Service struct {
 	// Include is the path to a file containing the service configuration.
 	Include string `yaml:"include" json:"include"`
 
-	// Image name without a tag or registry server.
+	// Image name without a tag or registry serverConfig.
 	Image string `yaml:"image" json:"image"`
 
 	// Hosts the service responds to.
@@ -85,22 +84,24 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(any) error) error {
 
 	for name, service := range services {
 		if service.Include != "" {
-			bytes, err := Locator.Read(service.Include)
-			if err != nil {
-				return err
-			}
-
-			var parsedService *Service
-
-			err = yaml.Unmarshal(bytes, &parsedService)
-			if err != nil {
-				return err
-			}
-
-			parsedService.ApplyDefaults(name)
-
-			services[name] = parsedService
+			// todo: handle include
+			delete(services, name)
 			continue
+			//bytes, err := Config.Read(service.Include)
+			//if err != nil {
+			//	return err
+			//}
+			//
+			//var parsedService *Service
+			//
+			//err = yaml.Unmarshal(bytes, &parsedService)
+			//if err != nil {
+			//	return err
+			//}
+			//
+			//parsedService.ApplyDefaults(name)
+			//
+			//services[name] = parsedService
 		}
 
 		service.ApplyDefaults(name)

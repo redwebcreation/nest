@@ -3,23 +3,22 @@ package cli
 import (
 	"fmt"
 	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 )
 
-func runVersionCommand(cmd *cobra.Command, args []string) error {
-	fmt.Printf("Nest version %s, build %s\n", global.Version, global.Commit)
+func runVersionCommand(ctx *pkg.Context) error {
+	fmt.Fprintf(ctx.Out(), "Nest version %s, build %s\n\n", global.Version, global.Commit)
 	return nil
 }
 
 // NewVersionCommand creates a new `version` command.
-func NewVersionCommand() *cobra.Command {
+func NewVersionCommand(ctx *pkg.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "print nest's version",
-		RunE:  runVersionCommand,
-		Annotations: map[string]string{
-			"medic":  "false",
-			"config": "false",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return runVersionCommand(ctx)
 		},
 	}
 

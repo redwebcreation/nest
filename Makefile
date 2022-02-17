@@ -18,7 +18,7 @@ lint: ## lint the code
 
 .PHONY: test
 test: ## run tests
-	gotestsum -f testname ./... -- -count=1
+	gotestsum -f testname ./...
 
 tests: test
 
@@ -29,4 +29,4 @@ fmt: ## format the code
 
 .PHONY: test-coverage
 test-coverage: ## run test coverage
-	go test -count=1 -cover -covermode=atomic -race ./...
+	go test -cover -covermode=atomic -race ./...

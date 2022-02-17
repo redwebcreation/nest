@@ -1,38 +1,45 @@
 package cloud
 
 import (
+	"fmt"
 	"github.com/redwebcreation/nest/cloud"
-	"github.com/redwebcreation/nest/util"
+	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 )
 
-func runLoginCommand(cmd *cobra.Command, args []string) error {
-	token := args[0]
+type loginOptions struct {
+	token string
+}
 
-	err := cloud.SetToken(token)
+func runLoginCommand(ctx *pkg.Context, opts *loginOptions) error {
+	err := cloud.SetToken(opts.token)
 	if err != nil {
 		return err
 	}
 
-	err = cloud.NewClient(token).Ping()
+	err = cloud.NewClient(opts.token).Ping()
 	if err == cloud.ErrResourceNotFound {
-		util.Red.Render("Invalid token.")
+		fmt.Fprintln(ctx.Out(), "Invalid token.")
 	} else if err != nil {
 		return err
 	} else {
-		util.Green.Render("Successfully logged in.")
+		fmt.Fprintln(ctx.Out(), "Successfully logged in.")
 	}
 
 	return nil
 }
 
 // NewLoginCommand creates a new `login` command.
-func NewLoginCommand() *cobra.Command {
+func NewLoginCommand(ctx *pkg.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "login to nest cloud",
 		Args:  cobra.ExactArgs(1),
-		RunE:  runLoginCommand,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runLoginCommand(ctx, &loginOptions{
+				token: args[0],
+			})
+		},
 	}
 
 	return cmd

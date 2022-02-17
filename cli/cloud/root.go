@@ -2,15 +2,12 @@ package cloud
 
 import (
 	"github.com/redwebcreation/nest/cloud"
+	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 )
 
-var commands = []*cobra.Command{
-	NewLoginCommand(),
-}
-
 // NewRootCommand creates a new `cloud` command.
-func NewRootCommand() *cobra.Command {
+func NewRootCommand(ctx *pkg.Context) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "cloud",
 		Short: "interact with nest cloud",
@@ -18,9 +15,10 @@ func NewRootCommand() *cobra.Command {
 
 	root.PersistentFlags().StringVar(&cloud.Endpoint, "endpoint", cloud.Endpoint, "nest cloud endpoint")
 
-	for _, command := range commands {
-		root.AddCommand(command)
-	}
+	root.AddCommand(
+		// login
+		NewLoginCommand(ctx),
+	)
 
 	return root
 }

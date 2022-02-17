@@ -13,6 +13,8 @@ import (
 	"github.com/pseidemann/finish"
 	"github.com/redwebcreation/nest/global"
 	"golang.org/x/crypto/acme/autocert"
+	"io/fs"
+	"log"
 	"math/big"
 	"net"
 	"net/http"
@@ -23,19 +25,20 @@ import (
 )
 
 type Proxy struct {
-	Config             *Configuration
+	Config             *ServerConfiguration
+	logger             *log.Logger
 	CertificateManager *autocert.Manager
 	hostToIP           map[string]string
 }
 
-func NewProxy(config *Configuration, manifest *Manifest) *Proxy {
+func NewProxy(config *ServerConfiguration, manifest *Manifest) *Proxy {
 	proxy := &Proxy{
 		Config:   config,
 		hostToIP: make(map[string]string),
 	}
 
 	// todo: get container ip
-	//for _, service := range config.Services {
+	//for _, service := range serverConfig.Services {
 	//	for _, host := range service.Hosts {
 	//		proxy.hostToIP[host] = manifest.Containers[service.Name].IP
 	//	}
@@ -61,7 +64,8 @@ func (p *Proxy) Run() {
 		if r.Host != "" && r.Host == p.Config.ControlPlane.Host {
 			p.Log(r, global.LevelInfo, "proxied request to plane")
 
-			NewRouter(p.Config).ServeHTTP(w, r)
+			NewRouter().ServeHTTP(w, r)
+			//NewRouter(p.ServerConfiguration).ServeHTTP(w, r)
 			return
 		}
 
@@ -78,26 +82,26 @@ func (p *Proxy) Run() {
 			keyFile := global.GetSelfSignedCertKeyFile()
 
 			cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-			if errors.Is(err, os.ErrNotExist) {
+			if errors.Is(err, fs.ErrNotExist) {
 				err = createSelfSignedCertificates(certFile, keyFile)
 				if err != nil {
-					global.LogP(global.LevelError, "failed to create self signed certificates", global.Fields{
+					p.logger.Print(global.NewEvent(global.LevelError, "failed to create self signed certificates", global.Fields{
 						"error": err.Error(),
-					})
+					}))
 					return nil, err
 				}
 
 				cert, err = tls.LoadX509KeyPair(certFile, keyFile)
 				if err != nil {
-					global.LogP(global.LevelError, "failed to load self signed certificates", global.Fields{
+					p.logger.Print(global.NewEvent(global.LevelError, "failed to load self signed certificates", global.Fields{
 						"error": err.Error(),
-					})
+					}))
 					return nil, err
 				}
 			} else if err != nil {
-				global.LogP(global.LevelError, "certificates exist but failed to load", global.Fields{
+				p.logger.Print(global.NewEvent(global.LevelError, "certificates exist but failed to load", global.Fields{
 					"error": err.Error(),
-				})
+				}))
 				return nil, err
 			}
 
@@ -112,7 +116,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	finisher := &finish.Finisher{
 		Timeout: 10 * time.Second,
 		Log: &global.FinisherLogger{
-			Logger: global.ProxyLogger,
+			Logger: p.logger,
 		},
 	}
 
@@ -124,7 +128,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	go func() {
 		err := certsHandler.ListenAndServe()
 		if err != nil {
-			global.LogP(global.LevelFatal, err.Error(), nil)
+			p.logger.Print(global.NewEvent(global.LevelFatal, err.Error(), nil))
 			os.Exit(1)
 		}
 	}()
@@ -132,7 +136,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	go func() {
 		err := proxy.ListenAndServeTLS("", "")
 		if err != nil {
-			global.LogP(global.LevelFatal, err.Error(), nil)
+			p.logger.Print(global.NewEvent(global.LevelFatal, err.Error(), nil))
 			os.Exit(1)
 		}
 	}()
@@ -164,7 +168,7 @@ func (p *Proxy) Log(r *http.Request, level global.Level, message string) {
 		ip = r.RemoteAddr
 	}
 
-	global.LogP(
+	p.logger.Print(global.NewEvent(
 		level,
 		message,
 		global.Fields{
@@ -174,7 +178,7 @@ func (p *Proxy) Log(r *http.Request, level global.Level, message string) {
 			"path":   r.URL.Path,
 			"ip":     ip,
 		},
-	)
+	))
 }
 
 func (p *Proxy) certsCreationHandler() *http.Server {
@@ -200,7 +204,7 @@ func (p *Proxy) newServer(port string, handler http.HandlerFunc) *http.Server {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 		Handler:        handler,
-		ErrorLog:       global.ProxyLogger,
+		ErrorLog:       p.logger,
 	}
 }
 

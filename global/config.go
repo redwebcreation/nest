@@ -14,8 +14,8 @@ import (
 // - ~/.nest
 var ConfigHome string
 
-func GetConfigStoreDir() string {
-	return ConfigHome + "/configStore"
+func ServerConfigsStore() string {
+	return ConfigHome + "/serverConfigStore"
 }
 
 func GetCertsDir() string {
@@ -30,8 +30,8 @@ func GetManifestsDir() string {
 	return ensureExists(ConfigHome + "/manifests")
 }
 
-func GetLocatorConfigFile() string {
-	return ConfigHome + "/locator.json"
+func ConfigFile() string {
+	return ConfigHome + "/config.json"
 }
 
 func GetContainerManifestFile(manifest string) string {

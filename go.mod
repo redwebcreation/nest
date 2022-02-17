@@ -10,6 +10,7 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-logfmt/logfmt v0.5.1
 	github.com/google/go-github/v42 v42.0.0
+	github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pseidemann/finish v1.0.0
 	github.com/spf13/cobra v1.3.0
@@ -37,7 +38,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
-	github.com/kr/logfmt v0.0.0-20210122060352-19f9bcb100e6 // indirect
 	github.com/kr/pty v1.1.5 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
@@ -47,7 +47,6 @@ require (
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.11.1-0.20220204035834-5ac8409525e0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect

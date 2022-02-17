@@ -3,37 +3,40 @@ package cli
 import (
 	"fmt"
 	"github.com/redwebcreation/nest/pkg"
-	"github.com/redwebcreation/nest/util"
 	"github.com/spf13/cobra"
 )
 
-func runMedicCommand(cmd *cobra.Command, args []string) error {
-	diagnostic := pkg.DiagnoseConfiguration()
+func runMedicCommand(ctx *pkg.Context) error {
+	sc, err := ctx.ServerConfiguration()
+	if err != nil {
+		return err
+	}
 
-	fmt.Println()
-	util.Printf(util.Red, "  Errors:\n")
+	diagnostic := pkg.DiagnoseConfiguration(sc)
+
+	fmt.Fprintln(ctx.Out())
+	fmt.Fprintln(ctx.Out(), "Errors:")
 
 	if len(diagnostic.Errors) == 0 {
-		util.Printf(util.Gray, "  - no errors\n")
+		fmt.Fprintln(ctx.Out(), "  - no errors")
 	} else {
 		for _, err := range diagnostic.Errors {
-			util.Printf(util.White, "  -  %s\n", err.Title)
+			fmt.Fprintf(ctx.Out(), "  -  %s\n", err.Title)
 			if err.Error != nil {
-				util.Printf(util.Gray, "    %s\n", err)
+				fmt.Fprintf(ctx.Out(), "    %s\n", err.Error)
 			}
 		}
 	}
 
-	util.Printf(util.Yellow, "\n  Warnings:")
-	fmt.Println()
+	fmt.Fprintln(ctx.Out(), "\nWarnings:")
 
 	if len(diagnostic.Warnings) == 0 {
-		util.Printf(util.Gray, "  - no warnings\n")
+		fmt.Fprintln(ctx.Out(), "  - no warnings")
 	} else {
 		for _, warn := range diagnostic.Warnings {
-			util.Printf(util.White, "  -  %s\n", warn.Title)
+			fmt.Fprintf(ctx.Out(), "  -  %s\n", warn.Title)
 			if warn.Advice != "" {
-				util.Printf(util.Gray, "    %s\n", warn.Advice)
+				fmt.Fprintf(ctx.Out(), "    %s\n", warn.Advice)
 			}
 		}
 	}
@@ -42,13 +45,12 @@ func runMedicCommand(cmd *cobra.Command, args []string) error {
 }
 
 // NewMedicCommand creates a new `medic` command.
-func NewMedicCommand() *cobra.Command {
+func NewMedicCommand(ctx *pkg.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "medic",
 		Short: "diagnose your configuration",
-		RunE:  runMedicCommand,
-		Annotations: map[string]string{
-			"medic": "false",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runMedicCommand(ctx)
 		},
 	}
 

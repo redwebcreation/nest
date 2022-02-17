@@ -5,13 +5,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var config *pkg.Configuration
+var config *pkg.ServerConfiguration
 
 var http string
 var https string
 var selfSigned bool
 
-func runRunCommand(cmd *cobra.Command, args []string) error {
+type runOptions struct {
+	deployment string
+}
+
+func runRunCommand(ctx *pkg.Context, opts *runOptions) error {
 	// update configuration according to flags
 	config.Proxy.HTTP = http
 	config.Proxy.HTTPS = https
@@ -20,8 +24,8 @@ func runRunCommand(cmd *cobra.Command, args []string) error {
 	var manifest *pkg.Manifest
 	var err error
 
-	if len(args) > 0 {
-		manifest, err = pkg.LoadManifest(args[0])
+	if opts.deployment != "" {
+		manifest, err = pkg.LoadManifest(opts.deployment)
 		if err != nil {
 			return err
 		}
@@ -38,8 +42,8 @@ func runRunCommand(cmd *cobra.Command, args []string) error {
 }
 
 // NewRunCommand creates a new `run` command
-func NewRunCommand() *cobra.Command {
-	resolvedConfig, err := pkg.Locator.Resolve()
+func NewRunCommand(ctx *pkg.Context) *cobra.Command {
+	resolvedConfig, err := ctx.ServerConfiguration()
 
 	cmd := &cobra.Command{
 		Use:   "run [deployment]",
@@ -50,7 +54,13 @@ func NewRunCommand() *cobra.Command {
 				return err
 			}
 
-			return runRunCommand(cmd, args)
+			opts := &runOptions{}
+
+			if len(args) > 0 {
+				opts.deployment = args[0]
+			}
+
+			return runRunCommand(ctx, opts)
 		},
 	}
 

@@ -7,9 +7,9 @@ import (
 
 // Diagnostic contains all the information about a given configuration diagnostic.
 type Diagnostic struct {
-	Config   *Configuration `json:"-"`
-	Warnings []Warning      `json:"warnings"`
-	Errors   []Error        `json:"errors"`
+	Config   *ServerConfiguration `json:"-"`
+	Warnings []Warning            `json:"warnings"`
+	Errors   []Error              `json:"errors"`
 }
 type Warning struct {
 	Title  string `json:"title"`
@@ -29,21 +29,8 @@ func (d *Diagnostic) MustPass() error {
 	return fmt.Errorf("invalid configuration (run `nest medic` for details)")
 }
 
-// DiagnoseConfiguration runs the diagnostics on the global Configuration.
-func DiagnoseConfiguration() *Diagnostic {
-	config, err := Locator.Resolve()
-	if err != nil {
-		return &Diagnostic{
-			Config: config,
-			Errors: []Error{
-				{
-					Title: "Unable to load the configuration",
-					Error: err,
-				},
-			},
-		}
-	}
-
+// DiagnoseConfiguration runs the diagnostics on the global ServerConfiguration.
+func DiagnoseConfiguration(config *ServerConfiguration) *Diagnostic {
 	diagnostic := Diagnostic{
 		Config: config,
 	}

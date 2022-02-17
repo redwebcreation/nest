@@ -13,7 +13,6 @@ var (
 
 type Manifest struct {
 	ID         string            `json:"id"`
-	Locator    *locator          `json:"locator"`
 	Containers map[string]string `json:"containers"`
 	Networks   map[string]string `json:"networks"`
 }
@@ -30,7 +29,6 @@ func (m Manifest) Save() error {
 func NewManifest(id string) *Manifest {
 	return &Manifest{
 		ID:         id,
-		Locator:    Locator,
 		Containers: make(map[string]string),
 		Networks:   make(map[string]string),
 	}

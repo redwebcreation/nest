@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-var ProxyLogger *log.Logger
-
 type CompositeLogger struct {
 	Loggers []io.Writer
 }
@@ -76,17 +74,12 @@ const (
 	LevelFatal
 )
 
-// LogP writes logs for the reverse proxy.
-func LogP(level Level, message string, fields Fields) {
-	ProxyLogger.Print(newFields(level, message, fields))
-}
-
 // LogI logs internal events.
 func LogI(level Level, message string, fields Fields) {
-	log.Print(newFields(level, message, fields))
+	log.Print(NewEvent(level, message, fields))
 }
 
-func newFields(level Level, message string, fields Fields) Fields {
+func NewEvent(level Level, message string, fields Fields) Fields {
 	if fields == nil {
 		fields = make(Fields)
 	}
@@ -131,16 +124,16 @@ func init() {
 		Path: GetInternalLogFile(),
 	})
 
-	ProxyLogger = log.New(CompositeLogger{
-		Loggers: []io.Writer{
-			&FileLogger{
-				Path: GetProxyLogFile(),
-			},
-			&FileLogger{
-				File: os.Stdout,
-			},
-		},
-	}, "", 0)
+	//ProxyLogger = log.New(CompositeLogger{
+	//	Loggers: []io.Writer{
+	//		&FileLogger{
+	//			Path: GetProxyLogFile(),
+	//		},
+	//		&FileLogger{
+	//			File: os.Stdout,
+	//		},
+	//	},
+	//}, "", 0)
 }
 
 type FinisherLogger struct {
@@ -148,13 +141,13 @@ type FinisherLogger struct {
 }
 
 func (l FinisherLogger) Infof(message string, args ...any) {
-	l.Logger.Print(newFields(LevelInfo, fmt.Sprintf(message, args...), Fields{
+	l.Logger.Print(NewEvent(LevelInfo, fmt.Sprintf(message, args...), Fields{
 		"tag": "proxy.finisher",
 	}))
 }
 
 func (l FinisherLogger) Errorf(message string, args ...any) {
-	l.Logger.Print(newFields(LevelError, fmt.Sprintf(message, args...), Fields{
+	l.Logger.Print(NewEvent(LevelError, fmt.Sprintf(message, args...), Fields{
 		"tag": "proxy.finisher",
 	}))
 }

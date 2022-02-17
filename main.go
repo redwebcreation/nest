@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/redwebcreation/nest/cli"
 	"github.com/redwebcreation/nest/cli/cloud"
-	"github.com/redwebcreation/nest/cli/config"
 	"github.com/redwebcreation/nest/cli/proxy"
 	"github.com/redwebcreation/nest/global"
 	"github.com/redwebcreation/nest/pkg"
@@ -12,30 +11,18 @@ import (
 	"os"
 )
 
-var commands = []*cobra.Command{
-	cloud.NewRootCommand(),
-	proxy.NewRootCommand(),
-	config.NewRootCommand(),
-	cli.NewDeployCommand(),
-	cli.NewMedicCommand(),
-	cli.NewSetupCommand(),
-	cli.NewVersionCommand(),
-	cli.NewSelfUpdateCommand(),
-}
-
-func newNestCommand() *cobra.Command {
+func newNestCommand(ctx *pkg.Context) *cobra.Command {
 	nest := &cobra.Command{
-		Use:     "nest",
-		Short:   "Service orchestrator",
-		Long:    "Nest is a powerful service orchestrator for a single server.",
-		Version: fmt.Sprintf("%s, build %s", global.Version, global.Commit),
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-
-			_, disableConfigLocator := cmd.Annotations["config"]
-			_, disableMedic := cmd.Annotations["medic"]
-
+		Use:           "nest",
+		Short:         "Service orchestrator",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Long:          "Nest is a powerful service orchestrator for a single server.",
+		Version:       fmt.Sprintf("%s, build %s", global.Version, global.Commit),
+		CompletionOptions: cobra.CompletionOptions{
+			DisableDefaultCmd: true,
+		},
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			global.LogI(
 				global.LevelDebug,
 				"command invoked",
@@ -44,23 +31,6 @@ func newNestCommand() *cobra.Command {
 					"command": cmd.Name(),
 				},
 			)
-
-			if !disableConfigLocator {
-				if _, err := os.Stat(global.GetLocatorConfigFile()); err != nil {
-					return fmt.Errorf("run `nest setup` to setup nest")
-				}
-
-				err := pkg.Locator.Load()
-				if err != nil {
-					return err
-				}
-			}
-
-			if disableMedic {
-				return nil
-			}
-
-			return pkg.DiagnoseConfiguration().MustPass()
 		},
 	}
 
@@ -69,23 +39,41 @@ func newNestCommand() *cobra.Command {
 		Hidden: true,
 	})
 
-	nest.CompletionOptions.DisableDefaultCmd = true
-
 	// This flag is not actually used by any of the commands.
-	// Its value is used in the init function in global/config.go
+	// Its value is used in the init function in global/server.go
 	nest.PersistentFlags().StringP("config", "c", global.ConfigHome, "set the global config path")
 
-	for _, command := range commands {
-		nest.AddCommand(command)
-	}
+	nest.AddCommand(
+		// version
+		cli.NewVersionCommand(ctx),
+
+		// setup
+		cli.NewSetupCommand(ctx),
+
+		// use
+		cli.NewUseCommand(ctx),
+
+		// medic
+		cli.NewMedicCommand(ctx),
+
+		// self-update
+		cli.NewSelfUpdateCommand(ctx),
+
+		// deploy
+		cli.NewDeployCommand(ctx),
+
+		// proxy commands
+		proxy.NewRootCommand(ctx),
+
+		// cloud commands
+		cloud.NewRootCommand(ctx),
+	)
 
 	return nest
 }
 
 func main() {
-	cmd := newNestCommand()
-
-	err := cmd.Execute()
+	err := newNestCommand(&pkg.Context{}).Execute()
 	if err != nil {
 		global.LogI(global.LevelError, err.Error(), nil)
 

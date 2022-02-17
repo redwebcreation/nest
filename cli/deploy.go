@@ -7,8 +7,8 @@ import (
 	"io"
 )
 
-func runDeployCommand(cmd *cobra.Command, args []string) error {
-	config, err := pkg.Locator.Resolve()
+func runDeployCommand(ctx *pkg.Context) error {
+	config, err := ctx.ServerConfiguration()
 	if err != nil {
 		return err
 	}
@@ -27,7 +27,7 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 
 	for event := range deployment.Events {
 		if event.Value == pkg.ErrDeploymentFailed {
-			fmt.Println("Deployment failed")
+			fmt.Fprintln(ctx.Out(), "Deployment failed")
 			break
 		}
 
@@ -36,9 +36,9 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 		}
 
 		if event.Service != nil {
-			fmt.Printf("%s: %v\n", event.Service.Name, event.Value)
+			fmt.Fprintf(ctx.Out(), "%s: %v\n", event.Service.Name, event.Value)
 		} else {
-			fmt.Printf("global: %v\n", event.Value)
+			fmt.Fprintf(ctx.Out(), "global: %v\n", event.Value)
 		}
 	}
 
@@ -46,11 +46,13 @@ func runDeployCommand(cmd *cobra.Command, args []string) error {
 }
 
 // NewDeployCommand creates a new `deploy` command.
-func NewDeployCommand() *cobra.Command {
+func NewDeployCommand(ctx *pkg.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy",
 		Short: "deploy the configuration",
-		RunE:  runDeployCommand,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runDeployCommand(ctx)
+		},
 	}
 
 	return cmd

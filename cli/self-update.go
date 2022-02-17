@@ -5,20 +5,25 @@ import (
 	"fmt"
 	"github.com/google/go-github/v42/github"
 	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 	"io"
 	"net/http"
 	"os"
 )
 
-func runSelfUpdate(cmd *cobra.Command, args []string) error {
+type selfUpdateOptions struct {
+	version string
+}
+
+func runSelfUpdate(ctx *pkg.Context, opts *selfUpdateOptions) error {
 	client := github.NewClient(nil)
 
 	var release *github.RepositoryRelease
 	var err error
 
-	if len(args) > 0 {
-		release, _, err = client.Repositories.GetReleaseByTag(context.Background(), "redwebcreation", "nest", args[0])
+	if opts.version != "" {
+		release, _, err = client.Repositories.GetReleaseByTag(context.Background(), "redwebcreation", "nest", opts.version)
 	} else {
 		release, _, err = client.Repositories.GetLatestRelease(context.Background(), "redwebcreation", "nest")
 	}
@@ -37,7 +42,7 @@ func runSelfUpdate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("the binary is not available yet, try again later")
 	}
 
-	fmt.Printf("Downloading %s...\n", binary.GetName())
+	fmt.Fprintf(ctx.Out(), "Downloading %s...\n", binary.GetName())
 
 	executable, err := os.Executable()
 	if err != nil {
@@ -54,21 +59,25 @@ func runSelfUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Successfully updated to version %s.\n", release.GetTagName())
+	fmt.Fprintf(ctx.Out(), "Successfully updated to version %s.\n", release.GetTagName())
 
 	return nil
 }
 
 // NewSelfUpdateCommand creates a new `self-update` command.
-func NewSelfUpdateCommand() *cobra.Command {
+func NewSelfUpdateCommand(ctx *pkg.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "self-update [version]",
 		Short: "update the CLI to the latest version",
 		Args:  cobra.RangeArgs(0, 1),
-		RunE:  runSelfUpdate,
-		Annotations: map[string]string{
-			"medic":  "false",
-			"config": "false",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			opts := &selfUpdateOptions{}
+
+			if len(args) > 0 {
+				opts.version = args[0]
+			}
+
+			return runSelfUpdate(ctx, opts)
 		},
 	}
 

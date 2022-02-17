@@ -11,7 +11,7 @@ import (
 
 type Deployment struct {
 	ID       string
-	Config   *Configuration
+	Config   *ServerConfiguration
 	Events   chan Event
 	Manifest *Manifest
 }
@@ -20,7 +20,7 @@ var (
 	ErrDeploymentFailed = fmt.Errorf("deployment failed")
 )
 
-func NewDeployment(config *Configuration) *Deployment {
+func NewDeployment(config *ServerConfiguration) *Deployment {
 	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	return &Deployment{
@@ -37,7 +37,7 @@ func (d *Deployment) Start() error {
 		return err
 	}
 
-	//dockerClient, err := docker.NewClient(d.Config.Network.Ipv6, d.Config.Network.Pools)
+	//dockerClient, err := docker.NewClient(d.ServerConfiguration.Network.Ipv6, d.ServerConfiguration.Network.Pools)
 	dockerClient, err := docker.NewClient()
 	if err != nil {
 		return err
