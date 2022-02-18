@@ -96,7 +96,6 @@ func WithDefaultInternalLogger() Option {
 		context.logger = log.New(&loggy.FileLogger{
 			Path: context.LogFile(),
 		}, "", 0)
-
 		return nil
 	}
 }

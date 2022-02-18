@@ -54,20 +54,34 @@ func (c *Context) Config() (*config.Config, error) {
 	return c.config, nil
 }
 
-// ServicesConfig returns the cached services config or loads it if it hasn't been loaded yet.
-func (c *Context) ServicesConfig() (*config.ServicesConfig, error) {
+func (c *Context) UnvalidatedServicesConfig() (*config.ServicesConfig, error) {
 	nc, err := c.Config()
 	if err != nil {
 		return nil, err
 	}
 
 	if c.servicesConfig == nil {
-		servicesConfig, err := nc.ServerConfig()
+		servicesConfig, err := nc.ServicesConfig()
 		if err != nil {
 			return nil, err
 		}
 
 		c.servicesConfig = servicesConfig
+	}
+
+	err = c.servicesConfig.ExpandIncludes(nc)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.servicesConfig, nil
+}
+
+// ServicesConfig returns the cached services config or loads it if it hasn't been loaded yet.
+func (c *Context) ServicesConfig() (*config.ServicesConfig, error) {
+	_, err := c.UnvalidatedServicesConfig()
+	if err != nil {
+		return nil, err
 	}
 
 	err = medic.DiagnoseConfig(c.servicesConfig).MustPass()
@@ -86,7 +100,7 @@ func (c *Context) Out() FileWriter {
 	return c.out
 }
 
-func (c Context) In() FileReader {
+func (c *Context) In() FileReader {
 	if c.in == nil {
 		c.in = os.Stdin
 	}
@@ -94,7 +108,7 @@ func (c Context) In() FileReader {
 	return c.in
 }
 
-func (c Context) Err() io.Writer {
+func (c *Context) Err() io.Writer {
 	if c.err == nil {
 		c.err = os.Stderr
 	}
@@ -102,19 +116,19 @@ func (c Context) Err() io.Writer {
 	return c.err
 }
 
-func (c Context) Home() string {
+func (c *Context) Home() string {
 	return c.home
 }
 
-func (c Context) ProxyLogger() *log.Logger {
+func (c *Context) ProxyLogger() *log.Logger {
 	return c.proxyLogger
 }
 
-func (c Context) Logger() *log.Logger {
+func (c *Context) Logger() *log.Logger {
 	return c.logger
 }
 
-func (c Context) ManifestManager() *deploy.Manager {
+func (c *Context) ManifestManager() *deploy.Manager {
 	if c.manifestManager == nil {
 		c.manifestManager = &deploy.Manager{
 			Path: c.ManifestsDir(),

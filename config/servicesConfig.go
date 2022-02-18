@@ -4,6 +4,7 @@ import (
 	"github.com/c-robinson/iplib"
 	"github.com/redwebcreation/nest/docker"
 	"github.com/redwebcreation/nest/service"
+	"gopkg.in/yaml.v2"
 	"net"
 	"sync"
 )
@@ -21,6 +22,32 @@ type ServicesConfig struct {
 		SelfSigned bool   `yaml:"self_signed" json:"selfSigned"`
 	} `yaml:"proxy" json:"proxy"`
 	Network NetworkConfiguration `yaml:"network" json:"network"`
+}
+
+func (c *ServicesConfig) ExpandIncludes(config *Config) error {
+	for _, s := range c.Services {
+		if s.Include == "" {
+			continue
+		}
+
+		bytes, err := config.Read(s.Include)
+		if err != nil {
+			return err
+		}
+
+		var parsedService *service.Service
+
+		err = yaml.Unmarshal(bytes, &parsedService)
+		if err != nil {
+			return err
+		}
+
+		parsedService.ApplyDefaults(s.Name)
+
+		c.Services[s.Name] = parsedService
+	}
+
+	return nil
 }
 
 type NetworkConfiguration struct {

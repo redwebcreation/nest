@@ -84,27 +84,6 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(any) error) error {
 	}
 
 	for name, service := range services {
-		if service.Include != "" {
-			// todo: handle include
-			delete(services, name)
-			continue
-			//bytes, err := ServicesConfig.Read(service.Include)
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//var parsedService *Service
-			//
-			//err = yaml.Unmarshal(bytes, &parsedService)
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//parsedService.ApplyDefaults(name)
-			//
-			//services[name] = parsedService
-		}
-
 		service.ApplyDefaults(name)
 		services[name] = service
 	}

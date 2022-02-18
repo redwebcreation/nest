@@ -54,6 +54,7 @@ func (d *Diagnostic) ValidateService(service *service.Service) {
 		})
 	}
 
+	fmt.Printf("%+v\n%+v\n", service, d.Config.Registries)
 	if _, ok := d.Config.Registries[service.Registry]; !ok && service.Registry != "" {
 		d.Errors = append(d.Errors, Error{
 			Title: fmt.Sprintf("Service %s has an invalid registry", service.Name),

@@ -58,7 +58,7 @@ func (c *Config) Read(file string) ([]byte, error) {
 	return c.Git.ReadFile(configPath, c.Commit, file)
 }
 
-func (c *Config) ServerConfig() (*ServicesConfig, error) {
+func (c *Config) ServicesConfig() (*ServicesConfig, error) {
 	configFile := "nest.yaml"
 	if c.Git.Exists(c.StorePath(), "nest.yml", c.Commit) {
 		configFile = "nest.yml"
