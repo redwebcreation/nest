@@ -14,7 +14,7 @@ func runDeployCommand(ctx *context.Context) error {
 		return err
 	}
 
-	deployment := deploy.NewDeployment(config, ctx.ManifestManager())
+	deployment := deploy.NewDeployment(config, ctx.Logger(), ctx.ManifestManager(), ctx.SubnetRegistryPath())
 
 	go func() {
 		err = deployment.Start()
@@ -39,7 +39,7 @@ func runDeployCommand(ctx *context.Context) error {
 		if event.Service != nil {
 			fmt.Fprintf(ctx.Out(), "%s: %v\n", event.Service.Name, event.Value)
 		} else {
-			fmt.Fprintf(ctx.Out(), "loggy: %v\n", event.Value)
+			fmt.Fprintf(ctx.Out(), "global: %v\n", event.Value)
 		}
 	}
 

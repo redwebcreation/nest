@@ -39,7 +39,7 @@ func New(ctx *context.Context) *gin.Engine {
 	})
 
 	router.GET("/plane/v1/deploy", func(context *gin.Context) {
-		deployment := deploy.NewDeployment(server, ctx.ManifestManager())
+		deployment := deploy.NewDeployment(server, ctx.Logger(), ctx.ManifestManager(), ctx.SubnetRegistryPath())
 
 		go func() {
 			err := deployment.Start()

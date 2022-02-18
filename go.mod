@@ -22,6 +22,7 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.5.1 // indirect
+	github.com/c-robinson/iplib v1.0.3 // indirect
 	github.com/containerd/containerd v1.6.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.0+incompatible // indirect

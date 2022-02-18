@@ -8,9 +8,22 @@ import (
 )
 
 func (c Client) NetworkCreate(name string, labels map[string]string) (string, error) {
+	subnet, err := c.networkConfig.NextSubnet()
+	if err != nil {
+		return "", err
+	}
+
 	res, err := c.client.NetworkCreate(context.Background(), name, types.NetworkCreate{
 		CheckDuplicate: true,
-		Labels:         labels,
+		IPAM: &network.IPAM{
+			Driver: "default",
+			Config: []network.IPAMConfig{
+				{
+					Subnet: subnet.String(),
+				},
+			},
+		},
+		Labels: labels,
 	})
 	if err != nil {
 		return "", err

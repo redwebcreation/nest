@@ -3,7 +3,7 @@ package docker
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"github.com/redwebcreation/nest/loggy"
 	"io"
 	"strings"
@@ -13,7 +13,7 @@ import (
 
 var (
 	// ErrImageNotFound is returned when the image does not exist
-	ErrImageNotFound = fmt.Errorf("image not found")
+	ErrImageNotFound = errors.New("image not found")
 )
 
 // Image represents a docker image name

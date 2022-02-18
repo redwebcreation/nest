@@ -104,8 +104,6 @@ func (c *Config) LoadCommit(commit string) error {
 func (c *Config) Clone() error {
 	_ = os.RemoveAll(c.StorePath())
 
-	fmt.Printf("%+v\n", c)
-
 	err := c.Git.Clone(c.RemoteURL(), c.StorePath(), c.Branch)
 
 	if err != nil {

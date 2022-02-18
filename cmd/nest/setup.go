@@ -24,18 +24,18 @@ func runSetupCommand(ctx *context.Context, opts *setupOptions) error {
 
 	if !opts.UsesFlags {
 		// A default value for a select must be one of the options
-		var repository = "github"
+		var provider = "github"
 
 		if hasConfig {
-			repository = oldConfig.Repository
+			provider = oldConfig.Provider
 		}
 
 		prompt := &survey.Select{
 			Message: "Select your provider:",
 			Options: []string{"github", "gitlab", "bitbucket"},
-			Default: repository,
+			Default: provider,
 		}
-		err = survey.AskOne(prompt, &opts.Provider, survey.WithValidator(survey.Required), survey.WithStdio(ctx.In(), ctx.Out(), ctx.Err()))
+		err = survey.AskOne(prompt, &opts.Repository, survey.WithValidator(survey.Required), survey.WithStdio(ctx.In(), ctx.Out(), ctx.Err()))
 		if err != nil {
 			return err
 		}

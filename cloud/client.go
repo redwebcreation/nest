@@ -3,6 +3,7 @@ package cloud
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/redwebcreation/nest/build"
 	"io"
@@ -17,7 +18,7 @@ type client struct {
 
 var (
 	// ErrResourceNotFound is returned when the requested resource is not found
-	ErrResourceNotFound = fmt.Errorf("resource not found")
+	ErrResourceNotFound = errors.New("resource not found")
 )
 
 func (c client) Request(method string, url string, params map[string]any, v any) error {

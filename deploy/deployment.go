@@ -1,35 +1,40 @@
 package deploy
 
 import (
+	"errors"
 	"fmt"
 	"github.com/redwebcreation/nest/config"
 	"github.com/redwebcreation/nest/docker"
-	"github.com/redwebcreation/nest/loggy"
 	"io"
+	"log"
 	"strconv"
 	"sync"
 	"time"
 )
 
 type Deployment struct {
-	ID       string
-	Server   *config.ServerConfig
-	Events   chan Event
-	Manifest *Manifest
+	ID                 string
+	Server             *config.ServerConfig
+	Events             chan Event
+	Manifest           *Manifest
+	Logger             *log.Logger
+	SubnetRegistryPath string
 }
 
 var (
-	ErrDeploymentFailed = fmt.Errorf("deployment failed")
+	ErrDeploymentFailed = errors.New("deployment failed")
 )
 
-func NewDeployment(server *config.ServerConfig, manager *Manager) *Deployment {
+func NewDeployment(server *config.ServerConfig, logger *log.Logger, manager *Manager, subnetRegistryPath string) *Deployment {
 	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	return &Deployment{
-		ID:       id,
-		Server:   server,
-		Events:   make(chan Event),
-		Manifest: manager.NewManifest(id),
+		ID:                 id,
+		Server:             server,
+		Events:             make(chan Event),
+		Manifest:           manager.NewManifest(id),
+		Logger:             logger,
+		SubnetRegistryPath: subnetRegistryPath,
 	}
 }
 
@@ -39,8 +44,8 @@ func (d *Deployment) Start() error {
 		return err
 	}
 
-	//dockerClient, err := docker.NewClient(d.ServerConfig.Network.Ipv6, d.ServerConfig.Network.Pools)
-	dockerClient, err := docker.NewClient(loggy.NewNullLogger())
+	var m sync.Mutex
+	dockerClient, err := docker.NewClient(d.Logger, d.Server.Network.Manager(d.SubnetRegistryPath, &m))
 	if err != nil {
 		return err
 	}

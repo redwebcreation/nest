@@ -44,6 +44,10 @@ func (c *Context) CloudTokenFile() string {
 	return ensureDirExists(c.Home() + "/cloud-token")
 }
 
+func (c *Context) SubnetRegistryPath() string {
+	return ensureDirExists(c.Home() + "/subnets.list")
+}
+
 // ensureDirExists creates all the directories in a given path if they don't exist.
 func ensureDirExists(path string) string {
 	// if the path contains a filename, create all its parent directories

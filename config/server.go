@@ -1,8 +1,11 @@
 package config
 
 import (
+	"github.com/c-robinson/iplib"
 	"github.com/redwebcreation/nest/docker"
 	"github.com/redwebcreation/nest/service"
+	"net"
+	"sync"
 )
 
 // ServerConfig represents nest's config
@@ -17,7 +20,30 @@ type ServerConfig struct {
 		HTTPS      string `yaml:"https" json:"https"`
 		SelfSigned bool   `yaml:"self_signed" json:"selfSigned"`
 	} `yaml:"proxy" json:"proxy"`
-	Network NetworkOptions `yaml:"network" json:"network"`
+	Network NetworkConfiguration `yaml:"network" json:"network"`
+}
+
+type NetworkConfiguration struct {
+	Policy  string   `json:"policy"` // "smallest_subnet", "/{mask size}"
+	Subnets []string `json:"subnets"`
+}
+
+func (n NetworkConfiguration) Manager(registryPath string, m *sync.Mutex) *docker.Subnetter {
+	var subnets []iplib.Net4
+
+	for _, subnet := range n.Subnets {
+		// todo(medic): validate subnet
+		ip, cidr, _ := net.ParseCIDR(subnet)
+
+		mask, _ := cidr.Mask.Size()
+		subnets = append(subnets, iplib.NewNet4(ip, mask))
+	}
+
+	return &docker.Subnetter{
+		RegistryPath: registryPath,
+		Subnets:      subnets,
+		Lock:         m,
+	}
 }
 
 // RegistryMap maps registry names to their respective docker.Registry structs
@@ -35,35 +61,6 @@ func (r *RegistryMap) UnmarshalYAML(unmarshal func(any) error) error {
 	}
 
 	*r = registries
-
-	return nil
-}
-
-type NetworkOptions struct {
-	Ipv6 bool `yaml:"ipv6" json:"ipv6"`
-
-	// todo: add check if pool overlaps on other subnets
-	// todo: add check if pool is in range of private ip ranges
-	//Pools []docker.IpRange `yaml:"pools" json:"pools"`
-}
-
-//var (
-//	ErrMissingIpv6Pool = errors.New("missing ipv6 pool")
-//)
-
-func (n *NetworkOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	type plain NetworkOptions
-	if err := unmarshal((*plain)(n)); err != nil {
-		return err
-	}
-
-	//if n.Ipv6 {
-	//	if len(n.Pools) == 0 {
-	//		return ErrMissingIpv6Pool
-	//	}
-	//} else {
-	//	n.Pools = docker.DefaultIpv4Pools
-	//}
 
 	return nil
 }

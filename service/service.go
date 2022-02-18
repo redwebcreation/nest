@@ -1,12 +1,13 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
 
 var (
-	ErrMissingService = fmt.Errorf("missing service")
+	ErrMissingService = errors.New("missing service")
 )
 
 // Service contains the information about a service.
