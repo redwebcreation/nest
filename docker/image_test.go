@@ -21,7 +21,7 @@ func TestClient_ImagePull(t *testing.T) {
 	assert.Assert(t, err != nil)
 	assert.Assert(t, strings.Contains(string(out), "No such object: alpine:latest"))
 
-	client, err := NewClient(loggy.NewNullLogger())
+	client, err := NewClient(loggy.NewNullLogger(), nil)
 	assert.NilError(t, err)
 
 	err = client.ImagePull(image, func(_ *PullEvent) {}, nil)
