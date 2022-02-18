@@ -11,10 +11,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pseidemann/finish"
-	"github.com/redwebcreation/nest/global"
+	logger2 "github.com/redwebcreation/nest/pkg/logger"
 	"github.com/redwebcreation/nest/pkg/manifest"
 	"golang.org/x/crypto/acme/autocert"
 	"io/fs"
+	"log"
 	"math/big"
 	"net"
 	"net/http"
@@ -63,7 +64,7 @@ func NewProxy(ctx *Context, serverConfig *ServerConfig, manifest *manifest.Manif
 func (p *Proxy) Run() {
 	server := p.newServer(p.Config.Proxy.HTTPS, func(w http.ResponseWriter, r *http.Request) {
 		if r.Host != "" && r.Host == p.Config.ControlPlane.Host {
-			p.Log(r, global.LevelInfo, "proxied request to plane")
+			p.Log(r, logger2.InfoLevel, "proxied request to plane")
 
 			NewRouter().ServeHTTP(w, r)
 			//NewRouter(p.ServerConfig).ServeHTTP(w, r)
@@ -86,7 +87,7 @@ func (p *Proxy) Run() {
 			if errors.Is(err, fs.ErrNotExist) {
 				err = createSelfSignedCertificates(certFile, keyFile)
 				if err != nil {
-					p.Ctx.ProxyLogger().Print(global.NewEvent(global.LevelError, "failed to create self signed certificates", global.Fields{
+					p.Ctx.ProxyLogger().Print(logger2.NewEvent(logger2.ErrorLevel, "failed to create self signed certificates", logger2.Fields{
 						"error": err.Error(),
 					}))
 					return nil, err
@@ -94,13 +95,13 @@ func (p *Proxy) Run() {
 
 				cert, err = tls.LoadX509KeyPair(certFile, keyFile)
 				if err != nil {
-					p.Ctx.ProxyLogger().Print(global.NewEvent(global.LevelError, "failed to load self signed certificates", global.Fields{
+					p.Ctx.ProxyLogger().Print(logger2.NewEvent(logger2.ErrorLevel, "failed to load self signed certificates", logger2.Fields{
 						"error": err.Error(),
 					}))
 					return nil, err
 				}
 			} else if err != nil {
-				p.Ctx.ProxyLogger().Print(global.NewEvent(global.LevelError, "certificates exist but failed to load", global.Fields{
+				p.Ctx.ProxyLogger().Print(logger2.NewEvent(logger2.ErrorLevel, "certificates exist but failed to load", logger2.Fields{
 					"error": err.Error(),
 				}))
 				return nil, err
@@ -116,7 +117,7 @@ func (p *Proxy) Run() {
 func (p *Proxy) start(proxy *http.Server) {
 	finisher := &finish.Finisher{
 		Timeout: 10 * time.Second,
-		Log: &global.FinisherLogger{
+		Log: &FinisherLogger{
 			Logger: p.Ctx.ProxyLogger(),
 		},
 	}
@@ -129,7 +130,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	go func() {
 		err := certsHandler.ListenAndServe()
 		if err != nil {
-			p.Ctx.ProxyLogger().Print(global.NewEvent(global.LevelFatal, err.Error(), nil))
+			p.Ctx.ProxyLogger().Print(logger2.NewEvent(logger2.FatalLevel, err.Error(), nil))
 			os.Exit(1)
 		}
 	}()
@@ -137,7 +138,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	go func() {
 		err := proxy.ListenAndServeTLS("", "")
 		if err != nil {
-			p.Ctx.ProxyLogger().Print(global.NewEvent(global.LevelFatal, err.Error(), nil))
+			p.Ctx.ProxyLogger().Print(logger2.NewEvent(logger2.FatalLevel, err.Error(), nil))
 			os.Exit(1)
 		}
 	}()
@@ -149,7 +150,7 @@ func (p *Proxy) handler(w http.ResponseWriter, r *http.Request) {
 	ip := p.hostToIP[r.Host]
 
 	if ip == "" {
-		p.Log(r, global.LevelInfo, "host not found")
+		p.Log(r, logger2.InfoLevel, "host not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -159,20 +160,20 @@ func (p *Proxy) handler(w http.ResponseWriter, r *http.Request) {
 		Host:   ip,
 	}).ServeHTTP(w, r)
 
-	p.Log(r, global.LevelInfo, "request proxied")
+	p.Log(r, logger2.InfoLevel, "request proxied")
 }
 
-func (p *Proxy) Log(r *http.Request, level global.Level, message string) {
+func (p *Proxy) Log(r *http.Request, level logger2.Level, message string) {
 	var ip string
 
 	if ip = r.Header.Get("X-Forwarded-For"); ip == "" {
 		ip = r.RemoteAddr
 	}
 
-	p.Ctx.ProxyLogger().Print(global.NewEvent(
+	p.Ctx.ProxyLogger().Print(logger2.NewEvent(
 		level,
 		message,
-		global.Fields{
+		logger2.Fields{
 			"tag":    "proxy",
 			"method": r.Method,
 			"host":   r.Host,
@@ -194,7 +195,7 @@ func (p *Proxy) certsCreationHandler() *http.Server {
 			http.Redirect(w, r, target, http.StatusFound)
 		})).ServeHTTP(w, r)
 
-		p.Log(r, global.LevelInfo, "redirecting to https")
+		p.Log(r, logger2.InfoLevel, "redirecting to https")
 	})
 }
 
@@ -275,4 +276,20 @@ func createSelfSignedCertificates(certFile string, keyFile string) error {
 
 	return nil
 
+}
+
+type FinisherLogger struct {
+	Logger *log.Logger
+}
+
+func (l FinisherLogger) Infof(message string, args ...any) {
+	l.Logger.Print(logger2.NewEvent(logger2.InfoLevel, fmt.Sprintf(message, args...), logger2.Fields{
+		"tag": "proxy.finisher",
+	}))
+}
+
+func (l FinisherLogger) Errorf(message string, args ...any) {
+	l.Logger.Print(logger2.NewEvent(logger2.ErrorLevel, fmt.Sprintf(message, args...), logger2.Fields{
+		"tag": "proxy.finisher",
+	}))
 }

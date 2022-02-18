@@ -29,7 +29,7 @@ func (d *Diagnostic) MustPass() error {
 	return fmt.Errorf("invalid config (run `nest medic` for details)")
 }
 
-// DiagnoseConfig runs the diagnostics on the global ServerConfig.
+// DiagnoseConfig runs the diagnostics on the logger ServerConfig.
 func DiagnoseConfig(config *ServerConfig) *Diagnostic {
 	diagnostic := Diagnostic{
 		Config: config,

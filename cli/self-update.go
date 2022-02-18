@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/go-github/v42/github"
-	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/build"
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 	"io"
@@ -32,7 +32,7 @@ func runSelfUpdate(ctx *pkg.Context, opts *selfUpdateOptions) error {
 		return err
 	}
 
-	if release.GetTagName() == global.Version {
+	if release.GetTagName() == build.Version {
 		return fmt.Errorf("you are already using the latest version of nest")
 	}
 

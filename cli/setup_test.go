@@ -10,7 +10,7 @@ import (
 
 func TestNewSetupCommand(t *testing.T) {
 	ctx := CommandTest{
-		Expectations: func(console *expect.Console) {
+		Test: func(console *expect.Console) {
 			Err(console.ExpectString("Select your provider:")).Check(t)
 			Err(console.SendLine("")).Check(t)
 			Err(console.ExpectString("Enter your repository:")).Check(t)

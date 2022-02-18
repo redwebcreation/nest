@@ -3,17 +3,17 @@ package pkg
 import (
 	"bytes"
 	"fmt"
-	"github.com/redwebcreation/nest/global"
+	logger2 "github.com/redwebcreation/nest/pkg/logger"
 	"log"
 	"os/exec"
 	"strings"
 )
 
-type git struct {
-	logger *log.Logger
+type GitWrapper struct {
+	Logger *log.Logger
 }
 
-func (g git) Clone(remote string, local string, branch string) error {
+func (g GitWrapper) Clone(remote string, local string, branch string) error {
 	if branch == "" {
 		return fmt.Errorf("branch is empty")
 	}
@@ -23,7 +23,7 @@ func (g git) Clone(remote string, local string, branch string) error {
 	return err
 }
 
-func (g git) Pull(dir string, branch string) ([]byte, error) {
+func (g GitWrapper) Pull(dir string, branch string) ([]byte, error) {
 	return g.run(dir, "pull", "origin", branch)
 }
 
@@ -42,7 +42,7 @@ func (c CommitList) Hashes() []string {
 	return hashes
 }
 
-func (g git) ListCommits(dir string, branch string) (CommitList, error) {
+func (g GitWrapper) ListCommits(dir string, branch string) (CommitList, error) {
 	out, err := g.run(dir, "log", "--pretty=%H=%s", "--no-merges", branch)
 	if err != nil {
 		return nil, err
@@ -69,11 +69,11 @@ func (g git) ListCommits(dir string, branch string) (CommitList, error) {
 	return commits, nil
 }
 
-func (g git) ReadFile(dir string, commit string, file string) ([]byte, error) {
+func (g GitWrapper) ReadFile(dir string, commit string, file string) ([]byte, error) {
 	return g.run(dir, "show", commit+":"+file)
 }
 
-func (g *git) run(dir string, args ...string) ([]byte, error) {
+func (g *GitWrapper) run(dir string, args ...string) ([]byte, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
 
@@ -84,10 +84,10 @@ func (g *git) run(dir string, args ...string) ([]byte, error) {
 	err := cmd.Run()
 	out := buf.Bytes()
 
-	g.logger.Print(global.NewEvent(
-		global.LevelDebug,
+	g.Logger.Print(logger2.NewEvent(
+		logger2.DebugLevel,
 		"running git command",
-		global.Fields{
+		logger2.Fields{
 			"cli": "git " + strings.Join(args, " "),
 			"tag": "vcs.run",
 		},
@@ -100,7 +100,7 @@ func (g *git) run(dir string, args ...string) ([]byte, error) {
 	return out, nil
 }
 
-func (g git) Exists(dir, path, commit string) bool {
+func (g GitWrapper) Exists(dir, path, commit string) bool {
 	_, err := g.ReadFile(dir, commit, path)
 	return err == nil
 }

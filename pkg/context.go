@@ -9,7 +9,7 @@ import (
 
 // Context is a struct that holds the context of the application
 type Context struct {
-	// home is the path to the global config for nest.
+	// home is the path to the logger config for nest.
 	//
 	// It resolves to the following (in order):
 	// - WithConfigHome option

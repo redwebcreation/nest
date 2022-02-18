@@ -84,6 +84,15 @@ func runSetupCommand(ctx *pkg.Context, opts *setupOptions) error {
 		Provider:   opts.Provider,
 		Repository: opts.Repository,
 		Branch:     opts.Branch,
+		Path:       ctx.ConfigFile(),
+		StoreDir:   ctx.ConfigStoreDir(),
+		Logger:     ctx.Logger(),
+		Git: &pkg.GitWrapper{
+			Logger: ctx.Logger(),
+		},
+	}
+	if err = config.Save(); err != nil {
+		return err
 	}
 
 	err = config.Clone()
@@ -91,12 +100,7 @@ func runSetupCommand(ctx *pkg.Context, opts *setupOptions) error {
 		return err
 	}
 
-	err = config.Save()
-	if err != nil {
-		return err
-	}
-
-	fmt.Fprintln(ctx.Out(), "\nYou now need to run `nest use` to specify which version of the config you want to use.")
+	fmt.Fprintln(ctx.Out(), "\nYou now need to run `nest use` to specify which version of the oldConfig you want to use.")
 
 	return nil
 }
@@ -107,7 +111,7 @@ func NewSetupCommand(ctx *pkg.Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "setup",
-		Short: "update the global config",
+		Short: "update the logger config",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.UsesFlags = cmd.Flags().NFlag() > 0

@@ -9,51 +9,53 @@ import (
 )
 
 func (c *Context) ManifestsDir() string {
-	return ensureExists(c.Home() + "/manifests")
+	return ensureDirExists(c.Home() + "/manifests")
 }
 
 func (c Context) ConfigStoreDir() string {
-	return ensureExists(c.Home() + "/config-store")
+	return ensureDirExists(c.Home() + "/config-store")
 }
 
 func (c *Context) CertsDir() string {
-	return ensureExists(c.Home() + "/certs")
+	return ensureDirExists(c.Home() + "/certs")
 }
 
 func (c Context) LogFile() string {
-	return ensureExists(c.Home() + "/logs/internal.log")
+	return ensureDirExists(c.Home() + "/logs/internal.log")
 }
 
 func (c Context) ProxyLogFile() string {
-	return ensureExists(c.Home() + "/logs/proxy.log")
+	return ensureDirExists(c.Home() + "/logs/proxy.log")
 }
 
 func (c Context) ConfigFile() string {
-	return ensureExists(c.Home() + "/config.json")
+	return ensureDirExists(c.Home() + "/config.json")
 }
 
 func (c *Context) SelfSignedKeyFile() string {
-	return ensureExists(c.CertsDir() + "/testing_key.pem")
+	return ensureDirExists(c.CertsDir() + "/testing_key.pem")
 }
 
 func (c *Context) SelfSignedCertFile() string {
-	return ensureExists(c.CertsDir() + "/testing_cert.pem")
+	return ensureDirExists(c.CertsDir() + "/testing_cert.pem")
 }
 
 func (c *Context) CloudTokenFile() string {
-	return ensureExists(c.Home() + "/cloud-token")
+	return ensureDirExists(c.Home() + "/cloud-token")
 }
 
 func (c *Context) ManifestFile(id string) string {
-	return ensureExists(c.ManifestsDir() + "/" + id + ".json")
+	return ensureDirExists(c.ManifestsDir() + "/" + id + ".json")
 }
 
-// ensureExists creates all the directories in a given path if they don't exist.
-func ensureExists(path string) string {
+// ensureDirExists creates all the directories in a given path if they don't exist.
+func ensureDirExists(path string) string {
 	// if the path contains a filename, create all its parent directories
 	filename := filepath.Base(path)
+	var isFilename bool
 	if !strings.HasPrefix(filename, ".") && strings.Contains(filename, ".") {
 		path = filepath.Dir(path)
+		isFilename = true
 	}
 
 	_, err := os.Stat(path)
@@ -63,6 +65,10 @@ func ensureExists(path string) string {
 		_ = os.MkdirAll(path, 0755)
 	case err != nil:
 		panic(err)
+	}
+
+	if isFilename {
+		path += "/" + filename
 	}
 
 	return strings.TrimRight(path, "/") // remove trailing slash

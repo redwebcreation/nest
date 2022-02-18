@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/redwebcreation/nest/build"
 	"github.com/redwebcreation/nest/cli"
 	"github.com/redwebcreation/nest/cli/cloud"
 	"github.com/redwebcreation/nest/cli/proxy"
-	"github.com/redwebcreation/nest/global"
 	"github.com/redwebcreation/nest/pkg"
+	logger2 "github.com/redwebcreation/nest/pkg/logger"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -18,15 +19,15 @@ func newNestCommand(ctx *pkg.Context) *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Long:          "Nest is a powerful service orchestrator for a single server.",
-		Version:       fmt.Sprintf("%s, build %s", global.Version, global.Commit),
+		Version:       fmt.Sprintf("%s, build %s", build.Version, build.Commit),
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			ctx.Logger().Print(global.NewEvent(
-				global.LevelDebug,
+			ctx.Logger().Print(logger2.NewEvent(
+				logger2.DebugLevel,
 				"command invoked",
-				global.Fields{
+				logger2.Fields{
 					"tag":     "command.invoke",
 					"command": cmd.Name(),
 				},
@@ -40,8 +41,8 @@ func newNestCommand(ctx *pkg.Context) *cobra.Command {
 	})
 
 	// This flag is not actually used by any of the commands.
-	// Its value is used in the init function in global/server.go
-	nest.PersistentFlags().StringP("config", "c", ctx.Home(), "set the global config path")
+	// Its value is used in the init function in logger/server.go
+	nest.PersistentFlags().StringP("config", "c", ctx.Home(), "set the logger config path")
 
 	nest.AddCommand(
 		// version
@@ -81,7 +82,7 @@ func main() {
 
 	err = newNestCommand(ctx).Execute()
 	if err != nil {
-		ctx.Logger().Print(global.NewEvent(global.LevelError, err.Error(), nil))
+		ctx.Logger().Print(logger2.NewEvent(logger2.ErrorLevel, err.Error(), nil))
 
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

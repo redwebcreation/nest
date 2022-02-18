@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 	"github.com/redwebcreation/nest/docker"
+	"github.com/redwebcreation/nest/pkg/logger"
 	"github.com/redwebcreation/nest/pkg/manifest"
 	"io"
 	"strconv"
@@ -39,7 +40,7 @@ func (d *Deployment) Start() error {
 	}
 
 	//dockerClient, err := docker.NewClient(d.ServerConfig.Network.Ipv6, d.ServerConfig.Network.Pools)
-	dockerClient, err := docker.NewClient()
+	dockerClient, err := docker.NewClient(logger.NewNullLogger())
 	if err != nil {
 		return err
 	}

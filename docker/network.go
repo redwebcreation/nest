@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
-	"github.com/redwebcreation/nest/global"
+	logger2 "github.com/redwebcreation/nest/pkg/logger"
 )
 
 func (c Client) NetworkCreate(name string, labels map[string]string) (string, error) {
@@ -16,7 +16,7 @@ func (c Client) NetworkCreate(name string, labels map[string]string) (string, er
 		return "", err
 	}
 
-	c.Log(global.LevelDebug, "creating a new network", global.Fields{
+	c.Log(logger2.DebugLevel, "creating a new network", logger2.Fields{
 		"tag":  "docker.network.create",
 		"name": name,
 		"id":   res.ID,
@@ -33,7 +33,7 @@ func (c Client) NetworkConnect(networkID, containerID string, aliases []string) 
 		return err
 	}
 
-	c.Log(global.LevelDebug, "connecting a container to a network", global.Fields{
+	c.Log(logger2.DebugLevel, "connecting a container to a network", logger2.Fields{
 		"tag":          "docker.network.connect",
 		"container_id": containerID,
 		"network_id":   networkID,

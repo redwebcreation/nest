@@ -2,13 +2,13 @@ package cli
 
 import (
 	"fmt"
-	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/build"
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 )
 
 func runVersionCommand(ctx *pkg.Context) error {
-	fmt.Fprintf(ctx.Out(), "Nest version %s, build %s\n\n", global.Version, global.Commit)
+	fmt.Fprintf(ctx.Out(), "Nest version %s, build %s\n\n", build.Version, build.Commit)
 	return nil
 }
 

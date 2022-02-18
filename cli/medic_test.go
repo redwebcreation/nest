@@ -9,13 +9,13 @@ import (
 
 func TestNewMedicCommand(t *testing.T) {
 	_ = CommandTest{
-		Expectations: func(console *expect.Console) {
+		Test: func(console *expect.Console) {
 			Err(console.ExpectString("Errors:")).Check(t)
 			Err(console.ExpectString("- no errors")).Check(t)
 			Err(console.ExpectString("Warnings:")).Check(t)
 			Err(console.ExpectString("- no warnings")).Check(t)
 		},
-		ContextOptions: []pkg.ContextOption{
+		ContextBuilder: []pkg.ContextOption{
 			// As the config is not nil, the context does not try to create it
 			pkg.WithConfig(&pkg.Config{}),
 			pkg.WithServerConfig(&pkg.ServerConfig{}),

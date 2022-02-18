@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/redwebcreation/nest/global"
+	logger2 "github.com/redwebcreation/nest/pkg/logger"
 	"io"
 	"strings"
 
@@ -56,9 +56,9 @@ func (c Client) ImagePull(i Image, handler func(event *PullEvent), registry *Reg
 	}
 
 	c.Log(
-		global.LevelDebug,
+		logger2.DebugLevel,
 		"pulled docker image",
-		global.Fields{
+		logger2.Fields{
 			"image":    image,
 			"registry": registry != nil,
 			"tag":      "docker.image.pull",

@@ -3,7 +3,7 @@ package docker
 import (
 	"fmt"
 	"github.com/docker/docker/client"
-	"github.com/redwebcreation/nest/global"
+	logger2 "github.com/redwebcreation/nest/pkg/logger"
 	"log"
 )
 
@@ -12,14 +12,11 @@ type Client struct {
 	logger *log.Logger
 }
 
-func (c Client) Log(level global.Level, message string, fields global.Fields) {
-	// we're calling the global logger only in one place
-	// makes it eas
-	//ier to change / refactor
-	c.logger.Print(global.NewEvent(level, message, fields))
+func (c Client) Log(level logger2.Level, message string, fields logger2.Fields) {
+	c.logger.Print(logger2.NewEvent(level, message, fields))
 }
 
-func NewClient() (*Client, error) {
+func NewClient(logger *log.Logger) (*Client, error) {
 	d, err := client.NewClientWithOpts(client.FromEnv)
 
 	if err != nil {
@@ -28,9 +25,6 @@ func NewClient() (*Client, error) {
 
 	return &Client{
 		client: d,
+		logger: logger,
 	}, nil
-}
-
-func newDefaultClient() (*Client, error) {
-	return NewClient()
 }

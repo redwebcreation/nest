@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/redwebcreation/nest/global"
+	logger2 "github.com/redwebcreation/nest/pkg/logger"
 	"gopkg.in/yaml.v2"
 	"io/fs"
 	"log"
@@ -12,20 +12,22 @@ import (
 	"strings"
 )
 
+// Config contains nest's configuration
 type Config struct {
 	Provider   string `json:"provider"`
 	Repository string `json:"repository"`
 	Branch     string `json:"branch"`
 	Commit     string `json:"commit"`
-	// Store is the path where configs are stored
-	Store  string `json:"-"`
+	// StoreDir is the path where server configs are stored
+	StoreDir string `json:"-"`
+	// Path is the location of the config file
 	Path   string `json:"-"`
-	logger *log.Logger
-	Git    *git
+	Logger *log.Logger
+	Git    *GitWrapper
 }
 
 func (c *Config) StorePath() string {
-	return c.Store + "/" + c.Branch + "-" + strings.Replace(c.Repository, "/", "-", -1)
+	return c.StoreDir + "/" + c.Branch + "-" + strings.Replace(c.Repository, "/", "-", -1)
 }
 
 func (c *Config) RemoteURL() string {
@@ -44,7 +46,7 @@ func (c *Config) Read(file string) ([]byte, error) {
 		return nil, err
 	}
 
-	c.log(global.LevelDebug, "reading serverConfig file", global.Fields{
+	c.log(logger2.DebugLevel, "reading serverConfig file", logger2.Fields{
 		"tag":  "ServerConfig.read",
 		"file": file,
 	})
@@ -82,7 +84,7 @@ func (c *Config) Save() error {
 		return err
 	}
 
-	c.log(global.LevelInfo, "updating config", global.Fields{
+	c.log(logger2.InfoLevel, "updating config", logger2.Fields{
 		"tag": "config.update",
 	})
 
@@ -98,25 +100,27 @@ func (c *Config) LoadCommit(commit string) error {
 func (c *Config) Clone() error {
 	_ = os.RemoveAll(c.StorePath())
 
+	fmt.Printf("%+v\n", c)
+
 	err := c.Git.Clone(c.RemoteURL(), c.StorePath(), c.Branch)
 
 	if err != nil {
 		return err
 	}
 
-	c.log(global.LevelInfo, "cloned config", global.Fields{
+	c.log(logger2.InfoLevel, "cloned config", logger2.Fields{
 		"tag": "config.clone",
 	})
 
 	return nil
 }
 
-func (c *Config) log(level global.Level, message string, fields global.Fields) {
+func (c *Config) log(level logger2.Level, message string, fields logger2.Fields) {
 	fields["commit"] = c.Commit
 	fields["branch"] = c.Branch
 	fields["location"] = c.RemoteURL()
 
-	c.logger.Print(global.NewEvent(level, message, fields))
+	c.Logger.Print(logger2.NewEvent(level, message, fields))
 }
 
 func (c *Config) Pull() error {
@@ -126,29 +130,28 @@ func (c *Config) Pull() error {
 		return err
 	}
 
-	c.log(global.LevelInfo, "pulled config", global.Fields{
+	c.log(logger2.InfoLevel, "pulled config", logger2.Fields{
 		"tag": "config.pull",
 	})
 
 	return nil
 }
 
-func NewConfig(configPath string, storePath string, logger *log.Logger) (*Config, error) {
-	if logger == nil {
-		return nil, errors.New("logger is nil")
-	}
-
+// NewConfig creates a new config
+//
+// It is not used while testing, make sure to reflect the changes you make here in the tests using the Config.
+func NewConfig(configPath string, storePath string, log *log.Logger) (*Config, error) {
 	contents, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("run `nest setup` to setup nest")
 	}
 
 	config := &Config{
-		Path:   configPath,
-		Store:  storePath,
-		logger: logger,
-		Git: &git{
-			logger: logger,
+		Path:     configPath,
+		StoreDir: storePath,
+		Logger:   log,
+		Git: &GitWrapper{
+			Logger: log,
 		},
 	}
 	err = json.Unmarshal(contents, config)

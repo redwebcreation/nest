@@ -3,7 +3,7 @@ package pkg
 import (
 	"fmt"
 	"github.com/mitchellh/go-homedir"
-	"github.com/redwebcreation/nest/global"
+	logger2 "github.com/redwebcreation/nest/pkg/logger"
 	"github.com/redwebcreation/nest/pkg/manifest"
 	"io"
 	"log"
@@ -93,7 +93,7 @@ func WithConfigHome(home string) ContextOption {
 
 func WithDefaultInternalLogger() ContextOption {
 	return func(context *Context) error {
-		context.logger = log.New(&global.WriterLogger{
+		context.logger = log.New(&logger2.FileLogger{
 			Path: context.LogFile(),
 		}, "", 0)
 
@@ -103,12 +103,12 @@ func WithDefaultInternalLogger() ContextOption {
 
 func WithDefaultProxyLogger() ContextOption {
 	return func(context *Context) error {
-		context.proxyLogger = log.New(global.CompositeLogger{
+		context.proxyLogger = log.New(logger2.CompositeLogger{
 			Loggers: []io.Writer{
-				&global.WriterLogger{
+				&logger2.FileLogger{
 					Path: context.ProxyLogFile(),
 				},
-				&global.WriterLogger{
+				&logger2.FileLogger{
 					Writer: os.Stdout,
 				},
 			},

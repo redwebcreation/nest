@@ -10,16 +10,24 @@ import (
 
 func TestNewUseCommand(t *testing.T) {
 	ctx := CommandTest{
-		Expectations: func(console *expect.Console) {
+		Test: func(console *expect.Console) {
 			Err(console.SendLine("")).Check(t)
 			Err(console.ExpectEOF()).Check(t)
 		},
-		ContextOptions: []pkg.ContextOption{
-			pkg.WithConfig(&pkg.Config{
-				Provider:   "github",
-				Repository: "redwebcreation/nest-configs",
-				Branch:     "empty-config",
-			}),
+		Setup: func(ctx *pkg.Context) []pkg.ContextOption {
+			return []pkg.ContextOption{
+				pkg.WithConfig(&pkg.Config{
+					Provider:   "github",
+					Repository: "redwebcreation/nest-configs",
+					Branch:     "empty-config",
+					Path:       ctx.ConfigFile(),
+					StoreDir:   ctx.ConfigStoreDir(),
+					Logger:     ctx.Logger(),
+					Git: &pkg.GitWrapper{
+						Logger: ctx.Logger(),
+					},
+				}),
+			}
 		},
 		NewCommand: func(ctx *pkg.Context) (*cobra.Command, error) {
 			config, err := ctx.Config()

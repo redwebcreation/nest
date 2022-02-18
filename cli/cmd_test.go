@@ -1,10 +1,8 @@
 package cli
 
 import (
-	"bytes"
 	"github.com/Netflix/go-expect"
 	"github.com/hinshun/vt10x"
-	"github.com/redwebcreation/nest/global"
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
 	"gotest.tools/v3/assert"
@@ -13,33 +11,42 @@ import (
 )
 
 type CommandTest struct {
-	Expectations   func(console *expect.Console)
+	Test           func(console *expect.Console)
 	NewCommand     func(ctx *pkg.Context) (*cobra.Command, error)
-	ContextOptions []pkg.ContextOption
+	ContextBuilder []pkg.ContextOption
+	Setup          func(ctx *pkg.Context) []pkg.ContextOption
 }
 
 func (c CommandTest) Run(t *testing.T) *pkg.Context {
 	dir, err := os.MkdirTemp("", "nest-home")
 	assert.NilError(t, err)
 
-	global.configHome = dir
-
-	// Multiplex output to a buffer as well for the raw bytes.
-	buf := new(bytes.Buffer)
-	console, _, err := vt10x.NewVT10XConsole(expect.WithStdout(buf))
+	console, _, err := vt10x.NewVT10XConsole()
 	assert.NilError(t, err)
+
 	defer console.Close()
 
 	donec := make(chan struct{})
 	go func() {
 		defer close(donec)
 
-		c.Expectations(console)
+		c.Test(console)
 	}()
 
-	options := append(c.ContextOptions, pkg.WithStdio(console.Tty(), console.Tty(), console.Tty()))
-	ctx, err := pkg.NewContext(options...)
+	ctx, err := pkg.NewContext(pkg.WithConfigHome(dir), pkg.WithStdio(console.Tty(), console.Tty(), console.Tty()))
 	assert.NilError(t, err)
+
+	for _, option := range c.ContextBuilder {
+		err = option(ctx)
+		assert.NilError(t, err)
+	}
+
+	if c.Setup != nil {
+		for _, opt := range c.Setup(ctx) {
+			err = opt(ctx)
+			assert.NilError(t, err)
+		}
+	}
 
 	cmd, err := c.NewCommand(ctx)
 	assert.NilError(t, err)
