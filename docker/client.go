@@ -3,7 +3,7 @@ package docker
 import (
 	"fmt"
 	"github.com/docker/docker/client"
-	logger2 "github.com/redwebcreation/nest/pkg/loggy"
+	"github.com/redwebcreation/nest/loggy"
 	"log"
 )
 
@@ -12,8 +12,8 @@ type Client struct {
 	logger *log.Logger
 }
 
-func (c Client) Log(level logger2.Level, message string, fields logger2.Fields) {
-	c.logger.Print(logger2.NewEvent(level, message, fields))
+func (c Client) Log(level loggy.Level, message string, fields loggy.Fields) {
+	c.logger.Print(loggy.NewEvent(level, message, fields))
 }
 
 func NewClient(logger *log.Logger) (*Client, error) {

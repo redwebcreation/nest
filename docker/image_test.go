@@ -1,7 +1,7 @@
 package docker
 
 import (
-	"github.com/redwebcreation/nest/pkg/loggy"
+	"github.com/redwebcreation/nest/loggy"
 	"gotest.tools/v3/assert"
 	"os/exec"
 	"strings"

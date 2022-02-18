@@ -5,7 +5,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
-	logger2 "github.com/redwebcreation/nest/pkg/loggy"
+	"github.com/redwebcreation/nest/loggy"
 )
 
 func (c Client) ContainerCreate(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {
@@ -14,7 +14,7 @@ func (c Client) ContainerCreate(config *container.Config, hostConfig *container.
 		return "", err
 	}
 
-	c.Log(logger2.DebugLevel, "creating a new docker container", logger2.Fields{
+	c.Log(loggy.DebugLevel, "creating a new docker container", loggy.Fields{
 		"name": containerName,
 		"id":   res.ID,
 		"tag":  "docker.container.create",
@@ -30,7 +30,7 @@ func (c Client) ContainerStart(id string) error {
 		return err
 	}
 
-	c.Log(logger2.DebugLevel, "starting a new docker container", logger2.Fields{
+	c.Log(loggy.DebugLevel, "starting a new docker container", loggy.Fields{
 		"id":  id,
 		"tag": "docker.container.start",
 	})
@@ -55,7 +55,7 @@ func (c Client) ContainerExec(id string, command string) error {
 		return err
 	}
 
-	c.Log(logger2.DebugLevel, "executing a command in a container", logger2.Fields{
+	c.Log(loggy.DebugLevel, "executing a command in a container", loggy.Fields{
 		"id":      id,
 		"command": command,
 		"tag":     "docker.container.exec",
