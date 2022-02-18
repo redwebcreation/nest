@@ -13,7 +13,7 @@ func (c Client) NetworkCreate(name string, labels map[string]string) (string, er
 		return "", err
 	}
 
-	res, err := c.client.NetworkCreate(context.Background(), name, types.NetworkCreate{
+	res, err := c.Client.NetworkCreate(context.Background(), name, types.NetworkCreate{
 		CheckDuplicate: true,
 		IPAM: &network.IPAM{
 			Driver: "default",
@@ -39,7 +39,7 @@ func (c Client) NetworkCreate(name string, labels map[string]string) (string, er
 }
 
 func (c Client) NetworkConnect(networkID, containerID string, aliases []string) error {
-	err := c.client.NetworkConnect(context.Background(), networkID, containerID, &network.EndpointSettings{
+	err := c.Client.NetworkConnect(context.Background(), networkID, containerID, &network.EndpointSettings{
 		Aliases: aliases,
 	})
 	if err != nil {

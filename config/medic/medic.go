@@ -9,9 +9,9 @@ import (
 
 // Diagnostic contains all the information about a given config diagnostic.
 type Diagnostic struct {
-	Config   *config.ServerConfig `json:"-"`
-	Warnings []Warning            `json:"warnings"`
-	Errors   []Error              `json:"errors"`
+	Config   *config.ServicesConfig `json:"-"`
+	Warnings []Warning              `json:"warnings"`
+	Errors   []Error                `json:"errors"`
 }
 
 type Warning struct {
@@ -32,8 +32,8 @@ func (d *Diagnostic) MustPass() error {
 	return fmt.Errorf("invalid config (run `nest medic` for details)")
 }
 
-// DiagnoseConfig runs the diagnostics on the ServerConfig.
-func DiagnoseConfig(config *config.ServerConfig) *Diagnostic {
+// DiagnoseConfig runs the diagnostics on the ServicesConfig.
+func DiagnoseConfig(config *config.ServicesConfig) *Diagnostic {
 	diagnostic := Diagnostic{
 		Config: config,
 	}

@@ -43,9 +43,9 @@ func WithStdio(stdin FileReader, stdout FileWriter, stderr io.Writer) Option {
 	}
 }
 
-func WithServerConfig(serverConfig *config.ServerConfig) Option {
+func WithServicesConfig(servicesConfig *config.ServicesConfig) Option {
 	return func(ctx *Context) error {
-		ctx.serverConfig = serverConfig
+		ctx.servicesConfig = servicesConfig
 
 		return nil
 	}

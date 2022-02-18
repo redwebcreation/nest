@@ -18,7 +18,7 @@ type Config struct {
 	Repository string `json:"repository"`
 	Branch     string `json:"branch"`
 	Commit     string `json:"commit"`
-	// StoreDir is the path where server configs are stored
+	// StoreDir is the path where services config are stored
 	StoreDir string `json:"-"`
 	// Path is the location of the config file
 	Path   string `json:"-"`
@@ -50,15 +50,15 @@ func (c *Config) Read(file string) ([]byte, error) {
 		return nil, err
 	}
 
-	c.log(loggy.DebugLevel, "reading serverConfig file", loggy.Fields{
-		"tag":  "ServerConfig.read",
+	c.log(loggy.DebugLevel, "reading services config file", loggy.Fields{
+		"tag":  "ServicesConfig.read",
 		"file": file,
 	})
 
 	return c.Git.ReadFile(configPath, c.Commit, file)
 }
 
-func (c *Config) ServerConfig() (*ServerConfig, error) {
+func (c *Config) ServerConfig() (*ServicesConfig, error) {
 	configFile := "nest.yaml"
 	if c.Git.Exists(c.StorePath(), "nest.yml", c.Commit) {
 		configFile = "nest.yml"
@@ -69,7 +69,7 @@ func (c *Config) ServerConfig() (*ServerConfig, error) {
 		return nil, err
 	}
 
-	config := &ServerConfig{}
+	config := &ServicesConfig{}
 	err = yaml.Unmarshal(contents, config)
 	if err != nil {
 		return nil, err

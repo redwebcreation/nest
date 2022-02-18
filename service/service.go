@@ -17,7 +17,7 @@ type Service struct {
 	// Include is the path to a file containing the service config.
 	Include string `yaml:"include" json:"include"`
 
-	// Image name without a tag or registry serverConfig.
+	// Image name without a registry.
 	Image string `yaml:"image" json:"image"`
 
 	// Hosts the service responds to.
@@ -88,7 +88,7 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(any) error) error {
 			// todo: handle include
 			delete(services, name)
 			continue
-			//bytes, err := Server.Read(service.Include)
+			//bytes, err := ServicesConfig.Read(service.Include)
 			//if err != nil {
 			//	return err
 			//}

@@ -22,9 +22,9 @@ type Context struct {
 	// config contains the path to nest's config file.
 	// it is resolved once and cached.
 	config *config.Config
-	// serverConfig contains the resolved server config from the config.
+	// servicesConfig contains the resolved server config from the config.
 	// it is resolved once and cached.
-	serverConfig *config.ServerConfig
+	servicesConfig *config.ServicesConfig
 	// out is a minimal interface to write to stdout.
 	out FileWriter
 	// in is a minimal interface to read from stdin.
@@ -54,28 +54,28 @@ func (c *Context) Config() (*config.Config, error) {
 	return c.config, nil
 }
 
-// ServerConfig returns the cached server config or loads it if it hasn't been loaded yet.
-func (c *Context) ServerConfig() (*config.ServerConfig, error) {
+// ServicesConfig returns the cached services config or loads it if it hasn't been loaded yet.
+func (c *Context) ServicesConfig() (*config.ServicesConfig, error) {
 	nc, err := c.Config()
 	if err != nil {
 		return nil, err
 	}
 
-	if c.serverConfig == nil {
-		serverConfig, err := nc.ServerConfig()
+	if c.servicesConfig == nil {
+		servicesConfig, err := nc.ServerConfig()
 		if err != nil {
 			return nil, err
 		}
 
-		c.serverConfig = serverConfig
+		c.servicesConfig = servicesConfig
 	}
 
-	err = medic.DiagnoseConfig(c.serverConfig).MustPass()
+	err = medic.DiagnoseConfig(c.servicesConfig).MustPass()
 	if err != nil {
 		return nil, err
 	}
 
-	return c.serverConfig, nil
+	return c.servicesConfig, nil
 }
 
 func (c *Context) Out() FileWriter {

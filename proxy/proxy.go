@@ -30,20 +30,20 @@ import (
 
 type Proxy struct {
 	Ctx                *context2.Context
-	Config             *config.ServerConfig
+	Config             *config.ServicesConfig
 	CertificateManager *autocert.Manager
 	hostToIP           map[string]string
 }
 
-func NewProxy(ctx *context2.Context, serverConfig *config.ServerConfig, manifest *deploy.Manifest) *Proxy {
+func NewProxy(ctx *context2.Context, servicesConfig *config.ServicesConfig, manifest *deploy.Manifest) *Proxy {
 	proxy := &Proxy{
 		Ctx:      ctx,
-		Config:   serverConfig,
+		Config:   servicesConfig,
 		hostToIP: make(map[string]string),
 	}
 
 	// todo: get container ip
-	//for _, service := range serverConfig.Services {
+	//for _, service := range servicesConfig.Services {
 	//	for _, host := range service.Hosts {
 	//		proxy.hostToIP[host] = manifest.Containers[service.Name].IP
 	//	}

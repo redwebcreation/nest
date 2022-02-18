@@ -12,7 +12,7 @@ import (
 func New(ctx *context.Context) *gin.Engine {
 	// config is already resolved at this point
 	config, _ := ctx.Config()
-	server, _ := ctx.ServerConfig()
+	servicesConfig, _ := ctx.ServicesConfig()
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -29,17 +29,17 @@ func New(ctx *context.Context) *gin.Engine {
 
 	router.GET("/plane/v1/server", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"Commit":     config.Commit,
+			"commit":     config.Commit,
 			"branch":     config.Branch,
 			"repository": config.Repository,
 			"remote":     config.RemoteURL(),
 			"provider":   config.Provider,
-			"server":     server,
+			"config":     servicesConfig,
 		})
 	})
 
 	router.GET("/plane/v1/deploy", func(context *gin.Context) {
-		deployment := deploy.NewDeployment(server, ctx.Logger(), ctx.ManifestManager(), ctx.SubnetRegistryPath())
+		deployment := deploy.NewDeployment(servicesConfig, ctx.Logger(), ctx.ManifestManager(), ctx.SubnetRegistryPath())
 
 		go func() {
 			err := deployment.Start()

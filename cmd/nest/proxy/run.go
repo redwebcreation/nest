@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var config *config2.ServerConfig
+var config *config2.ServicesConfig
 
 var http string
 var https string
@@ -45,7 +45,7 @@ func runRunCommand(ctx *context.Context, opts *runOptions) error {
 
 // NewRunCommand creates a new `run` command
 func NewRunCommand(ctx *context.Context) *cobra.Command {
-	resolvedConfig, err := ctx.ServerConfig()
+	resolvedConfig, err := ctx.ServicesConfig()
 
 	cmd := &cobra.Command{
 		Use:   "run [deployment]",

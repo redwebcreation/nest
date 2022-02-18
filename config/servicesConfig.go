@@ -8,8 +8,8 @@ import (
 	"sync"
 )
 
-// ServerConfig represents nest's config
-type ServerConfig struct {
+// ServicesConfig represents nest's config
+type ServicesConfig struct {
 	Services     service.ServiceMap `yaml:"services" json:"services"`
 	Registries   RegistryMap        `yaml:"registries" json:"registries"`
 	ControlPlane struct {
@@ -24,11 +24,31 @@ type ServerConfig struct {
 }
 
 type NetworkConfiguration struct {
-	Policy  string   `json:"policy"` // "smallest_subnet", "/{mask size}"
-	Subnets []string `json:"subnets"`
+	// todo: implement smallest_subnet policy once subnetter is thoroughly tested
+	Policy  string   `yaml:"policy" json:"policy"` // "smallest_subnet", "/{mask size}"
+	Subnets []string `yaml:"subnets" json:"subnets"`
 }
 
-func (n NetworkConfiguration) Manager(registryPath string, m *sync.Mutex) *docker.Subnetter {
+var defaultIpv4Pool = []string{"10.0.0.0/8"}
+
+func (n *NetworkConfiguration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type plain NetworkConfiguration
+	if err := unmarshal((*plain)(n)); err != nil {
+		return err
+	}
+
+	if n.Policy == "" {
+		n.Policy = "/24"
+	}
+
+	if n.Subnets == nil {
+		n.Subnets = defaultIpv4Pool
+	}
+
+	return nil
+}
+
+func (n *NetworkConfiguration) Manager(registryPath string, m *sync.Mutex) *docker.Subnetter {
 	var subnets []iplib.Net4
 
 	for _, subnet := range n.Subnets {

@@ -8,7 +8,7 @@ import (
 )
 
 func runMedicCommand(ctx *context.Context) error {
-	sc, err := ctx.ServerConfig()
+	sc, err := ctx.ServicesConfig()
 	if err != nil {
 		return err
 	}

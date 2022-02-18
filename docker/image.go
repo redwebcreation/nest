@@ -46,7 +46,7 @@ func (c Client) ImagePull(i Image, handler func(event *PullEvent), registry *Reg
 		image = registry.URLFor(image)
 	}
 
-	events, err := c.client.ImagePull(context.Background(), image, options)
+	events, err := c.Client.ImagePull(context.Background(), image, options)
 	if err != nil {
 		if strings.Contains(err.Error(), "manifest for "+image+" not found") || strings.Contains(err.Error(), "repository does not exist") {
 			return ErrImageNotFound

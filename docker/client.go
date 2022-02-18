@@ -8,7 +8,9 @@ import (
 )
 
 type Client struct {
-	client        *client.Client
+	// Client is the underlying docker client
+	// todo: make this private
+	Client        *client.Client
 	logger        *log.Logger
 	networkConfig *Subnetter
 }
@@ -25,7 +27,7 @@ func NewClient(logger *log.Logger, networkConf *Subnetter) (*Client, error) {
 
 	// todo: ipv6
 	return &Client{
-		client:        d,
+		Client:        d,
 		logger:        logger,
 		networkConfig: networkConf,
 	}, nil

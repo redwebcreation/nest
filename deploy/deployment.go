@@ -14,7 +14,7 @@ import (
 
 type Deployment struct {
 	ID                 string
-	Server             *config.ServerConfig
+	ServicesConfig     *config.ServicesConfig
 	Events             chan Event
 	Manifest           *Manifest
 	Logger             *log.Logger
@@ -25,12 +25,12 @@ var (
 	ErrDeploymentFailed = errors.New("deployment failed")
 )
 
-func NewDeployment(server *config.ServerConfig, logger *log.Logger, manager *Manager, subnetRegistryPath string) *Deployment {
+func NewDeployment(servicesConfig *config.ServicesConfig, logger *log.Logger, manager *Manager, subnetRegistryPath string) *Deployment {
 	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	return &Deployment{
 		ID:                 id,
-		Server:             server,
+		ServicesConfig:     servicesConfig,
 		Events:             make(chan Event),
 		Manifest:           manager.NewManifest(id),
 		Logger:             logger,
@@ -39,13 +39,13 @@ func NewDeployment(server *config.ServerConfig, logger *log.Logger, manager *Man
 }
 
 func (d *Deployment) Start() error {
-	graph, err := d.Server.Services.GroupInLayers()
+	graph, err := d.ServicesConfig.Services.GroupInLayers()
 	if err != nil {
 		return err
 	}
 
 	var m sync.Mutex
-	dockerClient, err := docker.NewClient(d.Logger, d.Server.Network.Manager(d.SubnetRegistryPath, &m))
+	dockerClient, err := docker.NewClient(d.Logger, d.ServicesConfig.Network.Manager(d.SubnetRegistryPath, &m))
 	if err != nil {
 		return err
 	}

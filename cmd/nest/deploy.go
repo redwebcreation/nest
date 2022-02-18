@@ -9,7 +9,7 @@ import (
 )
 
 func runDeployCommand(ctx *context.Context) error {
-	config, err := ctx.ServerConfig()
+	config, err := ctx.ServicesConfig()
 	if err != nil {
 		return err
 	}
