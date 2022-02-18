@@ -2,13 +2,8 @@ package deploy
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
-)
-
-var (
-	ErrNotFound = errors.New("manifest not found")
 )
 
 type Manifest struct {

@@ -117,8 +117,12 @@ func (d *Pipeline) ConnectRequiredServices(networkID string) error {
 	return nil
 }
 
+func (d *Pipeline) ContainerName() string {
+	return "nest_" + d.Service.Name + "_" + strings.Replace(d.Service.Image, ":", "_", 1) + "_" + d.Deployment.ID
+}
+
 func (d *Pipeline) CreateContainer() (string, error) {
-	containerName := "nest_" + d.Service.Name + "_" + strings.Replace(d.Service.Image, ":", "_", 1) + "_" + d.Deployment.ID
+	containerName := d.ContainerName()
 
 	var networking *network.NetworkingConfig
 
@@ -172,6 +176,7 @@ func (d *Pipeline) StartContainer(containerID string) error {
 
 var (
 	ErrContainerNotRunning = errors.New("container is not running")
+	ErrContainerTimeout    = errors.New("container is not running (timeout)")
 )
 
 // EnsureContainerIsRunning will wait for the container to start and then return
@@ -202,7 +207,7 @@ func (d *Pipeline) EnsureContainerIsRunning(containerID string) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("container is not running (timed out)")
+			return ErrContainerTimeout
 		case <-time.After(250 * time.Millisecond):
 			info, err = d.Docker.Client.ContainerInspect(ctx, containerID)
 			if err != nil {
