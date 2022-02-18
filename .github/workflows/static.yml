@@ -1,9 +1,17 @@
 name: Static
 on:
   push:
+    paths-ignore:
+      - README.md
+      - .gitignore
+      - .gitattributes
     branches:
       - next
   pull_request:
+    paths-ignore:
+      - README.md
+      - .gitignore
+      - .gitattributes
     branches:
       - next
   workflow_dispatch:
