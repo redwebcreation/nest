@@ -3,6 +3,7 @@ package deploy
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 )
 
@@ -30,7 +31,7 @@ func (m Manager) NewManifest(id string) *Manifest {
 }
 
 func (m Manager) LoadWithID(path string) (*Manifest, error) {
-	bytes, err := os.ReadFile(path)
+	bytes, err := os.ReadFile(m.Path + "/" + path)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +52,7 @@ func (m Manager) Latest() (*Manifest, error) {
 	}
 
 	if len(manifests) == 0 {
-		return nil, ErrNotFound
+		return nil, fmt.Errorf("no manifest found: run `nest deploy`")
 	}
 
 	latest := manifests[len(manifests)-1].Name()

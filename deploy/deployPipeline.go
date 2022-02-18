@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -169,6 +170,10 @@ func (d *Pipeline) StartContainer(containerID string) error {
 	return nil
 }
 
+var (
+	ErrContainerNotRunning = errors.New("container is not running")
+)
+
 // EnsureContainerIsRunning will wait for the container to start and then return
 // an error if the container is not running after either :
 // - 10 seconds if the container has no health-check
@@ -197,32 +202,34 @@ func (d *Pipeline) EnsureContainerIsRunning(containerID string) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("container %s is not running (timed out)", containerID)
-		default:
+			return fmt.Errorf("container is not running (timed out)")
+		case <-time.After(250 * time.Millisecond):
 			info, err = d.Docker.Client.ContainerInspect(ctx, containerID)
 			if err != nil {
 				return err
 			}
 
-			if info.State.Health != nil {
-				if info.State.Health.Status == types.Healthy {
+			if info.RestartCount > 0 || info.State.ExitCode != 0 {
+				return ErrContainerNotRunning
+			}
+
+			hasHealthchecks := info.State.Health != nil
+
+			if !hasHealthchecks {
+				if info.State.Status == "running" {
 					return nil
 				}
 
-				if info.State.Health.Status == types.Unhealthy {
-					return fmt.Errorf("container %s is not running (unhealthy)", containerID)
-				}
-
-				if info.State.Health.Status == types.Starting {
-					continue
-				}
+				return ErrContainerNotRunning
 			}
 
-			if info.State.Status != "running" || info.RestartCount > 0 || info.State.ExitCode != 1 {
-				return fmt.Errorf("container %s is not running", containerID)
+			if info.State.Health.Status == types.Healthy {
+				return nil
 			}
 
-			time.Sleep(time.Millisecond * 500)
+			if info.State.Health.Status == types.Unhealthy {
+				return ErrContainerNotRunning
+			}
 		}
 	}
 }
