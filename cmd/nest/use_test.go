@@ -15,8 +15,8 @@ func TestNewUseCommand(t *testing.T) {
 			Err(console.SendLine("")).Check(t)
 			Err(console.ExpectEOF()).Check(t)
 		},
-		Setup: func(ctx *context.Context) []context.ContextOption {
-			return []context.ContextOption{
+		Setup: func(ctx *context.Context) []context.Option {
+			return []context.Option{
 				context.WithConfig(&config.Config{
 					Provider:   "github",
 					Repository: "redwebcreation/nest-configs",
@@ -24,7 +24,7 @@ func TestNewUseCommand(t *testing.T) {
 					Path:       ctx.ConfigFile(),
 					StoreDir:   ctx.ConfigStoreDir(),
 					Logger:     ctx.Logger(),
-					Git: &config.GitWrapper{
+					Git: &config.Git{
 						Logger: ctx.Logger(),
 					},
 				}),

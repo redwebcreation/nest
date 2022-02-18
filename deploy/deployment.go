@@ -57,7 +57,7 @@ func (d *Deployment) Start() error {
 			go func() {
 				defer wg.Done()
 
-				pipeline := DeployPipeline{
+				pipeline := Pipeline{
 					Deployment:      d,
 					Docker:          dockerClient,
 					Service:         s,

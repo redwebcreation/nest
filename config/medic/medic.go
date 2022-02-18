@@ -13,6 +13,7 @@ type Diagnostic struct {
 	Warnings []Warning            `json:"warnings"`
 	Errors   []Error              `json:"errors"`
 }
+
 type Warning struct {
 	Title  string `json:"title"`
 	Advice string `json:"advice,omitempty"`
@@ -37,8 +38,8 @@ func DiagnoseConfig(config *config.ServerConfig) *Diagnostic {
 		Config: config,
 	}
 
-	for _, service := range diagnostic.Config.Services {
-		diagnostic.ValidateService(service)
+	for _, s := range diagnostic.Config.Services {
+		diagnostic.ValidateService(s)
 	}
 
 	diagnostic.EnsureNoCircularDependenciesInServices()

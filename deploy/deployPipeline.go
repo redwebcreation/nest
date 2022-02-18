@@ -14,18 +14,18 @@ type Event struct {
 	Value   any
 }
 
-type DeployPipeline struct {
+type Pipeline struct {
 	Docker          *docker.Client
 	Deployment      *Deployment
 	Service         *service.Service
 	HasDependencies bool
 }
 
-func (d *DeployPipeline) Log(v any) {
+func (d *Pipeline) Log(v any) {
 	d.Deployment.Events <- Event{d.Service, v}
 }
 
-func (d DeployPipeline) Run() error {
+func (d Pipeline) Run() error {
 	if d.HasDependencies {
 		net, err := d.CreateServiceNetwork()
 		if err != nil {
@@ -67,7 +67,7 @@ func (d DeployPipeline) Run() error {
 	return nil
 }
 
-func (d *DeployPipeline) PullImage() error {
+func (d *Pipeline) PullImage() error {
 	image := docker.Image(d.Service.Image)
 
 	return d.Docker.ImagePull(image, func(event *docker.PullEvent) {
@@ -75,7 +75,7 @@ func (d *DeployPipeline) PullImage() error {
 	}, d.Deployment.Server.Registries[d.Service.Registry])
 }
 
-func (d *DeployPipeline) CreateServiceNetwork() (string, error) {
+func (d *Pipeline) CreateServiceNetwork() (string, error) {
 	name := fmt.Sprintf("%s_%s", d.Service.Name, d.Deployment.ID)
 
 	net, err := d.Docker.NetworkCreate(name, map[string]string{
@@ -92,7 +92,7 @@ func (d *DeployPipeline) CreateServiceNetwork() (string, error) {
 	return net, nil
 }
 
-func (d *DeployPipeline) ConnectRequiredServices(networkID string) error {
+func (d *Pipeline) ConnectRequiredServices(networkID string) error {
 	for _, require := range d.Service.Requires {
 		err := d.Docker.NetworkConnect(networkID, d.Deployment.Manifest.Containers[require], []string{require})
 
@@ -104,7 +104,7 @@ func (d *DeployPipeline) ConnectRequiredServices(networkID string) error {
 	return nil
 }
 
-func (d *DeployPipeline) CreateContainer() (string, error) {
+func (d *Pipeline) CreateContainer() (string, error) {
 	containerName := "nest_" + d.Service.Name + "_" + strings.Replace(d.Service.Image, ":", "_", 1) + "_" + d.Deployment.ID
 
 	var networking *network.NetworkingConfig
@@ -139,7 +139,7 @@ func (d *DeployPipeline) CreateContainer() (string, error) {
 	return c, nil
 }
 
-func (d *DeployPipeline) RunHooks(id string, commands []string) error {
+func (d *Pipeline) RunHooks(id string, commands []string) error {
 	for _, command := range commands {
 		err := d.Docker.ContainerExec(id, command)
 		if err != nil {
@@ -152,7 +152,7 @@ func (d *DeployPipeline) RunHooks(id string, commands []string) error {
 	return nil
 }
 
-func (d *DeployPipeline) StartContainer(containerID string) error {
+func (d *Pipeline) StartContainer(containerID string) error {
 	err := d.Docker.ContainerStart(containerID)
 	if err != nil {
 		return err

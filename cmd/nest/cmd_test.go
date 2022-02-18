@@ -13,8 +13,8 @@ import (
 type CommandTest struct {
 	Test           func(console *expect.Console)
 	NewCommand     func(ctx *context.Context) (*cobra.Command, error)
-	ContextBuilder []context.ContextOption
-	Setup          func(ctx *context.Context) []context.ContextOption
+	ContextBuilder []context.Option
+	Setup          func(ctx *context.Context) []context.Option
 }
 
 func (c CommandTest) Run(t *testing.T) *context.Context {
@@ -33,7 +33,7 @@ func (c CommandTest) Run(t *testing.T) *context.Context {
 		c.Test(console)
 	}()
 
-	ctx, err := context.NewContext(context.WithConfigHome(dir), context.WithStdio(console.Tty(), console.Tty(), console.Tty()))
+	ctx, err := context.New(context.WithConfigHome(dir), context.WithStdio(console.Tty(), console.Tty(), console.Tty()))
 	assert.NilError(t, err)
 
 	for _, option := range c.ContextBuilder {

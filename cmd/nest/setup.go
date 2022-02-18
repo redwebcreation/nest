@@ -88,7 +88,7 @@ func runSetupCommand(ctx *context.Context, opts *setupOptions) error {
 		Path:       ctx.ConfigFile(),
 		StoreDir:   ctx.ConfigStoreDir(),
 		Logger:     ctx.Logger(),
-		Git: &config.GitWrapper{
+		Git: &config.Git{
 			Logger: ctx.Logger(),
 		},
 	}

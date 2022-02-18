@@ -16,7 +16,7 @@ func TestNewMedicCommand(t *testing.T) {
 			Err(console.ExpectString("Warnings:")).Check(t)
 			Err(console.ExpectString("- no warnings")).Check(t)
 		},
-		ContextBuilder: []context.ContextOption{
+		ContextBuilder: []context.Option{
 			// As the config is not nil, the context does not try to create it
 			context.WithConfig(&config.Config{}),
 			context.WithServerConfig(&config.ServerConfig{}),

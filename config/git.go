@@ -9,11 +9,11 @@ import (
 	"strings"
 )
 
-type GitWrapper struct {
+type Git struct {
 	Logger *log.Logger
 }
 
-func (g GitWrapper) Clone(remote string, local string, branch string) error {
+func (g Git) Clone(remote string, local string, branch string) error {
 	if branch == "" {
 		return fmt.Errorf("branch is empty")
 	}
@@ -23,7 +23,7 @@ func (g GitWrapper) Clone(remote string, local string, branch string) error {
 	return err
 }
 
-func (g GitWrapper) Pull(dir string, branch string) ([]byte, error) {
+func (g Git) Pull(dir string, branch string) ([]byte, error) {
 	return g.run(dir, "pull", "origin", branch)
 }
 
@@ -42,7 +42,7 @@ func (c CommitList) Hashes() []string {
 	return hashes
 }
 
-func (g GitWrapper) ListCommits(dir string, branch string) (CommitList, error) {
+func (g Git) ListCommits(dir string, branch string) (CommitList, error) {
 	out, err := g.run(dir, "log", "--pretty=%H=%s", "--no-merges", branch)
 	if err != nil {
 		return nil, err
@@ -69,11 +69,11 @@ func (g GitWrapper) ListCommits(dir string, branch string) (CommitList, error) {
 	return commits, nil
 }
 
-func (g GitWrapper) ReadFile(dir string, commit string, file string) ([]byte, error) {
+func (g Git) ReadFile(dir string, commit string, file string) ([]byte, error) {
 	return g.run(dir, "show", commit+":"+file)
 }
 
-func (g *GitWrapper) run(dir string, args ...string) ([]byte, error) {
+func (g *Git) run(dir string, args ...string) ([]byte, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
 
@@ -100,7 +100,7 @@ func (g *GitWrapper) run(dir string, args ...string) ([]byte, error) {
 	return out, nil
 }
 
-func (g GitWrapper) Exists(dir, path, commit string) bool {
+func (g Git) Exists(dir, path, commit string) bool {
 	_, err := g.ReadFile(dir, commit, path)
 	return err == nil
 }

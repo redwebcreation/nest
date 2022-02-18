@@ -1,7 +1,6 @@
 package cloud
 
 import (
-	"github.com/redwebcreation/nest/cloud"
 	"github.com/redwebcreation/nest/context"
 	"github.com/spf13/cobra"
 )
@@ -12,8 +11,6 @@ func NewRootCommand(ctx *context.Context) *cobra.Command {
 		Use:   "cloud",
 		Short: "interact with nest cloud",
 	}
-
-	root.PersistentFlags().StringVar(&cloud.Endpoint, "endpoint", cloud.Endpoint, "nest cloud endpoint")
 
 	root.AddCommand(
 		// login

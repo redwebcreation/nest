@@ -23,7 +23,7 @@ type Config struct {
 	// Path is the location of the config file
 	Path   string `json:"-"`
 	Logger *log.Logger
-	Git    *GitWrapper
+	Git    *Git
 }
 
 func (c *Config) StorePath() string {
@@ -142,8 +142,7 @@ func (c *Config) Pull() error {
 }
 
 // NewConfig creates a new config
-//
-// It is not used while testing, make sure to reflect the changes you make here in the tests using the Config.
+// It isn't used while testing, make sure to reflect the changes you make here in the tests using the Config.
 func NewConfig(configPath string, storePath string, log *log.Logger) (*Config, error) {
 	contents, err := os.ReadFile(configPath)
 	if err != nil {
@@ -154,7 +153,7 @@ func NewConfig(configPath string, storePath string, log *log.Logger) (*Config, e
 		Path:     configPath,
 		StoreDir: storePath,
 		Logger:   log,
-		Git: &GitWrapper{
+		Git: &Git{
 			Logger: log,
 		},
 	}

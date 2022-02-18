@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"github.com/redwebcreation/nest/config"
-	"github.com/redwebcreation/nest/deploy"
 	"github.com/redwebcreation/nest/loggy"
 	"io"
 	"log"
@@ -12,7 +11,7 @@ import (
 	"strings"
 )
 
-type ContextOption func(*Context) error
+type Option func(*Context) error
 
 // FileWriter provides a minimal interface for Stdin.
 type FileWriter interface {
@@ -26,7 +25,7 @@ type FileReader interface {
 	Fd() uintptr
 }
 
-func WithConfig(config *config.Config) ContextOption {
+func WithConfig(config *config.Config) Option {
 	return func(ctx *Context) error {
 		ctx.config = config
 
@@ -34,7 +33,7 @@ func WithConfig(config *config.Config) ContextOption {
 	}
 }
 
-func WithStdio(stdin FileReader, stdout FileWriter, stderr io.Writer) ContextOption {
+func WithStdio(stdin FileReader, stdout FileWriter, stderr io.Writer) Option {
 	return func(ctx *Context) error {
 		ctx.in = stdin
 		ctx.out = stdout
@@ -44,7 +43,7 @@ func WithStdio(stdin FileReader, stdout FileWriter, stderr io.Writer) ContextOpt
 	}
 }
 
-func WithServerConfig(serverConfig *config.ServerConfig) ContextOption {
+func WithServerConfig(serverConfig *config.ServerConfig) Option {
 	return func(ctx *Context) error {
 		ctx.serverConfig = serverConfig
 
@@ -52,7 +51,7 @@ func WithServerConfig(serverConfig *config.ServerConfig) ContextOption {
 	}
 }
 
-func WithDefaultConfigHome() ContextOption {
+func WithDefaultConfigHome() Option {
 	return func(context *Context) error {
 		for k, arg := range os.Args {
 			if arg != "--config" && arg != "-c" {
@@ -85,14 +84,14 @@ func WithDefaultConfigHome() ContextOption {
 	}
 }
 
-func WithConfigHome(home string) ContextOption {
+func WithConfigHome(home string) Option {
 	return func(context *Context) error {
 		context.home = home
 		return nil
 	}
 }
 
-func WithDefaultInternalLogger() ContextOption {
+func WithDefaultInternalLogger() Option {
 	return func(context *Context) error {
 		context.logger = log.New(&loggy.FileLogger{
 			Path: context.LogFile(),
@@ -102,7 +101,7 @@ func WithDefaultInternalLogger() ContextOption {
 	}
 }
 
-func WithDefaultProxyLogger() ContextOption {
+func WithDefaultProxyLogger() Option {
 	return func(context *Context) error {
 		context.proxyLogger = log.New(loggy.CompositeLogger{
 			Loggers: []io.Writer{
@@ -119,14 +118,7 @@ func WithDefaultProxyLogger() ContextOption {
 	}
 }
 
-func WithManifestManager(manifestManager *deploy.Manager) ContextOption {
-	return func(context *Context) error {
-		context.manifestManager = manifestManager
-		return nil
-	}
-}
-
-func WithLogger(logger *log.Logger) ContextOption {
+func WithLogger(logger *log.Logger) Option {
 	return func(context *Context) error {
 		context.logger = logger
 		return nil

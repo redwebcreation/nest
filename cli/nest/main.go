@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/redwebcreation/nest/build"
-	"github.com/redwebcreation/nest/command/nest"
-	"github.com/redwebcreation/nest/command/nest/cloud"
-	"github.com/redwebcreation/nest/command/nest/proxy"
+	"github.com/redwebcreation/nest/cmd/nest"
+	"github.com/redwebcreation/nest/cmd/nest/cloud"
+	"github.com/redwebcreation/nest/cmd/nest/proxy"
 	"github.com/redwebcreation/nest/context"
 	"github.com/redwebcreation/nest/loggy"
 	"github.com/spf13/cobra"
@@ -72,7 +72,7 @@ func newNestCommand(ctx *context.Context) *cobra.Command {
 }
 
 func main() {
-	ctx, err := context.NewContext()
+	ctx, err := context.New()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

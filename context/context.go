@@ -40,26 +40,15 @@ type Context struct {
 	manifestManager *deploy.Manager
 }
 
-// HasConfig returns true if the serverConfig has been loaded or the config file exists.
-func (c *Context) HasConfig() bool {
-	if c.serverConfig != nil {
-		return true
-	}
-
-	_, err := os.ReadFile(c.ConfigFile())
-
-	return err == nil
-}
-
 // Config returns the cached nest config or loads it if it hasn't been loaded yet.
 func (c *Context) Config() (*config.Config, error) {
 	if c.config == nil {
-		config, err := config.NewConfig(c.ConfigFile(), c.ConfigStoreDir(), c.Logger())
+		cf, err := config.NewConfig(c.ConfigFile(), c.ConfigStoreDir(), c.Logger())
 		if err != nil {
 			return nil, err
 		}
 
-		c.config = config
+		c.config = cf
 	}
 
 	return c.config, nil
@@ -67,13 +56,13 @@ func (c *Context) Config() (*config.Config, error) {
 
 // ServerConfig returns the cached server config or loads it if it hasn't been loaded yet.
 func (c *Context) ServerConfig() (*config.ServerConfig, error) {
-	config, err := c.Config()
+	nc, err := c.Config()
 	if err != nil {
 		return nil, err
 	}
 
 	if c.serverConfig == nil {
-		serverConfig, err := config.ServerConfig()
+		serverConfig, err := nc.ServerConfig()
 		if err != nil {
 			return nil, err
 		}
@@ -120,6 +109,7 @@ func (c Context) Home() string {
 func (c Context) ProxyLogger() *log.Logger {
 	return c.proxyLogger
 }
+
 func (c Context) Logger() *log.Logger {
 	return c.logger
 }
@@ -134,9 +124,9 @@ func (c Context) ManifestManager() *deploy.Manager {
 	return c.manifestManager
 }
 
-func NewContext(opts ...ContextOption) (*Context, error) {
+func New(opts ...Option) (*Context, error) {
 	ctx := &Context{}
-	defaultOptions := []ContextOption{
+	defaultOptions := []Option{
 		WithDefaultConfigHome(),
 		WithDefaultInternalLogger(),
 		WithDefaultProxyLogger(),

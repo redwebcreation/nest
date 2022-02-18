@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/redwebcreation/nest/build"
 	"io"
 	"net/http"
 )
@@ -13,9 +14,6 @@ type client struct {
 	endpoint string
 	token    string
 }
-
-// Endpoint is updated at build time
-var Endpoint = "http://localhost:8000/api/v1"
 
 var (
 	// ErrResourceNotFound is returned when the requested resource is not found
@@ -70,7 +68,7 @@ func (c *client) Ping() error {
 func NewClient(token string) *client {
 	return &client{
 		client:   &http.Client{},
-		endpoint: Endpoint,
+		endpoint: build.Endpoint,
 		token:    token,
 	}
 }
