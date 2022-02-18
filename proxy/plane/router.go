@@ -1,4 +1,4 @@
-package api
+package plane
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/redwebcreation/nest/deploy"
 )
 
-func NewRouter(ctx *context.Context) *gin.Engine {
+func New(ctx *context.Context) *gin.Engine {
 	// config is already resolved at this point
 	config, _ := ctx.Config()
 	server, _ := ctx.ServerConfig()
@@ -19,7 +19,7 @@ func NewRouter(ctx *context.Context) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
-	router.GET("/api/v1/version", func(c *gin.Context) {
+	router.GET("/plane/v1/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"software": "nest",
 			"version":  build.Version,
@@ -27,7 +27,7 @@ func NewRouter(ctx *context.Context) *gin.Engine {
 		})
 	})
 
-	router.GET("/api/v1/server", func(c *gin.Context) {
+	router.GET("/plane/v1/server", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"Commit":     config.Commit,
 			"branch":     config.Branch,
@@ -38,7 +38,7 @@ func NewRouter(ctx *context.Context) *gin.Engine {
 		})
 	})
 
-	router.GET("/api/v1/deploy", func(context *gin.Context) {
+	router.GET("/plane/v1/deploy", func(context *gin.Context) {
 		deployment := deploy.NewDeployment(server, ctx.ManifestManager())
 
 		go func() {
@@ -53,7 +53,7 @@ func NewRouter(ctx *context.Context) *gin.Engine {
 
 		context.Header("Access-Control-Allow-Origin", "*")
 		context.Header("Access-Control-Allow-Headers", "Content-Type")
-		context.Header("Content-Type", "text/event-stream")
+		context.Header("Content-Type", "text/sseEvent-stream")
 		context.Header("Cache-Control", "no-cache")
 		context.Header("Connection", "keep-alive")
 
@@ -71,7 +71,7 @@ func NewRouter(ctx *context.Context) *gin.Engine {
 				service = e.Service.Name
 			}
 
-			data, _ := json.Marshal(event{
+			data, _ := json.Marshal(sseEvent{
 				Kind:    "log",
 				Service: service,
 				Data:    fmt.Sprintf("%v", e.Value),
@@ -85,7 +85,7 @@ func NewRouter(ctx *context.Context) *gin.Engine {
 		context.Writer.Flush()
 
 		if err != nil {
-			fmt.Fprintf(context.Writer, "data: %s\n\n", event{
+			fmt.Fprintf(context.Writer, "data: %s\n\n", sseEvent{
 				Kind: "error",
 				Data: err.Error(),
 			})
@@ -93,13 +93,13 @@ func NewRouter(ctx *context.Context) *gin.Engine {
 		}
 
 		if err = ctx.ManifestManager().Save(deployment.Manifest); err != nil {
-			fmt.Fprintf(context.Writer, "data: %s\n\n", event{
+			fmt.Fprintf(context.Writer, "data: %s\n\n", sseEvent{
 				Kind: "error",
 				Data: fmt.Sprintf("%v", err),
 			})
 			context.Writer.Flush()
 		} else {
-			fmt.Fprintf(context.Writer, "data: %s\n\n", event{
+			fmt.Fprintf(context.Writer, "data: %s\n\n", sseEvent{
 				Kind: "manifest",
 				Data: deployment.Manifest,
 			})
@@ -110,7 +110,7 @@ func NewRouter(ctx *context.Context) *gin.Engine {
 	return router
 }
 
-type event struct {
+type sseEvent struct {
 	Kind string `json:"kind"`
 
 	Service string `json:"service"`
@@ -118,7 +118,7 @@ type event struct {
 	Data interface{} `json:"data"`
 }
 
-func (e event) String() string {
+func (e sseEvent) String() string {
 	data, _ := json.Marshal(e)
 
 	return string(data)

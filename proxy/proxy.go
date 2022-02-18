@@ -15,7 +15,7 @@ import (
 	context2 "github.com/redwebcreation/nest/context"
 	"github.com/redwebcreation/nest/deploy"
 	"github.com/redwebcreation/nest/loggy"
-	"github.com/redwebcreation/nest/proxy/api"
+	"github.com/redwebcreation/nest/proxy/plane"
 	"golang.org/x/crypto/acme/autocert"
 	"io/fs"
 	"log"
@@ -69,7 +69,7 @@ func (p *Proxy) Run() {
 		if r.Host != "" && r.Host == p.Config.ControlPlane.Host {
 			p.Log(r, loggy.InfoLevel, "proxied request to plane")
 
-			api.NewRouter(p.Ctx).ServeHTTP(w, r)
+			plane.New(p.Ctx).ServeHTTP(w, r)
 			return
 		}
 

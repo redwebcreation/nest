@@ -40,8 +40,6 @@ func newNestCommand(ctx *context.Context) *cobra.Command {
 		Hidden: true,
 	})
 
-	// This flag is not actually used by any of the commands.
-	// Its value is used in the init function in loggy/server.go
 	cli.PersistentFlags().StringP("config", "c", ctx.Home(), "set the loggy config path")
 
 	cli.AddCommand(
