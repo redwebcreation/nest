@@ -1,0 +1,26 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - next
+  pull_request:
+    branches:
+      - next
+  workflow_dispatch:
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install golang
+        uses: actions/setup-go@v2
+        with:
+          stable: false
+          go-version: 1.18.0-beta2
+      - name: Install dev tools
+        run: make install
+      - name: Run static analysis
+        run: make lint
