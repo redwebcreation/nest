@@ -5,11 +5,11 @@ import (
 	"regexp"
 )
 
-// Diagnostic contains all the information about a given configuration diagnostic.
+// Diagnostic contains all the information about a given config diagnostic.
 type Diagnostic struct {
-	Config   *ServerConfiguration `json:"-"`
-	Warnings []Warning            `json:"warnings"`
-	Errors   []Error              `json:"errors"`
+	Config   *ServerConfig `json:"-"`
+	Warnings []Warning     `json:"warnings"`
+	Errors   []Error       `json:"errors"`
 }
 type Warning struct {
 	Title  string `json:"title"`
@@ -26,11 +26,11 @@ func (d *Diagnostic) MustPass() error {
 		return nil
 	}
 
-	return fmt.Errorf("invalid configuration (run `nest medic` for details)")
+	return fmt.Errorf("invalid config (run `nest medic` for details)")
 }
 
-// DiagnoseConfiguration runs the diagnostics on the global ServerConfiguration.
-func DiagnoseConfiguration(config *ServerConfiguration) *Diagnostic {
+// DiagnoseConfig runs the diagnostics on the global ServerConfig.
+func DiagnoseConfig(config *ServerConfig) *Diagnostic {
 	diagnostic := Diagnostic{
 		Config: config,
 	}

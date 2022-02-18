@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter( /*serverConfig *ServerConfiguration*/ ) *gin.Engine {
+func NewRouter( /*serverConfig *ServerConfig*/ ) *gin.Engine {
 	router := gin.Default()
 	//router := gin.New()
 	//if global.Version == "dev" {

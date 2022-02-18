@@ -107,7 +107,7 @@ func NewSetupCommand(ctx *pkg.Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "setup",
-		Short: "update the global configuration",
+		Short: "update the global config",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.UsesFlags = cmd.Flags().NFlag() > 0

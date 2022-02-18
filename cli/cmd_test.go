@@ -22,7 +22,7 @@ func (c CommandTest) Run(t *testing.T) *pkg.Context {
 	dir, err := os.MkdirTemp("", "nest-home")
 	assert.NilError(t, err)
 
-	global.ConfigHome = dir
+	global.configHome = dir
 
 	// Multiplex output to a buffer as well for the raw bytes.
 	buf := new(bytes.Buffer)

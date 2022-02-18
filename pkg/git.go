@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/redwebcreation/nest/global"
+	"log"
 	"os/exec"
 	"strings"
 )
 
-var Git = &git{}
-
-type git struct{}
+type git struct {
+	logger *log.Logger
+}
 
 func (g git) Clone(remote string, local string, branch string) error {
 	if branch == "" {
@@ -83,14 +84,14 @@ func (g *git) run(dir string, args ...string) ([]byte, error) {
 	err := cmd.Run()
 	out := buf.Bytes()
 
-	global.LogI(
+	g.logger.Print(global.NewEvent(
 		global.LevelDebug,
 		"running git command",
 		global.Fields{
 			"cli": "git " + strings.Join(args, " "),
 			"tag": "vcs.run",
 		},
-	)
+	))
 
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", err, out)

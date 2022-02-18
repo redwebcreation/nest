@@ -7,12 +7,12 @@ import (
 )
 
 func runMedicCommand(ctx *pkg.Context) error {
-	sc, err := ctx.ServerConfiguration()
+	sc, err := ctx.ServerConfig()
 	if err != nil {
 		return err
 	}
 
-	diagnostic := pkg.DiagnoseConfiguration(sc)
+	diagnostic := pkg.DiagnoseConfig(sc)
 
 	fmt.Fprintln(ctx.Out())
 	fmt.Fprintln(ctx.Out(), "Errors:")
@@ -48,7 +48,7 @@ func runMedicCommand(ctx *pkg.Context) error {
 func NewMedicCommand(ctx *pkg.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "medic",
-		Short: "diagnose your configuration",
+		Short: "diagnose your config",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runMedicCommand(ctx)
 		},

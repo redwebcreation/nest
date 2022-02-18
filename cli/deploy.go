@@ -8,12 +8,12 @@ import (
 )
 
 func runDeployCommand(ctx *pkg.Context) error {
-	config, err := ctx.ServerConfiguration()
+	config, err := ctx.ServerConfig()
 	if err != nil {
 		return err
 	}
 
-	deployment := pkg.NewDeployment(config)
+	deployment := pkg.NewDeployment(config, ctx.ManifestManager())
 
 	go func() {
 		err = deployment.Start()
@@ -42,14 +42,14 @@ func runDeployCommand(ctx *pkg.Context) error {
 		}
 	}
 
-	return deployment.Manifest.Save()
+	return deployment.Manifest.Save(ctx.ManifestFile(deployment.ID))
 }
 
 // NewDeployCommand creates a new `deploy` command.
 func NewDeployCommand(ctx *pkg.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy",
-		Short: "deploy the configuration",
+		Short: "deploy the config",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runDeployCommand(ctx)
 		},

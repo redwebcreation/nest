@@ -23,14 +23,14 @@ func newNestCommand(ctx *pkg.Context) *cobra.Command {
 			DisableDefaultCmd: true,
 		},
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			global.LogI(
+			ctx.Logger().Print(global.NewEvent(
 				global.LevelDebug,
 				"command invoked",
 				global.Fields{
 					"tag":     "command.invoke",
 					"command": cmd.Name(),
 				},
-			)
+			))
 		},
 	}
 
@@ -41,7 +41,7 @@ func newNestCommand(ctx *pkg.Context) *cobra.Command {
 
 	// This flag is not actually used by any of the commands.
 	// Its value is used in the init function in global/server.go
-	nest.PersistentFlags().StringP("config", "c", global.ConfigHome, "set the global config path")
+	nest.PersistentFlags().StringP("config", "c", ctx.Home(), "set the global config path")
 
 	nest.AddCommand(
 		// version
@@ -73,9 +73,15 @@ func newNestCommand(ctx *pkg.Context) *cobra.Command {
 }
 
 func main() {
-	err := newNestCommand(&pkg.Context{}).Execute()
+	ctx, err := pkg.NewContext()
 	if err != nil {
-		global.LogI(global.LevelError, err.Error(), nil)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	err = newNestCommand(ctx).Execute()
+	if err != nil {
+		ctx.Logger().Print(global.NewEvent(global.LevelError, err.Error(), nil))
 
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

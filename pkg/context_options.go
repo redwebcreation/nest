@@ -1,7 +1,14 @@
 package pkg
 
 import (
+	"fmt"
+	"github.com/mitchellh/go-homedir"
+	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/pkg/manifest"
 	"io"
+	"log"
+	"os"
+	"strings"
 )
 
 type ContextOption func(*Context) error
@@ -36,10 +43,91 @@ func WithStdio(stdin FileReader, stdout FileWriter, stderr io.Writer) ContextOpt
 	}
 }
 
-func WithServerConfiguration(serverConfig *ServerConfiguration) ContextOption {
+func WithServerConfig(serverConfig *ServerConfig) ContextOption {
 	return func(ctx *Context) error {
 		ctx.serverConfig = serverConfig
 
+		return nil
+	}
+}
+
+func WithDefaultConfigHome() ContextOption {
+	return func(context *Context) error {
+		for k, arg := range os.Args {
+			if arg != "--config" && arg != "-c" {
+				continue
+			}
+
+			if len(os.Args) <= k+1 {
+				fmt.Fprintln(os.Stderr, "--config requires an argument")
+				os.Exit(1)
+			}
+
+			context.home = strings.TrimRight(os.Args[k+1], "/")
+			return nil
+		}
+
+		if os.Getenv("NEST_HOME") != "" {
+			context.home = strings.TrimRight(os.Getenv("NEST_HOME"), "/")
+			return nil
+		}
+
+		// otherwise, use the default
+		userHome, err := homedir.Dir()
+		if err != nil {
+			return err
+		}
+
+		context.home = userHome + "/.nest"
+
+		return nil
+	}
+}
+
+func WithConfigHome(home string) ContextOption {
+	return func(context *Context) error {
+		context.home = home
+		return nil
+	}
+}
+
+func WithDefaultInternalLogger() ContextOption {
+	return func(context *Context) error {
+		context.logger = log.New(&global.WriterLogger{
+			Path: context.LogFile(),
+		}, "", 0)
+
+		return nil
+	}
+}
+
+func WithDefaultProxyLogger() ContextOption {
+	return func(context *Context) error {
+		context.proxyLogger = log.New(global.CompositeLogger{
+			Loggers: []io.Writer{
+				&global.WriterLogger{
+					Path: context.ProxyLogFile(),
+				},
+				&global.WriterLogger{
+					Writer: os.Stdout,
+				},
+			},
+		}, "", 0)
+
+		return nil
+	}
+}
+
+func WithManifestManager(manifestManager *manifest.Manager) ContextOption {
+	return func(context *Context) error {
+		context.manifestManager = manifestManager
+		return nil
+	}
+}
+
+func WithLogger(logger *log.Logger) ContextOption {
+	return func(context *Context) error {
+		context.logger = logger
 		return nil
 	}
 }

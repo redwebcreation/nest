@@ -7,6 +7,7 @@ import (
 	"github.com/redwebcreation/nest/global"
 	"gopkg.in/yaml.v2"
 	"io/fs"
+	"log"
 	"os"
 	"strings"
 )
@@ -16,10 +17,15 @@ type Config struct {
 	Repository string `json:"repository"`
 	Branch     string `json:"branch"`
 	Commit     string `json:"commit"`
+	// Store is the path where configs are stored
+	Store  string `json:"-"`
+	Path   string `json:"-"`
+	logger *log.Logger
+	Git    *git
 }
 
-func (c *Config) Path() string {
-	return global.ServerConfigsStore() + "/" + c.Branch + "-" + strings.Replace(c.Repository, "/", "-", -1)
+func (c *Config) StorePath() string {
+	return c.Store + "/" + c.Branch + "-" + strings.Replace(c.Repository, "/", "-", -1)
 }
 
 func (c *Config) RemoteURL() string {
@@ -27,7 +33,7 @@ func (c *Config) RemoteURL() string {
 }
 
 func (c *Config) Read(file string) ([]byte, error) {
-	configPath := c.Path()
+	configPath := c.StorePath()
 
 	if _, err := os.Stat(configPath); errors.Is(err, fs.ErrNotExist) {
 		err = c.Clone()
@@ -39,16 +45,16 @@ func (c *Config) Read(file string) ([]byte, error) {
 	}
 
 	c.log(global.LevelDebug, "reading serverConfig file", global.Fields{
-		"tag":  "ServerConfiguration.read",
+		"tag":  "ServerConfig.read",
 		"file": file,
 	})
 
-	return Git.ReadFile(configPath, c.Commit, file)
+	return c.Git.ReadFile(configPath, c.Commit, file)
 }
 
-func (c *Config) GetServerConfiguration() (*ServerConfiguration, error) {
+func (c *Config) ServerConfig() (*ServerConfig, error) {
 	configFile := "nest.yaml"
-	if Git.Exists(c.Path(), "nest.yml", c.Commit) {
+	if c.Git.Exists(c.StorePath(), "nest.yml", c.Commit) {
 		configFile = "nest.yml"
 	}
 
@@ -57,7 +63,7 @@ func (c *Config) GetServerConfiguration() (*ServerConfiguration, error) {
 		return nil, err
 	}
 
-	config := &ServerConfiguration{}
+	config := &ServerConfig{}
 	err = yaml.Unmarshal(contents, config)
 	if err != nil {
 		return nil, err
@@ -71,7 +77,7 @@ func (c *Config) Save() error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(global.ConfigFile(), contents, 0600)
+	err = os.WriteFile(c.Path, contents, 0600)
 	if err != nil {
 		return err
 	}
@@ -90,9 +96,9 @@ func (c *Config) LoadCommit(commit string) error {
 }
 
 func (c *Config) Clone() error {
-	_ = os.RemoveAll(c.Path())
+	_ = os.RemoveAll(c.StorePath())
 
-	err := Git.Clone(c.RemoteURL(), c.Path(), c.Branch)
+	err := c.Git.Clone(c.RemoteURL(), c.StorePath(), c.Branch)
 
 	if err != nil {
 		return err
@@ -106,15 +112,15 @@ func (c *Config) Clone() error {
 }
 
 func (c *Config) log(level global.Level, message string, fields global.Fields) {
-	fields["Commit"] = c.Commit
+	fields["commit"] = c.Commit
 	fields["branch"] = c.Branch
 	fields["location"] = c.RemoteURL()
 
-	global.LogI(level, message, fields)
+	c.logger.Print(global.NewEvent(level, message, fields))
 }
 
 func (c *Config) Pull() error {
-	_, err := Git.Pull(c.Path(), c.Branch)
+	_, err := c.Git.Pull(c.StorePath(), c.Branch)
 
 	if err != nil {
 		return err
@@ -127,13 +133,24 @@ func (c *Config) Pull() error {
 	return nil
 }
 
-func NewConfig() (*Config, error) {
-	contents, err := os.ReadFile(global.ConfigFile())
+func NewConfig(configPath string, storePath string, logger *log.Logger) (*Config, error) {
+	if logger == nil {
+		return nil, errors.New("logger is nil")
+	}
+
+	contents, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("run `nest setup` to setup nest")
 	}
 
-	config := &Config{}
+	config := &Config{
+		Path:   configPath,
+		Store:  storePath,
+		logger: logger,
+		Git: &git{
+			logger: logger,
+		},
+	}
 	err = json.Unmarshal(contents, config)
 	if err != nil {
 		return nil, err

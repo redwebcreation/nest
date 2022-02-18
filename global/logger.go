@@ -28,30 +28,31 @@ func (c CompositeLogger) Write(p []byte) (int, error) {
 	return nn, nil
 }
 
-type FileLogger struct {
-	Path string
-	File *os.File
-	Perm os.FileMode
+type WriterLogger struct {
+	Path   string
+	Writer io.Writer
+	Perm   os.FileMode
 }
 
-func (f *FileLogger) Write(p []byte) (int, error) {
-	if f.File == nil && f.Path == "" {
+func (f *WriterLogger) Write(p []byte) (int, error) {
+	if f.Writer == nil && f.Path == "" {
 		return 0, fmt.Errorf("no file specified")
 	}
 
-	if f.File == nil {
+	if f.Writer == nil {
 		if f.Perm == 0 {
 			f.Perm = 0600
 		}
 
 		var err error
-		f.File, err = os.OpenFile(f.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		f.Writer, err = os.OpenFile(f.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 		if err != nil {
 			return 0, err
 		}
+
 	}
 
-	return f.File.Write(p)
+	return f.Writer.Write(p)
 }
 
 type Fields map[string]interface{}
@@ -75,9 +76,9 @@ const (
 )
 
 // LogI logs internal events.
-func LogI(level Level, message string, fields Fields) {
-	log.Print(NewEvent(level, message, fields))
-}
+//func LogI(level Level, message string, fields Fields) {
+//	log.Print(NewEvent(level, message, fields))
+//}
 
 func NewEvent(level Level, message string, fields Fields) Fields {
 	if fields == nil {
@@ -118,22 +119,12 @@ func (f Fields) String() string {
 }
 
 func init() {
-	log.SetPrefix("")
-	log.SetFlags(0)
-	log.SetOutput(&FileLogger{
-		Path: GetInternalLogFile(),
-	})
+	//log.SetPrefix("")
+	//log.SetFlags(0)
+	//log.SetOutput(&WriterLogger{
+	//	StorePath: InternalLogFile(),
+	//})
 
-	//ProxyLogger = log.New(CompositeLogger{
-	//	Loggers: []io.Writer{
-	//		&FileLogger{
-	//			Path: GetProxyLogFile(),
-	//		},
-	//		&FileLogger{
-	//			File: os.Stdout,
-	//		},
-	//	},
-	//}, "", 0)
 }
 
 type FinisherLogger struct {

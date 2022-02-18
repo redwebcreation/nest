@@ -13,7 +13,7 @@ var (
 type Service struct {
 	// Name of the service.
 	Name string `yaml:"-" json:"-"`
-	// Include is the path to a file containing the service configuration.
+	// Include is the path to a file containing the service config.
 	Include string `yaml:"include" json:"include"`
 
 	// Image name without a tag or registry serverConfig.

@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 	"github.com/redwebcreation/nest/docker"
+	"github.com/redwebcreation/nest/pkg/manifest"
 	"io"
 	"strconv"
 	"sync"
@@ -11,23 +12,23 @@ import (
 
 type Deployment struct {
 	ID       string
-	Config   *ServerConfiguration
+	Config   *ServerConfig
 	Events   chan Event
-	Manifest *Manifest
+	Manifest *manifest.Manifest
 }
 
 var (
 	ErrDeploymentFailed = fmt.Errorf("deployment failed")
 )
 
-func NewDeployment(config *ServerConfiguration) *Deployment {
+func NewDeployment(config *ServerConfig, manager *manifest.Manager) *Deployment {
 	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	return &Deployment{
 		ID:       id,
 		Config:   config,
 		Events:   make(chan Event),
-		Manifest: NewManifest(id),
+		Manifest: manager.NewManifest(id),
 	}
 }
 
@@ -37,7 +38,7 @@ func (d *Deployment) Start() error {
 		return err
 	}
 
-	//dockerClient, err := docker.NewClient(d.ServerConfiguration.Network.Ipv6, d.ServerConfiguration.Network.Pools)
+	//dockerClient, err := docker.NewClient(d.ServerConfig.Network.Ipv6, d.ServerConfig.Network.Pools)
 	dockerClient, err := docker.NewClient()
 	if err != nil {
 		return err

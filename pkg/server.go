@@ -4,8 +4,8 @@ import (
 	"errors"
 )
 
-// ServerConfiguration represents nest's configuration
-type ServerConfiguration struct {
+// ServerConfig represents nest's config
+type ServerConfig struct {
 	Services     ServiceMap  `yaml:"services" json:"services"`
 	Registries   RegistryMap `yaml:"registries" json:"registries"`
 	ControlPlane struct {

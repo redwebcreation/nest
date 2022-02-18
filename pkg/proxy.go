@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"github.com/pseidemann/finish"
 	"github.com/redwebcreation/nest/global"
+	"github.com/redwebcreation/nest/pkg/manifest"
 	"golang.org/x/crypto/acme/autocert"
 	"io/fs"
-	"log"
 	"math/big"
 	"net"
 	"net/http"
@@ -25,15 +25,16 @@ import (
 )
 
 type Proxy struct {
-	Config             *ServerConfiguration
-	logger             *log.Logger
+	Ctx                *Context
+	Config             *ServerConfig
 	CertificateManager *autocert.Manager
 	hostToIP           map[string]string
 }
 
-func NewProxy(config *ServerConfiguration, manifest *Manifest) *Proxy {
+func NewProxy(ctx *Context, serverConfig *ServerConfig, manifest *manifest.Manifest) *Proxy {
 	proxy := &Proxy{
-		Config:   config,
+		Ctx:      ctx,
+		Config:   serverConfig,
 		hostToIP: make(map[string]string),
 	}
 
@@ -53,7 +54,7 @@ func NewProxy(config *ServerConfiguration, manifest *Manifest) *Proxy {
 
 			return fmt.Errorf("acme/autocert: host %s not configured", host)
 		},
-		Cache: autocert.DirCache(global.GetCertsDir()),
+		Cache: autocert.DirCache(ctx.CertsDir()),
 	}
 
 	return proxy
@@ -65,7 +66,7 @@ func (p *Proxy) Run() {
 			p.Log(r, global.LevelInfo, "proxied request to plane")
 
 			NewRouter().ServeHTTP(w, r)
-			//NewRouter(p.ServerConfiguration).ServeHTTP(w, r)
+			//NewRouter(p.ServerConfig).ServeHTTP(w, r)
 			return
 		}
 
@@ -78,14 +79,14 @@ func (p *Proxy) Run() {
 				return p.CertificateManager.GetCertificate(info)
 			}
 
-			certFile := global.GetSelfSignedCertFile()
-			keyFile := global.GetSelfSignedCertKeyFile()
+			certFile := p.Ctx.SelfSignedCertFile()
+			keyFile := p.Ctx.SelfSignedKeyFile()
 
 			cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 			if errors.Is(err, fs.ErrNotExist) {
 				err = createSelfSignedCertificates(certFile, keyFile)
 				if err != nil {
-					p.logger.Print(global.NewEvent(global.LevelError, "failed to create self signed certificates", global.Fields{
+					p.Ctx.ProxyLogger().Print(global.NewEvent(global.LevelError, "failed to create self signed certificates", global.Fields{
 						"error": err.Error(),
 					}))
 					return nil, err
@@ -93,13 +94,13 @@ func (p *Proxy) Run() {
 
 				cert, err = tls.LoadX509KeyPair(certFile, keyFile)
 				if err != nil {
-					p.logger.Print(global.NewEvent(global.LevelError, "failed to load self signed certificates", global.Fields{
+					p.Ctx.ProxyLogger().Print(global.NewEvent(global.LevelError, "failed to load self signed certificates", global.Fields{
 						"error": err.Error(),
 					}))
 					return nil, err
 				}
 			} else if err != nil {
-				p.logger.Print(global.NewEvent(global.LevelError, "certificates exist but failed to load", global.Fields{
+				p.Ctx.ProxyLogger().Print(global.NewEvent(global.LevelError, "certificates exist but failed to load", global.Fields{
 					"error": err.Error(),
 				}))
 				return nil, err
@@ -116,7 +117,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	finisher := &finish.Finisher{
 		Timeout: 10 * time.Second,
 		Log: &global.FinisherLogger{
-			Logger: p.logger,
+			Logger: p.Ctx.ProxyLogger(),
 		},
 	}
 
@@ -128,7 +129,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	go func() {
 		err := certsHandler.ListenAndServe()
 		if err != nil {
-			p.logger.Print(global.NewEvent(global.LevelFatal, err.Error(), nil))
+			p.Ctx.ProxyLogger().Print(global.NewEvent(global.LevelFatal, err.Error(), nil))
 			os.Exit(1)
 		}
 	}()
@@ -136,7 +137,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	go func() {
 		err := proxy.ListenAndServeTLS("", "")
 		if err != nil {
-			p.logger.Print(global.NewEvent(global.LevelFatal, err.Error(), nil))
+			p.Ctx.ProxyLogger().Print(global.NewEvent(global.LevelFatal, err.Error(), nil))
 			os.Exit(1)
 		}
 	}()
@@ -168,7 +169,7 @@ func (p *Proxy) Log(r *http.Request, level global.Level, message string) {
 		ip = r.RemoteAddr
 	}
 
-	p.logger.Print(global.NewEvent(
+	p.Ctx.ProxyLogger().Print(global.NewEvent(
 		level,
 		message,
 		global.Fields{
@@ -204,7 +205,7 @@ func (p *Proxy) newServer(port string, handler http.HandlerFunc) *http.Server {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 		Handler:        handler,
-		ErrorLog:       p.logger,
+		ErrorLog:       p.Ctx.ProxyLogger(),
 	}
 }
 

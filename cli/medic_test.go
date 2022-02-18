@@ -18,7 +18,7 @@ func TestNewMedicCommand(t *testing.T) {
 		ContextOptions: []pkg.ContextOption{
 			// As the config is not nil, the context does not try to create it
 			pkg.WithConfig(&pkg.Config{}),
-			pkg.WithServerConfiguration(&pkg.ServerConfiguration{}),
+			pkg.WithServerConfig(&pkg.ServerConfig{}),
 		},
 		NewCommand: func(ctx *pkg.Context) (*cobra.Command, error) {
 			return NewMedicCommand(ctx), nil

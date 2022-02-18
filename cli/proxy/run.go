@@ -2,10 +2,11 @@ package proxy
 
 import (
 	"github.com/redwebcreation/nest/pkg"
+	"github.com/redwebcreation/nest/pkg/manifest"
 	"github.com/spf13/cobra"
 )
 
-var config *pkg.ServerConfiguration
+var config *pkg.ServerConfig
 
 var http string
 var https string
@@ -16,34 +17,34 @@ type runOptions struct {
 }
 
 func runRunCommand(ctx *pkg.Context, opts *runOptions) error {
-	// update configuration according to flags
+	// update config according to flags
 	config.Proxy.HTTP = http
 	config.Proxy.HTTPS = https
 	config.Proxy.SelfSigned = selfSigned
 
-	var manifest *pkg.Manifest
+	var manifest *manifest.Manifest
 	var err error
 
 	if opts.deployment != "" {
-		manifest, err = pkg.LoadManifest(opts.deployment)
+		manifest, err = ctx.ManifestManager().LoadWithID(opts.deployment)
 		if err != nil {
 			return err
 		}
 	} else {
-		manifest, err = pkg.GetLatestManifest()
+		manifest, err = ctx.ManifestManager().Latest()
 		if err != nil {
 			return err
 		}
 	}
 
-	pkg.NewProxy(config, manifest).Run()
+	pkg.NewProxy(ctx, config, manifest).Run()
 
 	return nil
 }
 
 // NewRunCommand creates a new `run` command
 func NewRunCommand(ctx *pkg.Context) *cobra.Command {
-	resolvedConfig, err := ctx.ServerConfiguration()
+	resolvedConfig, err := ctx.ServerConfig()
 
 	cmd := &cobra.Command{
 		Use:   "run [deployment]",

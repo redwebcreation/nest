@@ -22,7 +22,7 @@ func runUseCommand(ctx *pkg.Context, opts *useOptions) error {
 		return err
 	}
 
-	commits, err := pkg.Git.ListCommits(config.Path(), config.Branch)
+	commits, err := config.Git.ListCommits(config.StorePath(), config.Branch)
 	if err != nil {
 		return err
 	}

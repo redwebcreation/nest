@@ -5,6 +5,7 @@ import (
 	"github.com/redwebcreation/nest/cloud"
 	"github.com/redwebcreation/nest/pkg"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 type loginOptions struct {
@@ -12,7 +13,7 @@ type loginOptions struct {
 }
 
 func runLoginCommand(ctx *pkg.Context, opts *loginOptions) error {
-	err := cloud.SetToken(opts.token)
+	err := os.WriteFile(ctx.CloudTokenFile(), []byte(opts.token), 0600)
 	if err != nil {
 		return err
 	}
