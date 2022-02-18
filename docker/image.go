@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	logger2 "github.com/redwebcreation/nest/pkg/logger"
+	logger2 "github.com/redwebcreation/nest/pkg/loggy"
 	"io"
 	"strings"
 

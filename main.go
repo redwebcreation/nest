@@ -7,7 +7,7 @@ import (
 	"github.com/redwebcreation/nest/cli/cloud"
 	"github.com/redwebcreation/nest/cli/proxy"
 	"github.com/redwebcreation/nest/pkg"
-	logger2 "github.com/redwebcreation/nest/pkg/logger"
+	logger2 "github.com/redwebcreation/nest/pkg/loggy"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -41,8 +41,8 @@ func newNestCommand(ctx *pkg.Context) *cobra.Command {
 	})
 
 	// This flag is not actually used by any of the commands.
-	// Its value is used in the init function in logger/server.go
-	nest.PersistentFlags().StringP("config", "c", ctx.Home(), "set the logger config path")
+	// Its value is used in the init function in loggy/server.go
+	nest.PersistentFlags().StringP("config", "c", ctx.Home(), "set the loggy config path")
 
 	nest.AddCommand(
 		// version

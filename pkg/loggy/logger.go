@@ -1,4 +1,6 @@
-package logger
+// Package loggy contains a simple logger interoperable with the standard library.
+// It is name loggy simply to avoid naming conflicts.
+package loggy
 
 import (
 	"bytes"

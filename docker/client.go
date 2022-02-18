@@ -3,7 +3,7 @@ package docker
 import (
 	"fmt"
 	"github.com/docker/docker/client"
-	logger2 "github.com/redwebcreation/nest/pkg/logger"
+	logger2 "github.com/redwebcreation/nest/pkg/loggy"
 	"log"
 )
 

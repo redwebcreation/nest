@@ -38,7 +38,7 @@ func runDeployCommand(ctx *pkg.Context) error {
 		if event.Service != nil {
 			fmt.Fprintf(ctx.Out(), "%s: %v\n", event.Service.Name, event.Value)
 		} else {
-			fmt.Fprintf(ctx.Out(), "logger: %v\n", event.Value)
+			fmt.Fprintf(ctx.Out(), "loggy: %v\n", event.Value)
 		}
 	}
 

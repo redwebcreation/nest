@@ -11,7 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pseidemann/finish"
-	logger2 "github.com/redwebcreation/nest/pkg/logger"
+	"github.com/redwebcreation/nest/pkg/loggy"
 	"github.com/redwebcreation/nest/pkg/manifest"
 	"golang.org/x/crypto/acme/autocert"
 	"io/fs"
@@ -64,7 +64,7 @@ func NewProxy(ctx *Context, serverConfig *ServerConfig, manifest *manifest.Manif
 func (p *Proxy) Run() {
 	server := p.newServer(p.Config.Proxy.HTTPS, func(w http.ResponseWriter, r *http.Request) {
 		if r.Host != "" && r.Host == p.Config.ControlPlane.Host {
-			p.Log(r, logger2.InfoLevel, "proxied request to plane")
+			p.Log(r, loggy.InfoLevel, "proxied request to plane")
 
 			NewRouter().ServeHTTP(w, r)
 			//NewRouter(p.ServerConfig).ServeHTTP(w, r)
@@ -87,7 +87,7 @@ func (p *Proxy) Run() {
 			if errors.Is(err, fs.ErrNotExist) {
 				err = createSelfSignedCertificates(certFile, keyFile)
 				if err != nil {
-					p.Ctx.ProxyLogger().Print(logger2.NewEvent(logger2.ErrorLevel, "failed to create self signed certificates", logger2.Fields{
+					p.Ctx.ProxyLogger().Print(loggy.NewEvent(loggy.ErrorLevel, "failed to create self signed certificates", loggy.Fields{
 						"error": err.Error(),
 					}))
 					return nil, err
@@ -95,13 +95,13 @@ func (p *Proxy) Run() {
 
 				cert, err = tls.LoadX509KeyPair(certFile, keyFile)
 				if err != nil {
-					p.Ctx.ProxyLogger().Print(logger2.NewEvent(logger2.ErrorLevel, "failed to load self signed certificates", logger2.Fields{
+					p.Ctx.ProxyLogger().Print(loggy.NewEvent(loggy.ErrorLevel, "failed to load self signed certificates", loggy.Fields{
 						"error": err.Error(),
 					}))
 					return nil, err
 				}
 			} else if err != nil {
-				p.Ctx.ProxyLogger().Print(logger2.NewEvent(logger2.ErrorLevel, "certificates exist but failed to load", logger2.Fields{
+				p.Ctx.ProxyLogger().Print(loggy.NewEvent(loggy.ErrorLevel, "certificates exist but failed to load", loggy.Fields{
 					"error": err.Error(),
 				}))
 				return nil, err
@@ -130,7 +130,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	go func() {
 		err := certsHandler.ListenAndServe()
 		if err != nil {
-			p.Ctx.ProxyLogger().Print(logger2.NewEvent(logger2.FatalLevel, err.Error(), nil))
+			p.Ctx.ProxyLogger().Print(loggy.NewEvent(loggy.FatalLevel, err.Error(), nil))
 			os.Exit(1)
 		}
 	}()
@@ -138,7 +138,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	go func() {
 		err := proxy.ListenAndServeTLS("", "")
 		if err != nil {
-			p.Ctx.ProxyLogger().Print(logger2.NewEvent(logger2.FatalLevel, err.Error(), nil))
+			p.Ctx.ProxyLogger().Print(loggy.NewEvent(loggy.FatalLevel, err.Error(), nil))
 			os.Exit(1)
 		}
 	}()
@@ -150,7 +150,7 @@ func (p *Proxy) handler(w http.ResponseWriter, r *http.Request) {
 	ip := p.hostToIP[r.Host]
 
 	if ip == "" {
-		p.Log(r, logger2.InfoLevel, "host not found")
+		p.Log(r, loggy.InfoLevel, "host not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -160,20 +160,20 @@ func (p *Proxy) handler(w http.ResponseWriter, r *http.Request) {
 		Host:   ip,
 	}).ServeHTTP(w, r)
 
-	p.Log(r, logger2.InfoLevel, "request proxied")
+	p.Log(r, loggy.InfoLevel, "request proxied")
 }
 
-func (p *Proxy) Log(r *http.Request, level logger2.Level, message string) {
+func (p *Proxy) Log(r *http.Request, level loggy.Level, message string) {
 	var ip string
 
 	if ip = r.Header.Get("X-Forwarded-For"); ip == "" {
 		ip = r.RemoteAddr
 	}
 
-	p.Ctx.ProxyLogger().Print(logger2.NewEvent(
+	p.Ctx.ProxyLogger().Print(loggy.NewEvent(
 		level,
 		message,
-		logger2.Fields{
+		loggy.Fields{
 			"tag":    "proxy",
 			"method": r.Method,
 			"host":   r.Host,
@@ -195,7 +195,7 @@ func (p *Proxy) certsCreationHandler() *http.Server {
 			http.Redirect(w, r, target, http.StatusFound)
 		})).ServeHTTP(w, r)
 
-		p.Log(r, logger2.InfoLevel, "redirecting to https")
+		p.Log(r, loggy.InfoLevel, "redirecting to https")
 	})
 }
 
@@ -283,13 +283,13 @@ type FinisherLogger struct {
 }
 
 func (l FinisherLogger) Infof(message string, args ...any) {
-	l.Logger.Print(logger2.NewEvent(logger2.InfoLevel, fmt.Sprintf(message, args...), logger2.Fields{
+	l.Logger.Print(loggy.NewEvent(loggy.InfoLevel, fmt.Sprintf(message, args...), loggy.Fields{
 		"tag": "proxy.finisher",
 	}))
 }
 
 func (l FinisherLogger) Errorf(message string, args ...any) {
-	l.Logger.Print(logger2.NewEvent(logger2.ErrorLevel, fmt.Sprintf(message, args...), logger2.Fields{
+	l.Logger.Print(loggy.NewEvent(loggy.ErrorLevel, fmt.Sprintf(message, args...), loggy.Fields{
 		"tag": "proxy.finisher",
 	}))
 }

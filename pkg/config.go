@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	logger2 "github.com/redwebcreation/nest/pkg/logger"
+	"github.com/redwebcreation/nest/pkg/loggy"
 	"gopkg.in/yaml.v2"
 	"io/fs"
 	"log"
@@ -37,16 +37,20 @@ func (c *Config) RemoteURL() string {
 func (c *Config) Read(file string) ([]byte, error) {
 	configPath := c.StorePath()
 
-	if _, err := os.Stat(configPath); errors.Is(err, fs.ErrNotExist) {
+	_, err := os.Stat(configPath)
+
+	if errors.Is(err, fs.ErrNotExist) {
 		err = c.Clone()
 		if err != nil {
 			return nil, err
 		}
-	} else if err != nil {
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	c.log(logger2.DebugLevel, "reading serverConfig file", logger2.Fields{
+	c.log(loggy.DebugLevel, "reading serverConfig file", loggy.Fields{
 		"tag":  "ServerConfig.read",
 		"file": file,
 	})
@@ -84,7 +88,7 @@ func (c *Config) Save() error {
 		return err
 	}
 
-	c.log(logger2.InfoLevel, "updating config", logger2.Fields{
+	c.log(loggy.InfoLevel, "updating config", loggy.Fields{
 		"tag": "config.update",
 	})
 
@@ -108,19 +112,19 @@ func (c *Config) Clone() error {
 		return err
 	}
 
-	c.log(logger2.InfoLevel, "cloned config", logger2.Fields{
+	c.log(loggy.InfoLevel, "cloned config", loggy.Fields{
 		"tag": "config.clone",
 	})
 
 	return nil
 }
 
-func (c *Config) log(level logger2.Level, message string, fields logger2.Fields) {
+func (c *Config) log(level loggy.Level, message string, fields loggy.Fields) {
 	fields["commit"] = c.Commit
 	fields["branch"] = c.Branch
 	fields["location"] = c.RemoteURL()
 
-	c.Logger.Print(logger2.NewEvent(level, message, fields))
+	c.Logger.Print(loggy.NewEvent(level, message, fields))
 }
 
 func (c *Config) Pull() error {
@@ -130,7 +134,7 @@ func (c *Config) Pull() error {
 		return err
 	}
 
-	c.log(logger2.InfoLevel, "pulled config", logger2.Fields{
+	c.log(loggy.InfoLevel, "pulled config", loggy.Fields{
 		"tag": "config.pull",
 	})
 

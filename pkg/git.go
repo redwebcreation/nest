@@ -3,7 +3,7 @@ package pkg
 import (
 	"bytes"
 	"fmt"
-	logger2 "github.com/redwebcreation/nest/pkg/logger"
+	logger2 "github.com/redwebcreation/nest/pkg/loggy"
 	"log"
 	"os/exec"
 	"strings"

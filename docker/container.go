@@ -5,7 +5,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
-	logger2 "github.com/redwebcreation/nest/pkg/logger"
+	logger2 "github.com/redwebcreation/nest/pkg/loggy"
 )
 
 func (c Client) ContainerCreate(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (string, error) {

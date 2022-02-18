@@ -7,7 +7,7 @@ import (
 func NewRouter( /*serverConfig *ServerConfig*/ ) *gin.Engine {
 	router := gin.Default()
 	//router := gin.New()
-	//if logger.Version == "dev" {
+	//if global.Version == "dev" {
 	//	gin.SetMode(gin.DebugMode)
 	//	router.Use(gin.Logger())
 	//} else {
@@ -19,7 +19,7 @@ func NewRouter( /*serverConfig *ServerConfig*/ ) *gin.Engine {
 	//router.GET("/api/v1/version", func(c *gin.Context) {
 	//	c.JSON(200, gin.H{
 	//		"software": "nest",
-	//		"version":  logger.Version,
+	//		"version":  global.Version,
 	//	})
 	//})
 	//
@@ -61,7 +61,7 @@ func NewRouter( /*serverConfig *ServerConfig*/ ) *gin.Engine {
 	//			break
 	//		}
 	//
-	//		service := "logger"
+	//		service := "global"
 	//
 	//		if e.Service != nil {
 	//			service = e.Service.Name

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
-	logger2 "github.com/redwebcreation/nest/pkg/logger"
+	logger2 "github.com/redwebcreation/nest/pkg/loggy"
 )
 
 func (c Client) NetworkCreate(name string, labels map[string]string) (string, error) {

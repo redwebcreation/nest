@@ -1,7 +1,7 @@
 package docker
 
 import (
-	"github.com/redwebcreation/nest/pkg/logger"
+	"github.com/redwebcreation/nest/pkg/loggy"
 	"gotest.tools/v3/assert"
 	"os/exec"
 	"strings"
@@ -21,7 +21,7 @@ func TestClient_ImagePull(t *testing.T) {
 	assert.Assert(t, err != nil)
 	assert.Assert(t, strings.Contains(string(out), "No such object: alpine:latest"))
 
-	client, err := NewClient(logger.NewNullLogger())
+	client, err := NewClient(loggy.NewNullLogger())
 	assert.NilError(t, err)
 
 	err = client.ImagePull(image, func(_ *PullEvent) {}, nil)

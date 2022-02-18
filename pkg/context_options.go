@@ -3,7 +3,7 @@ package pkg
 import (
 	"fmt"
 	"github.com/mitchellh/go-homedir"
-	logger2 "github.com/redwebcreation/nest/pkg/logger"
+	logger2 "github.com/redwebcreation/nest/pkg/loggy"
 	"github.com/redwebcreation/nest/pkg/manifest"
 	"io"
 	"log"
