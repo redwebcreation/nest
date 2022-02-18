@@ -1,4 +1,6 @@
 .PHONY: help
+
+
 help: ## print this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {gsub("\\\\n",sprintf("\n%22c",""), $$2);printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
@@ -11,20 +13,20 @@ install: ## install dev tools
 .PHONY: lint
 lint: ## lint the code
 	@echo "Running staticcheck..."
-	staticcheck -checks all,-ST1000 ./...
+	staticcheck -checks all,-ST1000 github.com/redwebcreation/nest/...
 	@echo "Running golangci-lint..."
-	golangci-lint run ./...
+	golangci-lint run  ./...
 	@echo "Done!"
 
 .PHONY: test
 test: ## run tests
-	gotestsum -f testname ./...
+	gotestsum -f testname  ./...
 
 tests: test
 
 .PHONY: fmt
 fmt: ## format the code
-	@go list -f {{.Dir}} ./... | xargs gofmt -w -s -d
+	go fmt ./...
 
 
 .PHONY: test-coverage

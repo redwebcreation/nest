@@ -1,4 +1,4 @@
-package command
+package nest
 
 import (
 	"github.com/Netflix/go-expect"

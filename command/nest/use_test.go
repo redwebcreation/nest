@@ -2,7 +2,6 @@ package nest
 
 import (
 	"github.com/Netflix/go-expect"
-	"github.com/redwebcreation/nest/command"
 	"github.com/redwebcreation/nest/config"
 	"github.com/redwebcreation/nest/context"
 	"github.com/spf13/cobra"
@@ -11,10 +10,10 @@ import (
 )
 
 func TestNewUseCommand(t *testing.T) {
-	ctx := command.CommandTest{
+	ctx := CommandTest{
 		Test: func(console *expect.Console) {
-			command.Err(console.SendLine("")).Check(t)
-			command.Err(console.ExpectEOF()).Check(t)
+			Err(console.SendLine("")).Check(t)
+			Err(console.ExpectEOF()).Check(t)
 		},
 		Setup: func(ctx *context.Context) []context.ContextOption {
 			return []context.ContextOption{
