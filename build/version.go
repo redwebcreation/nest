@@ -2,7 +2,10 @@ package build
 
 // Default build-time variable.
 // These values are overridden by ldflags.
-var (
+
+const DevVersion = "dev"
+
+const (
 	Version = "dev"
 	Commit  = "unknown"
 )

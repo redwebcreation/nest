@@ -13,7 +13,7 @@ import (
 
 type Deployment struct {
 	ID       string
-	Config   *ServerConfig
+	Server   *ServerConfig
 	Events   chan Event
 	Manifest *manifest.Manifest
 }
@@ -22,19 +22,19 @@ var (
 	ErrDeploymentFailed = fmt.Errorf("deployment failed")
 )
 
-func NewDeployment(config *ServerConfig, manager *manifest.Manager) *Deployment {
+func NewDeployment(server *ServerConfig, manager *manifest.Manager) *Deployment {
 	id := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	return &Deployment{
 		ID:       id,
-		Config:   config,
+		Server:   server,
 		Events:   make(chan Event),
 		Manifest: manager.NewManifest(id),
 	}
 }
 
 func (d *Deployment) Start() error {
-	graph, err := d.Config.Services.GroupInLayers()
+	graph, err := d.Server.Services.GroupInLayers()
 	if err != nil {
 		return err
 	}

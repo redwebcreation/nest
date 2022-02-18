@@ -71,7 +71,7 @@ func (d *DeployPipeline) PullImage() error {
 
 	return d.Docker.ImagePull(image, func(event *docker.PullEvent) {
 		d.Log(event.Status)
-	}, d.Deployment.Config.Registries[d.Service.Registry])
+	}, d.Deployment.Server.Registries[d.Service.Registry])
 }
 
 func (d *DeployPipeline) CreateServiceNetwork() (string, error) {

@@ -21,15 +21,6 @@ type Manager struct {
 	Path string
 }
 
-func (m Manifest) Save(path string) error {
-	bytes, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(path, bytes, 0600)
-}
-
 func (m Manager) NewManifest(id string) *Manifest {
 	return &Manifest{
 		ID:         id,
@@ -67,4 +58,13 @@ func (m Manager) Latest() (*Manifest, error) {
 
 	// removes .json
 	return m.LoadWithID(latest[:len(latest)-5])
+}
+
+func (m Manager) Save(manifest *Manifest) error {
+	bytes, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(m.Path+"/"+manifest.ID+".json", bytes, 0600)
 }

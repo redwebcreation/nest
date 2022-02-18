@@ -66,8 +66,7 @@ func (p *Proxy) Run() {
 		if r.Host != "" && r.Host == p.Config.ControlPlane.Host {
 			p.Log(r, loggy.InfoLevel, "proxied request to plane")
 
-			NewRouter().ServeHTTP(w, r)
-			//NewRouter(p.ServerConfig).ServeHTTP(w, r)
+			NewRouter(p.Ctx).ServeHTTP(w, r)
 			return
 		}
 
@@ -100,7 +99,9 @@ func (p *Proxy) Run() {
 					}))
 					return nil, err
 				}
-			} else if err != nil {
+			}
+
+			if err != nil {
 				p.Ctx.ProxyLogger().Print(loggy.NewEvent(loggy.ErrorLevel, "certificates exist but failed to load", loggy.Fields{
 					"error": err.Error(),
 				}))

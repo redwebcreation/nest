@@ -38,8 +38,7 @@ func runRunCommand(ctx *pkg.Context, opts *runOptions) error {
 	}
 
 	pkg.NewProxy(ctx, config, manifest).Run()
-
-	return nil
+	return err
 }
 
 // NewRunCommand creates a new `run` command

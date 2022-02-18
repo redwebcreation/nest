@@ -87,7 +87,7 @@ func (s *ServiceMap) UnmarshalYAML(unmarshal func(any) error) error {
 			// todo: handle include
 			delete(services, name)
 			continue
-			//bytes, err := Config.Read(service.Include)
+			//bytes, err := Server.Read(service.Include)
 			//if err != nil {
 			//	return err
 			//}

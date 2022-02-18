@@ -42,7 +42,7 @@ func runDeployCommand(ctx *pkg.Context) error {
 		}
 	}
 
-	return deployment.Manifest.Save(ctx.ManifestFile(deployment.ID))
+	return ctx.ManifestManager().Save(deployment.Manifest)
 }
 
 // NewDeployCommand creates a new `deploy` command.
