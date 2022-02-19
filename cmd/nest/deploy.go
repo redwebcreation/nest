@@ -14,7 +14,7 @@ func runDeployCommand(ctx *context.Context) error {
 		return err
 	}
 
-	deployment := deploy.NewDeployment(config, ctx.Logger(), ctx.ManifestManager(), ctx.SubnetRegistryPath())
+	deployment := deploy.NewDeployment(config, ctx.Logger(), ctx.ManifestManager(), ctx.Subnetter(config.Network.Subnets))
 
 	go func() {
 		err = deployment.Start()

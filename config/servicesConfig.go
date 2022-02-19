@@ -1,12 +1,10 @@
 package config
 
 import (
-	"github.com/c-robinson/iplib"
+	"encoding/json"
 	"github.com/redwebcreation/nest/docker"
 	"github.com/redwebcreation/nest/service"
 	"gopkg.in/yaml.v2"
-	"net"
-	"sync"
 )
 
 // ServicesConfig represents nest's config
@@ -24,6 +22,19 @@ type ServicesConfig struct {
 	Network NetworkConfiguration `yaml:"network" json:"network"`
 }
 
+func (c *ServicesConfig) MarshalJSON() ([]byte, error) {
+	if c.Services == nil {
+		c.Services = service.ServiceMap{}
+	}
+
+	if c.Registries == nil {
+		c.Registries = RegistryMap{}
+	}
+
+	type plain ServicesConfig
+	return json.Marshal((*plain)(c))
+}
+
 func (c *ServicesConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type plain ServicesConfig
 	if err := unmarshal((*plain)(c)); err != nil {
@@ -36,6 +47,10 @@ func (c *ServicesConfig) UnmarshalYAML(unmarshal func(interface{}) error) error 
 
 	if c.Proxy.HTTPS == "" {
 		c.Proxy.HTTPS = "443"
+	}
+
+	if c.Network.Policy == "" {
+		c.Network.Policy = "/24"
 	}
 
 	return nil
@@ -73,41 +88,13 @@ type NetworkConfiguration struct {
 	Subnets []string `yaml:"subnets" json:"subnets"`
 }
 
-var defaultIpv4Pool = []string{"10.0.0.0/8"}
-
-func (n *NetworkConfiguration) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	type plain NetworkConfiguration
-	if err := unmarshal((*plain)(n)); err != nil {
-		return err
-	}
-
-	if n.Policy == "" {
-		n.Policy = "/24"
-	}
-
+func (n *NetworkConfiguration) MarshalJSON() ([]byte, error) {
 	if n.Subnets == nil {
-		n.Subnets = defaultIpv4Pool
+		n.Subnets = []string{}
 	}
 
-	return nil
-}
-
-func (n *NetworkConfiguration) Manager(registryPath string, m *sync.Mutex) *docker.Subnetter {
-	var subnets []iplib.Net4
-
-	for _, subnet := range n.Subnets {
-		// todo(medic): validate subnet
-		ip, cidr, _ := net.ParseCIDR(subnet)
-
-		mask, _ := cidr.Mask.Size()
-		subnets = append(subnets, iplib.NewNet4(ip, mask))
-	}
-
-	return &docker.Subnetter{
-		RegistryPath: registryPath,
-		Subnets:      subnets,
-		Lock:         m,
-	}
+	type plain NetworkConfiguration
+	return json.Marshal((*plain)(n))
 }
 
 // RegistryMap maps registry names to their respective docker.Registry structs

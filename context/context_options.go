@@ -94,7 +94,7 @@ func WithConfigHome(home string) Option {
 func WithDefaultInternalLogger() Option {
 	return func(context *Context) error {
 		context.logger = log.New(&loggy.FileLogger{
-			Path: context.LogFile(),
+			Path: context.logFile(),
 		}, "", 0)
 		return nil
 	}
@@ -105,7 +105,7 @@ func WithDefaultProxyLogger() Option {
 		context.proxyLogger = log.New(loggy.CompositeLogger{
 			Loggers: []io.Writer{
 				&loggy.FileLogger{
-					Path: context.ProxyLogFile(),
+					Path: context.proxyLogFile(),
 				},
 				&loggy.FileLogger{
 					Writer: os.Stdout,

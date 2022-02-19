@@ -41,7 +41,7 @@ func New(ctx *context.Context) *gin.Engine {
 	})
 
 	router.GET("/api/v1/deploy", func(context *gin.Context) {
-		deployment := deploy.NewDeployment(servicesConfig, ctx.Logger(), ctx.ManifestManager(), ctx.SubnetRegistryPath())
+		deployment := deploy.NewDeployment(servicesConfig, ctx.Logger(), ctx.ManifestManager(), ctx.Subnetter(servicesConfig.Network.Subnets))
 
 		go func() {
 			err := deployment.Start()

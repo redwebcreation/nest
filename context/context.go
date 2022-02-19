@@ -1,13 +1,19 @@
 package context
 
 import (
+	"github.com/c-robinson/iplib"
 	"github.com/redwebcreation/nest/cloud"
 	"github.com/redwebcreation/nest/config"
 	"github.com/redwebcreation/nest/config/medic"
 	"github.com/redwebcreation/nest/deploy"
+	"github.com/redwebcreation/nest/docker"
+	"golang.org/x/crypto/acme/autocert"
 	"io"
+	"io/ioutil"
 	"log"
+	"net"
 	"os"
+	"sync"
 )
 
 // Context is a struct that holds the context of the application
@@ -39,12 +45,13 @@ type Context struct {
 	proxyLogger *log.Logger
 
 	manifestManager *deploy.Manager
+	subnetter       *docker.Subnetter
 }
 
 // Config returns the cached nest config or loads it if it hasn't been loaded yet.
 func (c *Context) Config() (*config.Config, error) {
 	if c.config == nil {
-		cf, err := config.NewConfig(c.ConfigFile(), c.ConfigStoreDir(), c.Logger())
+		cf, err := config.NewConfig(c.configFile(), c.ConfigStoreDir(), c.Logger())
 		if err != nil {
 			return nil, err
 		}
@@ -132,7 +139,7 @@ func (c *Context) Logger() *log.Logger {
 func (c *Context) ManifestManager() *deploy.Manager {
 	if c.manifestManager == nil {
 		c.manifestManager = &deploy.Manager{
-			Path: c.ManifestsDir(),
+			Path: c.manifestsDir(),
 		}
 	}
 
@@ -157,7 +164,7 @@ func New(opts ...Option) (*Context, error) {
 }
 
 func (c *Context) CloudCredentials() (id, token string, err error) {
-	bytes, err := os.ReadFile(c.CloudCredentialsFile())
+	bytes, err := os.ReadFile(c.cloudCredentialsFile())
 	if err != nil {
 		return "", "", err
 	}
@@ -178,4 +185,56 @@ func (c *Context) CloudClient() (*cloud.Client, error) {
 	}
 
 	return cloud.NewClient(id, token), nil
+}
+
+func (c *Context) Subnetter(CIDRs []string) *docker.Subnetter {
+	if c.subnetter == nil {
+		var subnets []iplib.Net4
+		for _, cidr := range CIDRs {
+			// todo(medic):  validate cidr
+			_, n, err := iplib.ParseCIDR(cidr)
+			if err != nil {
+				panic(err)
+			}
+
+			_, mask := n.Mask().Size()
+			subnets = append(subnets, iplib.NewNet4(n.IP(), mask))
+		}
+
+		if len(CIDRs) == 0 {
+			subnets = []iplib.Net4{
+				iplib.NewNet4(net.IPv4(10, 0, 0, 0), 8),
+			}
+		}
+
+		c.subnetter = &docker.Subnetter{
+			Lock:         &sync.Mutex{},
+			RegistryPath: c.subnetRegistryPath(),
+			Subnets:      subnets,
+		}
+	}
+
+	return c.subnetter
+}
+
+func (c *Context) SetCloudCredentials(id string, token string) error {
+	return ioutil.WriteFile(c.cloudCredentialsFile(), []byte(cloud.FormatDsn(id, token)), 0600)
+}
+
+func (c *Context) CertificateStore() autocert.DirCache {
+	return autocert.DirCache(c.certsDir())
+}
+
+func (c *Context) NewConfig(provider, repository, branch string) *config.Config {
+	return &config.Config{
+		Provider:   provider,
+		Repository: repository,
+		Branch:     branch,
+		Path:       c.configFile(),
+		StoreDir:   c.ConfigStoreDir(),
+		Logger:     c.Logger(),
+		Git: &config.Git{
+			Logger: c.Logger(),
+		},
+	}
 }

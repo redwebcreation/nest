@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -9,6 +10,38 @@ import (
 var (
 	ErrMissingService = errors.New("missing service")
 )
+
+type Hooks struct {
+	// Prestart is a list of commands to run before the service starts.
+	Prestart []string `yaml:"prestart" json:"prestart"`
+	// Poststart is a list of commands to run after the service starts.
+	Poststart []string `yaml:"poststart" json:"poststart"`
+	// Preclean is a list of commands to run before the service is removed by the container collector.
+	Preclean []string `yaml:"preclean" json:"preclean"`
+	// Postclean is a list of commands to run after the service is removed by the container collector.
+	Postclean []string `yaml:"postclean" json:"postclean"`
+}
+
+func (h *Hooks) MarshalJSON() ([]byte, error) {
+	if h.Prestart == nil {
+		h.Prestart = []string{}
+	}
+
+	if h.Poststart == nil {
+		h.Poststart = []string{}
+	}
+
+	if h.Preclean == nil {
+		h.Preclean = []string{}
+	}
+
+	if h.Postclean == nil {
+		h.Postclean = []string{}
+	}
+
+	type plain Hooks
+	return json.Marshal((*plain)(h))
+}
 
 // Service contains the information about a service.
 type Service struct {
@@ -30,16 +63,7 @@ type Service struct {
 	ListeningOn string `yaml:"listening_on" json:"listeningOn"`
 
 	// Hooks are commands to run during the lifecycle of the service.
-	Hooks struct {
-		// Prestart is a list of commands to run before the service starts.
-		Prestart []string `yaml:"prestart" json:"prestart"`
-		// Poststart is a list of commands to run after the service starts.
-		Poststart []string `yaml:"poststart" json:"poststart"`
-		// Preclean is a list of commands to run before the service is removed by the container collector.
-		Preclean []string `yaml:"preclean" json:"preclean"`
-		// Postclean is a list of commands to run after the service is removed by the container collector.
-		Postclean []string `yaml:"postclean" json:"postclean"`
-	} `yaml:"hooks" json:"hooks"`
+	Hooks Hooks `yaml:"hooks" json:"hooks"`
 
 	// Requires is a list of services that must be running before this service.
 	Requires []string `yaml:"requires" json:"requires"`
@@ -47,6 +71,23 @@ type Service struct {
 	// Registry to pull the image from.
 	// It may be a string referencing Retrieve.Registries[%s] or a Registry.
 	Registry string `yaml:"registry" json:"registry"`
+}
+
+func (s *Service) MarshalJSON() ([]byte, error) {
+	if s.Hosts == nil {
+		s.Hosts = []string{}
+	}
+
+	if s.Env == nil {
+		s.Env = EnvMap{}
+	}
+
+	if s.Requires == nil {
+		s.Requires = []string{}
+	}
+
+	type plain Service
+	return json.Marshal((*plain)(s))
 }
 
 // ApplyDefaults sets default values and transforms certain defined patterns of a unmarshalled service.

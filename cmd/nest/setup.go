@@ -3,7 +3,6 @@ package nest
 import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/redwebcreation/nest/config"
 	"github.com/redwebcreation/nest/context"
 	"regexp"
 
@@ -81,17 +80,7 @@ func runSetupCommand(ctx *context.Context, opts *setupOptions) error {
 		}
 	}
 
-	config := config.Config{
-		Provider:   opts.Provider,
-		Repository: opts.Repository,
-		Branch:     opts.Branch,
-		Path:       ctx.ConfigFile(),
-		StoreDir:   ctx.ConfigStoreDir(),
-		Logger:     ctx.Logger(),
-		Git: &config.Git{
-			Logger: ctx.Logger(),
-		},
-	}
+	config := ctx.NewConfig(opts.Provider, opts.Repository, opts.Branch)
 	if err = config.Save(); err != nil {
 		return err
 	}

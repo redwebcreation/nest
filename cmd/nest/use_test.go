@@ -2,7 +2,6 @@ package nest
 
 import (
 	"github.com/Netflix/go-expect"
-	"github.com/redwebcreation/nest/config"
 	"github.com/redwebcreation/nest/context"
 	"github.com/spf13/cobra"
 	"gotest.tools/v3/assert"
@@ -17,17 +16,7 @@ func TestNewUseCommand(t *testing.T) {
 		},
 		Setup: func(ctx *context.Context) []context.Option {
 			return []context.Option{
-				context.WithConfig(&config.Config{
-					Provider:   "github",
-					Repository: "redwebcreation/nest-configs",
-					Branch:     "empty-config",
-					Path:       ctx.ConfigFile(),
-					StoreDir:   ctx.ConfigStoreDir(),
-					Logger:     ctx.Logger(),
-					Git: &config.Git{
-						Logger: ctx.Logger(),
-					},
-				}),
+				context.WithConfig(ctx.NewConfig("github", "redwebcreation/nest-configs", "empty-config")),
 			}
 		},
 		NewCommand: func(ctx *context.Context) (*cobra.Command, error) {

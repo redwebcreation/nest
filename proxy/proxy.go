@@ -8,7 +8,6 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"github.com/pseidemann/finish"
 	"github.com/redwebcreation/nest/config"
@@ -17,7 +16,6 @@ import (
 	"github.com/redwebcreation/nest/loggy"
 	"github.com/redwebcreation/nest/proxy/plane"
 	"golang.org/x/crypto/acme/autocert"
-	"io/fs"
 	"log"
 	"math/big"
 	"net"
@@ -58,7 +56,7 @@ func NewProxy(ctx *context2.Context, servicesConfig *config.ServicesConfig, mani
 
 			return fmt.Errorf("acme/autocert: host %s not configured", host)
 		},
-		Cache: autocert.DirCache(ctx.CertsDir()),
+		Cache: ctx.CertificateStore(),
 	}
 
 	return proxy
@@ -66,7 +64,7 @@ func NewProxy(ctx *context2.Context, servicesConfig *config.ServicesConfig, mani
 
 func (p *Proxy) Run() {
 	server := p.newServer(p.Config.Proxy.HTTPS, func(w http.ResponseWriter, r *http.Request) {
-		if r.Host != "" && r.Host == p.Config.ControlPlane.Host {
+		if (r.Host != "" && r.Host == p.Config.ControlPlane.Host) || r.Host == "control-plane" {
 			p.Log(r, loggy.InfoLevel, "proxied request to plane")
 
 			plane.New(p.Ctx).ServeHTTP(w, r)
@@ -82,32 +80,21 @@ func (p *Proxy) Run() {
 				return p.CertificateManager.GetCertificate(info)
 			}
 
-			certFile := p.Ctx.SelfSignedCertFile()
-			keyFile := p.Ctx.SelfSignedKeyFile()
+			keyFile := "dev_key.pem"
+			certFile := "dev_cert.pem"
 
-			cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-			if errors.Is(err, fs.ErrNotExist) {
-				err = createSelfSignedCertificates(certFile, keyFile)
-				if err != nil {
-					p.Ctx.ProxyLogger().Print(loggy.NewEvent(loggy.ErrorLevel, "failed to create self signed certificates", loggy.Fields{
-						"error": err.Error(),
-					}))
-					return nil, err
-				}
-
-				cert, err = tls.LoadX509KeyPair(certFile, keyFile)
-				if err != nil {
-					p.Ctx.ProxyLogger().Print(loggy.NewEvent(loggy.ErrorLevel, "failed to load self signed certificates", loggy.Fields{
-						"error": err.Error(),
-					}))
-					return nil, err
-				}
+			keyPEM, err := p.Ctx.CertificateStore().Get(context.Background(), keyFile)
+			if err != nil {
+				return handleSelfSignedCertificates(keyFile, certFile)
 			}
 
+			certPEM, certErr := p.Ctx.CertificateStore().Get(context.Background(), certFile)
+			if certErr != nil {
+				return handleSelfSignedCertificates(keyFile, certFile)
+			}
+
+			cert, err := tls.X509KeyPair(certPEM, keyPEM)
 			if err != nil {
-				p.Ctx.ProxyLogger().Print(loggy.NewEvent(loggy.ErrorLevel, "certificates exist but failed to load", loggy.Fields{
-					"error": err.Error(),
-				}))
 				return nil, err
 			}
 
@@ -116,6 +103,20 @@ func (p *Proxy) Run() {
 	}
 
 	p.start(server)
+}
+
+func handleSelfSignedCertificates(keyFile, certFile string) (*tls.Certificate, error) {
+	err := generateSelfSignedCertificates(certFile, keyFile)
+	if err != nil {
+		return nil, err
+	}
+
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cert, nil
 }
 
 func (p *Proxy) start(proxy *http.Server) {
@@ -222,7 +223,7 @@ func replacePort(url string, newPort string) string {
 	return net.JoinHostPort(host, newPort)
 }
 
-func createSelfSignedCertificates(certFile string, keyFile string) error {
+func generateSelfSignedCertificates(certFile string, keyFile string) error {
 	// create self-signed certificate using x509 package
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {

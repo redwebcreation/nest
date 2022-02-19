@@ -46,8 +46,8 @@ func newTestPipeline(t *testing.T, opts ...func(*testing.T, *Pipeline)) *Pipelin
 				Containers: map[string]string{},
 				Networks:   map[string]string{},
 			},
-			ServicesConfig:     &config.ServicesConfig{},
-			SubnetRegistryPath: path,
+			ServicesConfig: &config.ServicesConfig{},
+			Subnetter:      &docker.Subnetter{},
 		},
 		Docker: newTestDockerClient(t, path),
 		Service: &service.Service{

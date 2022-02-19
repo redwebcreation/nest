@@ -8,43 +8,35 @@ import (
 	"strings"
 )
 
-func (c *Context) ManifestsDir() string {
-	return ensureDirExists(c.Home() + "/manifests")
-}
-
-func (c Context) ConfigStoreDir() string {
+func (c *Context) ConfigStoreDir() string {
 	return ensureDirExists(c.Home() + "/config-store")
 }
 
-func (c *Context) CertsDir() string {
-	return ensureDirExists(c.Home() + "/certs")
-}
-
-func (c Context) LogFile() string {
-	return ensureDirExists(c.Home() + "/logs/internal.log")
-}
-
-func (c Context) ProxyLogFile() string {
-	return ensureDirExists(c.Home() + "/logs/proxy.log")
-}
-
-func (c Context) ConfigFile() string {
+func (c *Context) configFile() string {
 	return ensureDirExists(c.Home() + "/config.json")
 }
 
-func (c *Context) SelfSignedKeyFile() string {
-	return ensureDirExists(c.CertsDir() + "/testing_key.pem")
+func (c *Context) manifestsDir() string {
+	return ensureDirExists(c.Home() + "/manifests")
 }
 
-func (c *Context) SelfSignedCertFile() string {
-	return ensureDirExists(c.CertsDir() + "/testing_cert.pem")
+func (c *Context) certsDir() string {
+	return ensureDirExists(c.Home() + "/certs")
 }
 
-func (c *Context) CloudCredentialsFile() string {
+func (c *Context) logFile() string {
+	return ensureDirExists(c.Home() + "/logs/internal.log")
+}
+
+func (c *Context) proxyLogFile() string {
+	return ensureDirExists(c.Home() + "/logs/proxy.log")
+}
+
+func (c *Context) cloudCredentialsFile() string {
 	return c.Home() + "/.creds"
 }
 
-func (c *Context) SubnetRegistryPath() string {
+func (c *Context) subnetRegistryPath() string {
 	return ensureDirExists(c.Home() + "/subnets.list")
 }
 
