@@ -18,8 +18,10 @@ func New(ctx *context.Context) *gin.Engine {
 
 	router := gin.New()
 	router.Use(gin.Recovery())
+	router.Use(WithNestContext(ctx))
+	router.Use(Auth())
 
-	router.GET("/plane/v1/version", func(c *gin.Context) {
+	router.GET("/api/v1/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"software": "nest",
 			"version":  build.Version,
@@ -27,7 +29,7 @@ func New(ctx *context.Context) *gin.Engine {
 		})
 	})
 
-	router.GET("/plane/v1/server", func(c *gin.Context) {
+	router.GET("/api/v1/server", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"commit":     config.Commit,
 			"branch":     config.Branch,
@@ -38,7 +40,7 @@ func New(ctx *context.Context) *gin.Engine {
 		})
 	})
 
-	router.GET("/plane/v1/deploy", func(context *gin.Context) {
+	router.GET("/api/v1/deploy", func(context *gin.Context) {
 		deployment := deploy.NewDeployment(servicesConfig, ctx.Logger(), ctx.ManifestManager(), ctx.SubnetRegistryPath())
 
 		go func() {

@@ -24,6 +24,23 @@ type ServicesConfig struct {
 	Network NetworkConfiguration `yaml:"network" json:"network"`
 }
 
+func (c *ServicesConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type plain ServicesConfig
+	if err := unmarshal((*plain)(c)); err != nil {
+		return err
+	}
+
+	if c.Proxy.HTTP == "" {
+		c.Proxy.HTTP = "80"
+	}
+
+	if c.Proxy.HTTPS == "" {
+		c.Proxy.HTTPS = "443"
+	}
+
+	return nil
+}
+
 func (c *ServicesConfig) ExpandIncludes(config *Config) error {
 	for _, s := range c.Services {
 		if s.Include == "" {

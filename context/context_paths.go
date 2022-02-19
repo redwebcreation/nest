@@ -40,8 +40,8 @@ func (c *Context) SelfSignedCertFile() string {
 	return ensureDirExists(c.CertsDir() + "/testing_cert.pem")
 }
 
-func (c *Context) CloudTokenFile() string {
-	return ensureDirExists(c.Home() + "/cloud-token")
+func (c *Context) CloudCredentialsFile() string {
+	return c.Home() + "/.creds"
 }
 
 func (c *Context) SubnetRegistryPath() string {

@@ -1,6 +1,7 @@
 package context
 
 import (
+	"github.com/redwebcreation/nest/cloud"
 	"github.com/redwebcreation/nest/config"
 	"github.com/redwebcreation/nest/config/medic"
 	"github.com/redwebcreation/nest/deploy"
@@ -153,4 +154,28 @@ func New(opts ...Option) (*Context, error) {
 	}
 
 	return ctx, nil
+}
+
+func (c *Context) CloudCredentials() (id, token string, err error) {
+	bytes, err := os.ReadFile(c.CloudCredentialsFile())
+	if err != nil {
+		return "", "", err
+	}
+
+	credentials := string(bytes)
+
+	if err = cloud.ValidateDsn(credentials); err != nil {
+		return "", "", err
+	}
+
+	return cloud.ParseDsn(credentials)
+}
+
+func (c *Context) CloudClient() (*cloud.Client, error) {
+	id, token, err := c.CloudCredentials()
+	if err != nil {
+		return nil, err
+	}
+
+	return cloud.NewClient(id, token), nil
 }

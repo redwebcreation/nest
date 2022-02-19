@@ -9,16 +9,22 @@ import (
 )
 
 type loginOptions struct {
-	token string
+	id          string
+	accessToken string
 }
 
 func runLoginCommand(ctx *context.Context, opts *loginOptions) error {
-	err := os.WriteFile(ctx.CloudTokenFile(), []byte(opts.token), 0600)
+	err := os.WriteFile(ctx.CloudCredentialsFile(), []byte(fmt.Sprintf("%s:%s", opts.id, opts.accessToken)), 0600)
 	if err != nil {
 		return err
 	}
 
-	err = cloud.NewClient(opts.token).Ping()
+	client, err := ctx.CloudClient()
+	if err != nil {
+		return err
+	}
+
+	err = client.Ping()
 	if err == cloud.ErrResourceNotFound {
 		fmt.Fprintln(ctx.Out(), "Invalid token.")
 	} else if err != nil {
@@ -37,8 +43,13 @@ func NewLoginCommand(ctx *context.Context) *cobra.Command {
 		Short: "login to nest cloud",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args[0]) != 45 {
+				return fmt.Errorf("invalid token")
+			}
+
 			return runLoginCommand(ctx, &loginOptions{
-				token: args[0],
+				id:          args[0][:22],
+				accessToken: args[0][23:],
 			})
 		},
 	}

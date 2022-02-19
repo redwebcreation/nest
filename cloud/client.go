@@ -10,10 +10,11 @@ import (
 	"net/http"
 )
 
-type client struct {
-	client   *http.Client
-	endpoint string
-	token    string
+type Client struct {
+	client      *http.Client
+	endpoint    string
+	id          string
+	accessToken string
 }
 
 var (
@@ -21,7 +22,7 @@ var (
 	ErrResourceNotFound = errors.New("resource not found")
 )
 
-func (c client) Request(method string, url string, params map[string]any, v any) error {
+func (c Client) Request(method string, url string, params map[string]any, v any) error {
 	request, err := http.NewRequest(method, c.endpoint+url, nil)
 	if err != nil {
 		return err
@@ -62,14 +63,31 @@ func (c client) Request(method string, url string, params map[string]any, v any)
 	return json.Unmarshal(body, &v)
 }
 
-func (c *client) Ping() error {
-	return c.Request("GET", "/servers/"+c.token+"/ping", nil, nil)
+func (c *Client) Ping() error {
+	return c.Request("GET", "/servers/"+c.id+"/ping", nil, nil)
 }
 
-func NewClient(token string) *client {
-	return &client{
-		client:   &http.Client{},
-		endpoint: build.Endpoint,
-		token:    token,
+func NewClient(id string, accessToken string) *Client {
+	return &Client{
+		client:      &http.Client{},
+		endpoint:    build.Endpoint,
+		id:          id,
+		accessToken: accessToken,
 	}
+}
+
+func ValidateDsn(dsn string) error {
+	if len(dsn) != 45 {
+		return fmt.Errorf("invalid dsn: %s", dsn)
+	}
+
+	return nil
+}
+
+func ParseDsn(dsn string) (id, token string, err error) {
+	if err = ValidateDsn(dsn); err != nil {
+		return "", "", err
+	}
+
+	return dsn[:22], dsn[23:], nil
 }
