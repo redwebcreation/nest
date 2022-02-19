@@ -52,8 +52,7 @@ func (m Manager) Latest() (*Manifest, error) {
 
 	latest := manifests[len(manifests)-1].Name()
 
-	// removes .json
-	return m.LoadWithID(latest[:len(latest)-5])
+	return m.LoadWithID(latest)
 }
 
 func (m Manager) Save(manifest *Manifest) error {
